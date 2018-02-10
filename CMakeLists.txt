@@ -8,10 +8,12 @@ set(CMAKE_CXX_FLAGS "-g -Wall")
 ################################
 # Normal Libraries & Executables
 ################################
-# include_directories(jama)
+include_directories(gi)
 
-add_executable(gilearner main.cc
-                         dfa.cc)
+add_executable(gilearner main.cc)
+
+# Extra linking for the project.
+target_link_libraries(gilearner gi_lib)
 
 ################################
 # Testing
@@ -22,10 +24,10 @@ if (test)
     add_definitions(-D__GLIBCXX__)
   endif (APPLE)
 
-  # This adds another subdirectory, which has 'project(gtest)'.
-#  add_subdirectory(lib/gtest-1.6.0)
+  # This adds another subdirectory, which has the gilib library'.
+  add_subdirectory(gi)
 
-  # This adds another subdirectory, which has 'project(googletest-distribution)'.
+  # This adds another subdirectory, which has 'project(googletest)'.
   add_subdirectory(googletest/googletest)
 
   enable_testing()
@@ -43,7 +45,7 @@ if (test)
   target_link_libraries(runUnitTests gtest gtest_main)
 
   # Extra linking for the project.
-  # target_link_libraries(runUnitTests project1_lib)
+  target_link_libraries(runUnitTests gi_lib)
 
   # This is so you can do 'make test' to see all your tests run, instead of
   # manually running the executable runUnitTests to see those specific tests.

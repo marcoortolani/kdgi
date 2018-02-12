@@ -10,6 +10,9 @@ set(CMAKE_CXX_FLAGS "-g -Wall")
 ################################
 include_directories(gi)
 
+# This adds another subdirectory, which has the gilib library'.
+add_subdirectory(gi)
+
 add_executable(gilearner main.cc)
 
 # Extra linking for the project.
@@ -19,22 +22,23 @@ target_link_libraries(gilearner gi_lib)
 # Testing
 ################################
 if (test)
+
+  # Testing through Googletest; addedd as a submodule
+  # to this git repository
+  # git submodule add https://github.com/google/googletest.git gtest
+  include(gtest.cmake)
+
+  # GTest needs threading support
+  find_package (Threads)
+  target_link_libraries(gtest ${CMAKE_THREAD_LIBS_INIT})
+  target_link_libraries(gtest_main ${CMAKE_THREAD_LIBS_INIT})
+
   if (APPLE)
     add_definitions(-DGTEST_USE_OWN_TR1_TUPLE)
     add_definitions(-D__GLIBCXX__)
   endif (APPLE)
 
-  # This adds another subdirectory, which has the gilib library'.
-  add_subdirectory(gi)
-
-  # This adds another subdirectory, which has 'project(googletest)'.
-  add_subdirectory(googletest/googletest)
-
   enable_testing()
-
-  # Include the gtest library. gtest_SOURCE_DIR is available due to
-  # 'project(gtest)' above.
-  include_directories(${gtest_SOURCE_DIR}/include ${gtest_SOURCE_DIR})
 
   ##############
   # Unit Tests

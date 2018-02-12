@@ -55,7 +55,9 @@ protected:
 // Also note: use TEST_F instead of TEST to access the test fixture (from google test primer)
 TEST_F(Project1Test, MethodBarDoesAbc) {
 	int i = 0;
-	//p.foo(i); // we have access to p, declared in the fixture
+
+	d.independentMethod(i); // we have access to d, declared in the fixture
+
 	EXPECT_EQ(1, i);
 }
 

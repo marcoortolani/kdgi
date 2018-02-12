@@ -4,4 +4,6 @@ Dfa::Dfa() {
 
 }
 
-void Dfa::independentMethod(int &i) {}
+void Dfa::independentMethod(int &i) {
+  i = 1;
+}

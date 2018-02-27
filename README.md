@@ -8,14 +8,18 @@ Le librerie di testing sono aggiunte come un submodule tramite il comando:
 
 Per aggiornare il submodule, una volta clonato il progetto da git, si possono dare i comandi:
 
-git submodule init
+`git submodule init`
 
-git submodule update
+`git submodule update`
 
 oppure direttamente:
 
-git clone --recursive https://github.com/marcoortolani/kdgi.git
+`git clone --recursive https://github.com/marcoortolani/kdgi.git`
 
-Per compilare: mkdir build cd build cmake -G "Unix Makefiles" .. make
+Per compilare:
+`mkdir build cd build cmake -G "Unix Makefiles" ..`
+`make`
 
-oppure (per il testing): cmake -G "Unix Makefiles" -Dtest=on .. make && make test
+oppure (per il testing):
+`cmake -G "Unix Makefiles" -Dtest=on ..` 
+`make && make test`

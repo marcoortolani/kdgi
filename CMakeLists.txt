@@ -5,6 +5,8 @@ project("GI learner")
 # Enable all warning by default
 set(CMAKE_CXX_FLAGS "-g -Wall")
 
+set (CMAKE_CXX_STANDARD 11)
+
 ################################
 # Normal Libraries & Executables
 ################################
@@ -43,7 +45,8 @@ if (test)
   ##############
   # Unit Tests
   ##############
-  add_executable(runUnitTests test_dfa.cc)
+  #dare chmod 777 su ogni file
+  add_executable(runUnitTests unit_testing/tomita15_test.cc)
 
   # Standard linking to gtest stuff.
   target_link_libraries(runUnitTests gtest gtest_main)
@@ -53,9 +56,12 @@ if (test)
 
   # This is so you can do 'make test' to see all your tests run, instead of
   # manually running the executable runUnitTests to see those specific tests.
-  add_test(NAME that-test-I-made COMMAND runUnitTests)
+  add_test(NAME tomita_15 COMMAND runUnitTests)
 
   # You can also omit NAME and COMMAND. The second argument could be some other
   # test executable.
-  add_test(that-other-test-I-made runUnitTests)
+  # add_test(that-other-test-I-made runUnitTests)
+
+  #gtest_add_tests(TARGET runUnitTests SOURCES unit_testing/tomita15_test.cc)
+
 endif()

@@ -21,5 +21,8 @@ Per compilare:
 `make`
 
 oppure (per il testing):
-`cmake -G "Unix Makefiles" -Dtest=on ..` 
+`cmake -G "Unix Makefiles" -Dtest=on ..`
 `make && make test`
+
+Se si vuole vedere quale specifico test è riuscito/fallito occorre eseguire, all'interno della cartella build:
+`./runUnitTests`

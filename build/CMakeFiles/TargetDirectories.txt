@@ -1,0 +1,11 @@
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/CMakeFiles/rebuild_cache.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/CMakeFiles/edit_cache.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/CMakeFiles/test.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/CMakeFiles/gtest_main.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/CMakeFiles/gtest.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/CMakeFiles/runUnitTests.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/CMakeFiles/gilearner.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/gi/CMakeFiles/rebuild_cache.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/gi/CMakeFiles/edit_cache.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/gi/CMakeFiles/test.dir
+/Users/andrea/Desktop/tesi_ort/code/kdgi/build/gi/CMakeFiles/gi_lib.dir

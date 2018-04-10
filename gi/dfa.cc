@@ -38,7 +38,7 @@ using namespace std;
 #define MAX_DIMENSION_WMETHOD_TEST_SET 500000
 
 // Generation of random strings
-#define ITERATION_LIMIT_FOR_EVERY_GENERAL_PROBLEM 60000
+#define ITERATION_LIMIT_FOR_EVERY_GENERAL_PROBLEM 6000000
 
 Dfa::Dfa() {
   dim_alphabet_ = 0;

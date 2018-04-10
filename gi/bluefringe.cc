@@ -19,7 +19,7 @@
 #include "omp.h"	//OpenMP
 #endif
 
-#include "edsm.h"
+#include "bluefringe.h"
 #include "utilities.h"
 
 
@@ -246,8 +246,8 @@ RedBlueDfa* BlueFringe::build_apta(const vector<SYMBOL>* positive, const int dim
 
 	// PREFISSI
 	// Calcolo i prefissi e li salvo insieme ad un indice indicatore dello stato
-	map<vector<SYMBOL>,int, vector_int_size_less> prefissi;
-	typedef	map<vector<SYMBOL>,int,vector_int_size_less>::const_iterator It;
+	map<vector<SYMBOL>,int> prefissi;
+	typedef	map<vector<SYMBOL>,int>::const_iterator It;
 
 	typedef	vector<SYMBOL>::const_iterator It_posneg;
 

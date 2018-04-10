@@ -85,7 +85,7 @@ protected:
    * @param str A string to make a membership query.
    * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
    */
-  bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
+  //bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
 
   /**
    * Given a state, it returns a string of SYMBOLS which drives to
@@ -199,6 +199,13 @@ protected:
 
 
 public:
+//PROVVISORIO
+/**
+   * Make a membership query to dfa with the "str" string. Return "true" if the arrive state for "str" is acceptor, else "false".
+   * @param str A string to make a membership query.
+   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
+   */
+  bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
 
   /**
    * Make an instance of null dfa

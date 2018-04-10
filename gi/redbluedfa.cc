@@ -40,7 +40,7 @@ RedBlueDfa::RedBlueDfa(const Dfa &d1)
 
 
 RedBlueDfa::RedBlueDfa(const RedBlueDfa &d1)
-:Dfa(d1.num_states, d1.dim_alphabet, d1.alphabet, d1.start_state, (const int**) d1.ttable){
+:Dfa(d1.num_states_, d1.dim_alphabet_, d1.alphabet_, d1.start_state_, (const int**) d1.ttable_){
 
 	blue_states = new vector<int>;
 	red_states = new vector<int>;
@@ -67,7 +67,7 @@ RedBlueDfa::~RedBlueDfa(){
 
 
 Dfa* RedBlueDfa::to_dfa(){
-	return new Dfa(this->num_states,this->dim_alphabet, this->alphabet, this->start_state, (const int**) this->ttable);
+	return new Dfa(this->num_states_,this->dim_alphabet_, this->alphabet_, this->start_state_, (const int**) this->ttable_);
 }
 
 
@@ -89,13 +89,13 @@ RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
 	RedBlueDfa* finalDFA = new RedBlueDfa(n_final_states, get_dim_alphabet(), get_alphabet());
 	map<int, int> updated_transition;
 
-	for (int i = 0; i < num_states; ++i) {
+	for (int i = 0; i < num_states_; ++i) {
 		if (is_inside_red_states(i)) {
 
 			for (int j = 0; j <get_dim_alphabet() + 1; ++j) {
 
 				// Aggiungo lo stato al nuovo automa
-				finalDFA->get_ttable()[count][j] = ttable[i][j];
+				finalDFA->get_ttable()[count][j] = ttable_[i][j];
 
 				updated_transition[i] = count;
 			}
@@ -170,15 +170,15 @@ int RedBlueDfa::get_actual_num_states()
 
 	set<int> reacheable_states;
 
-	for(int i=0; i<num_states; ++i){
-		for(int j=0; j<dim_alphabet; ++j)
-			if(ttable[i][j] != i && ttable[i][j] != ND)
-				reacheable_states.insert(ttable[i][j]);
+	for(int i=0; i<num_states_; ++i){
+		for(int j=0; j<dim_alphabet_; ++j)
+			if(ttable_[i][j] != i && ttable_[i][j] != ND)
+				reacheable_states.insert(ttable_[i][j]);
 	}
 
 
 	// Insert also the start state, colud be not reacheable from everyone by definition
-	reacheable_states.insert(start_state);
+	reacheable_states.insert(start_state_);
 
 	return reacheable_states.size();
 
@@ -283,30 +283,30 @@ void RedBlueDfa::print_dfa_with_color(string title)
 	cout << endl<< "--------------------------" << endl;
 	cout << title << endl;
 	string header = "    ";
-		for(int i=0; i<dim_alphabet; ++i)
+		for(int i=0; i<dim_alphabet_; ++i)
 			header = header + " | "+ intTostring(i);
 		header = header + " - A  - C";
 	cout << header << endl;
 
-	for(int i=0; i<num_states; ++i){
+	for(int i=0; i<num_states_; ++i){
 		cout << "S"<<i<<"  ";
 
-		for(int j=0; j<dim_alphabet+1; ++j)
+		for(int j=0; j<dim_alphabet_+1; ++j)
 		{
 
-			if(j < dim_alphabet && ttable[i][j] == ND)				// Valori delle transizioni, o ND o il valore
+			if(j < dim_alphabet_ && ttable_[i][j] == ND)				// Valori delle transizioni, o ND o il valore
 				cout << " N ";
 
-			else if(j < dim_alphabet)
-				cout << " "<< ttable[i][j] <<" ";
+			else if(j < dim_alphabet_)
+				cout << " "<< ttable_[i][j] <<" ";
 
-			else if(j == dim_alphabet)								// Tipo dello stato: accettante o meno
+			else if(j == dim_alphabet_)								// Tipo dello stato: accettante o meno
 			{
-				if(ttable[i][j] == DFA_STATE_NON_ACCEPTING )
+				if(ttable_[i][j] == DFA_STATE_NON_ACCEPTING )
 					cout << "  / ";
-				else if(ttable[i][j] == DFA_STATE_ACCEPTING)
+				else if(ttable_[i][j] == DFA_STATE_ACCEPTING)
 					cout << " Ac ";
-				else if(ttable[i][j] == DFA_STATE_REJECTING)
+				else if(ttable_[i][j] == DFA_STATE_REJECTING)
 					cout << " Ri ";
 				else
 					cout << "  X ";
@@ -335,29 +335,29 @@ void RedBlueDfa::print_dfa_with_color_mapped_alphabet(string title)
 	cout << endl<< "--------------------------" << endl;
 	cout << title << endl;
 	string header = "    ";
-		for(int i=0; i<dim_alphabet; ++i)
-			header = header + " | "+ alphabet[i];
+		for(int i=0; i<dim_alphabet_; ++i)
+			header = header + " | "+ alphabet_[i];
 		header = header + " - A  - C";
 	cout << header << endl;
 
-	for(int i=0; i<num_states; ++i){
+	for(int i=0; i<num_states_; ++i){
 		cout << "S"<<i<<"  ";
 
-		for(int j=0; j<dim_alphabet+1; ++j)
+		for(int j=0; j<dim_alphabet_+1; ++j)
 		{
 
-			if(j < dim_alphabet && ttable[i][j] == ND)				// Valori delle transizioni, o ND o il valore
+			if(j < dim_alphabet_ && ttable_[i][j] == ND)				// Valori delle transizioni, o ND o il valore
 				cout << " N ";
-			else if(j < dim_alphabet)
-				cout << " "<< alphabet[ttable[i][j]] <<" ";
+			else if(j < dim_alphabet_)
+				cout << " "<< alphabet_[ttable_[i][j]] <<" ";
 
-			else if(j == dim_alphabet)								// Tipo dello stato: accettante o meno
+			else if(j == dim_alphabet_)								// Tipo dello stato: accettante o meno
 			{
-				if(ttable[i][j] == DFA_STATE_NON_ACCEPTING )
+				if(ttable_[i][j] == DFA_STATE_NON_ACCEPTING )
 					cout << "  / ";
-				else if(ttable[i][j] == DFA_STATE_ACCEPTING)
+				else if(ttable_[i][j] == DFA_STATE_ACCEPTING)
 					cout << " Ac ";
-				else if(ttable[i][j] == DFA_STATE_REJECTING)
+				else if(ttable_[i][j] == DFA_STATE_REJECTING)
 					cout << " Ri ";
 				else
 					cout << "  X ";
@@ -394,16 +394,16 @@ void RedBlueDfa::print_dfa_dot(string title, const char *file_path)
 	string shape = "";
 	string style="";
 	string color="";
-	for(int i=0; i<num_states; ++i)
+	for(int i=0; i<num_states_; ++i)
 	{
-		if(ttable[i][dim_alphabet] == DFA_STATE_UNREACHABLE)
+		if(ttable_[i][dim_alphabet_] == DFA_STATE_UNREACHABLE)
 			continue;
 
-		if(ttable[i][dim_alphabet] == DFA_STATE_ACCEPTING){
+		if(ttable_[i][dim_alphabet_] == DFA_STATE_ACCEPTING){
 			shape = "doublecircle";
 			style = "rounded,filled";
 		}
-		else if(ttable[i][dim_alphabet] == DFA_STATE_REJECTING){
+		else if(ttable_[i][dim_alphabet_] == DFA_STATE_REJECTING){
 			shape = "circle";
 			style = "filled";
 		} else {
@@ -423,9 +423,9 @@ void RedBlueDfa::print_dfa_dot(string title, const char *file_path)
 
 	// Transizioni
 	string transitions = "";
-	for(int i=0; i<num_states; ++i){
-		for(int j=0; j<dim_alphabet; ++j){
-			int arrive_state = ttable[i][j];
+	for(int i=0; i<num_states_; ++i){
+		for(int j=0; j<dim_alphabet_; ++j){
+			int arrive_state = ttable_[i][j];
 			if(arrive_state == ND)
 				continue;
 
@@ -462,16 +462,16 @@ void RedBlueDfa::print_dfa_dot_mapped_alphabet(string title, const char *file_pa
 	string shape = "";
 	string style="";
 	string color="";
-	for(int i=0; i<num_states; ++i)
+	for(int i=0; i<num_states_; ++i)
 	{
-		if(ttable[i][dim_alphabet] == DFA_STATE_UNREACHABLE)
+		if(ttable_[i][dim_alphabet_] == DFA_STATE_UNREACHABLE)
 			continue;
 
-		if(ttable[i][dim_alphabet] == DFA_STATE_ACCEPTING){
+		if(ttable_[i][dim_alphabet_] == DFA_STATE_ACCEPTING){
 			shape = "doublecircle";
 			style = "rounded,filled";
 		}
-		else if(ttable[i][dim_alphabet] == DFA_STATE_REJECTING){
+		else if(ttable_[i][dim_alphabet_] == DFA_STATE_REJECTING){
 			shape = "circle";
 			style = "filled";
 		} else {
@@ -495,17 +495,17 @@ void RedBlueDfa::print_dfa_dot_mapped_alphabet(string title, const char *file_pa
 	//map<string, string> label_for_transiction;					// La chiave individua una coppia di stati tra cui potrebbe esserci una transizione
 																	// Il valore è la label da stampare, contenente tutti i simboli per cui avviene quella transizione
 
-	vector< vector<string> > label_for_transiction(num_states, vector<string>(num_states));
+	vector< vector<string> > label_for_transiction(num_states_, vector<string>(num_states_));
 
-	for(int i=0; i<num_states; ++i){
-		for(int j=0; j<dim_alphabet; ++j){
+	for(int i=0; i<num_states_; ++i){
+		for(int j=0; j<dim_alphabet_; ++j){
 
-			int arrive_state = ttable[i][j];
+			int arrive_state = ttable_[i][j];
 
 			if(arrive_state == ND)
 				continue;
 
-			string transition_symbol = alphabet[j];
+			string transition_symbol = alphabet_[j];
 
 			if(label_for_transiction[i][arrive_state].length() == 0)
 				label_for_transiction[i][arrive_state] = label_for_transiction[i][arrive_state] + transition_symbol;
@@ -521,8 +521,8 @@ void RedBlueDfa::print_dfa_dot_mapped_alphabet(string title, const char *file_pa
 	}
 
 
-	for(int i=0; i<num_states; ++i)
-		for(int j=0; j<num_states; ++j){
+	for(int i=0; i<num_states_; ++i)
+		for(int j=0; j<num_states_; ++j){
 			if(label_for_transiction[i][j].compare(""))
 				transitions = transitions + "s"+intTostring(i)+" -> s"+intTostring(j)+" [label=\""+label_for_transiction[i][j]+"\"];\n";
 		}

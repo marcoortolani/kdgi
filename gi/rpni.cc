@@ -48,17 +48,15 @@ using namespace std;
 
 Rpni::Rpni(const char * path):BlueFringe(path){};
 
-//TODO: verificare che venga invoca il distruttore della classe "bluefringe"
+//TODO: verificare che venga invocato il distruttore della classe "bluefringe"
 Rpni::~Rpni(){};
 
 
 int Rpni::merge_heuristic_score(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* wp = NULL, int* wn=NULL)
 {
-
-	for(int i=0; i<dim_negative; ++i){
+	for(int i=0; i<dim_negative; ++i)
 		if(dfa1->membership_query_using_mapped_alphabet(negative[i]))
 			return 0;
-	}
 
 	return 1;
 }

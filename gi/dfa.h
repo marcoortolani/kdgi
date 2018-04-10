@@ -169,14 +169,6 @@ protected:
   size_t get_set_depth(std::vector<std::vector<SYMBOL> > set) const;
 
 
-  /**
-   * Make a membership query to dfa with the "str" string. Return "true" if the arrive state for "str" is acceptor, else "false".
-   * @param str A string to make a membership query.
-   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
-   */
-  bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
-
-
 public:
 
   /**
@@ -486,6 +478,14 @@ public:
    * @return array containing {tp,fn,tn,fp,precision,recall,f-measure,specifity,bcr}
    */
    long double* get_w_method_statistics(vector<string> test_set, Dfa* subject_dfa) const;
+
+   //PROVVISORIO 10/04/18
+   /**
+   * Make a membership query to dfa with the "str" string. Return "true" if the arrive state for "str" is acceptor, else "false".
+   * @param str A string to make a membership query.
+   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
+   */
+  bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
 
 };
 

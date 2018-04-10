@@ -1,3 +1,8 @@
+/*
+ * dfa.cc
+ */
+
+
 #include "dfa.h"
 #include <vector>
 #include <string>
@@ -730,7 +735,7 @@ int Dfa::get_arrive_state(const vector<SYMBOL> &dfa_string) const
 }
 
 
-void Dfa::print_dfa_ttable(string title)
+void Dfa::print_dfa_ttable_mapped_alphabet(string title)
 {
 	// Last column provides type of state (acceptor or rejector); its index is "dim_alphabet_"
 
@@ -778,7 +783,7 @@ void Dfa::print_dfa_ttable(string title)
 }
 
 
-void Dfa::print_dfa_ttable_mapped_alphabet(string title)
+void Dfa::print_dfa_ttable(string title)
 {
 	// It uses Mapped alphabet_
 
@@ -1477,7 +1482,28 @@ vector<int> 			Dfa::get_sink_states() const{
 		return sink_states;
 }
 
-string	Dfa::get_symbol_from_mapped_alphabet(const SYMBOL index) const
+string	Dfa::get_letter_from_mapped_alphabet(const SYMBOL index) const
+{
+	string symbol = "";
+
+	// Symbol corresponding to transition index
+	bool found_symbols = false;
+	for(auto it=mapped_alphabet_.begin(); it != mapped_alphabet_.end(); it++)
+		if(it->second == index){
+			symbol = it->first;
+			found_symbols = true;
+		}
+
+	//if(symbol.compare(" "))
+	//	cout << "PROBLEM!! There is a space symbol! ////////////////////////////////////////////////7" << endl;
+
+	if(!found_symbols)
+		cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
+
+	return symbol;
+}
+
+string	Dfa::get_letter_from_mapped_alphabet_test(const SYMBOL index) const
 {
 	string symbol = "";
 
@@ -1915,7 +1941,7 @@ size_t Dfa::get_set_depth(std::vector<std::vector<SYMBOL> > set_mapped) const{
     vector<string> strvec;
     for (SYMBOL sy:phrase)
     {
-      string tmp=get_symbol_from_mapped_alphabet(sy);
+      string tmp=get_letter_from_mapped_alphabet(sy);
       strvec.push_back(tmp);
     }
     string str;
@@ -2006,7 +2032,7 @@ vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa) const
 	for(auto &it1 : w_set) {
 		std::vector<char> strvec;
 		for (SYMBOL s: it1) {
-			char c = get_symbol_from_mapped_alphabet(s)[0];
+			char c = get_letter_from_mapped_alphabet(s)[0];
 			strvec.push_back(c);
 		}
 		std::string str(strvec.begin(),strvec.end());
@@ -2099,35 +2125,41 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 
 	int curr_transition_mapped_symbol =0;
 
-	int freq_to_stop = 1+2*(dim_alphabet_);	  // The inverse is probability to stop
+	int freq_to_stop = 1+2*(this->get_dim_alphabet());	  // The inverse is probability to stop
 
 	string current_transition_symbol = "";
 
 
-	bool found_one_minimun_accepted_str = false;
+	bool found_one_minimum_accepted_str = false;
 	bool go_next = true;
 	int current_state = 0;
 
 	int num_attempts = 0;
 	int num_neg_attempts = 0;
 
+	//int debug=1;
 	////////////////////////////////////////////////////
 	// POSITIVE SAMPLE
 	while(samples.size() < n_pos_samples)
-	{
+	{	
+		//cout<<"Iterazione: "<<debug<<endl;
+		//debug++;
+
 		// Init
 		vector<string> incremental_sample;
 		vector<string> positive_sample;
 
 
 		// New random transition - Input for first transition
-		curr_transition_mapped_symbol = rand() % dim_alphabet_;
+		curr_transition_mapped_symbol = rand() % this->get_dim_alphabet();
+		//cout<<curr_transition_mapped_symbol<<endl;
+		//cout<<"dim alph="<<this->get_dim_alphabet()<<endl;
 
 		// Symbol corresponding to transition index
-		current_transition_symbol = get_symbol_from_mapped_alphabet(curr_transition_mapped_symbol);
-
+		current_transition_symbol = this->get_letter_from_mapped_alphabet(curr_transition_mapped_symbol);
+		//cout<<current_transition_symbol<<endl;
 		if(current_transition_symbol == ""){
-			cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
+			cerr  << "ERROR: Random transition have no corresponding alphabet simbol" << endl;
 			continue;
 		}
 
@@ -2137,14 +2169,14 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 		current_state = 0;
 		int num_iteration = 0;
 		bool sink_state = false;
-		found_one_minimun_accepted_str = false;
+		found_one_minimum_accepted_str = false;
 
 		while(go_next)
 		{
 			current_state = ttable_[current_state][curr_transition_mapped_symbol];
 
 			// Symbol corresponding to transition index
-			current_transition_symbol = get_symbol_from_mapped_alphabet(curr_transition_mapped_symbol);
+			current_transition_symbol = get_letter_from_mapped_alphabet(curr_transition_mapped_symbol);
 			if(current_transition_symbol == "")
 					cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
 
@@ -2154,13 +2186,13 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 
 			// Visit DFA with input symbol: if accepting state than stop!
 			if(ttable_[current_state][dim_alphabet_] == DFA_STATE_ACCEPTING){
-				found_one_minimun_accepted_str = true;
+				found_one_minimum_accepted_str = true;
 				positive_sample = incremental_sample;
 			}
 
 
 			// Stop condition - // If it stops some good strings should have been generated
-			if( ((rand() % freq_to_stop) == 1 && found_one_minimun_accepted_str) || num_iteration > 5000)
+			if( ((rand() % freq_to_stop) == 1 && found_one_minimum_accepted_str) || num_iteration > 5000)
 				go_next = false;
 
 
@@ -2194,7 +2226,7 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 		//cout << "Positive string generated: " << positive_sample << endl;
 
 
-
+		
 
 	} // END while(positive_sample)
 
@@ -2251,7 +2283,7 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 					int new_integer_char = rand() % dim_alphabet_;
 
 					// Map symbol to integer
-					string new_symbol = get_symbol_from_mapped_alphabet(new_integer_char);
+					string new_symbol = get_letter_from_mapped_alphabet(new_integer_char);
 
 					// Substitution with the new symbol
 					incremental_sample[index_of_substituted_symbol] = new_symbol;
@@ -2264,7 +2296,7 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 					int new_integer_char = rand() % dim_alphabet_;
 
 					// Map symbol from integer to referred alphabet_ symbol (from int to string)
-					string new_symbol = get_symbol_from_mapped_alphabet(new_integer_char);
+					string new_symbol = get_letter_from_mapped_alphabet(new_integer_char);
 
 					incremental_sample.insert(incremental_sample.begin()+index_of_substituted_symbol, new_symbol);
 				}
@@ -2414,6 +2446,55 @@ bool Dfa::write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int
 	return true;
 }
 
+bool Dfa::write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path)
+{
+	// File variable
+	ofstream myfile;
+
+	// Write positive and negative samples on file
+	//cout << "Writing on: " << file_path << endl;
+
+	myfile.open(file_path);
+
+	myfile << dim_alphabet_ << "\n";
+
+
+	// Write alphabet_ symbols
+	myfile << "$ ";						// Empty string symbol
+	for(int i=0; i<dim_alphabet_; ++i)
+		myfile << alphabet_[i] <<" ";
+	myfile << "\n";
+
+
+	// Write positive sample
+	for(auto it = samples.begin(); it != samples.end(); ++it)
+	{
+		if(it->second == 1){
+			myfile << "+ ";
+			for(auto ch = (it->first).begin(); ch!=(it->first).end(); ++ch)
+				myfile << (*ch) << " ";
+			myfile << "\n";
+		}
+	}
+
+
+	// Write negative sample
+	for(auto it = samples.begin(); it != samples.end(); ++it)
+	{
+		if(it->second == 0){
+			myfile << "- ";
+			for(auto ch = (it->first).begin(); ch!=(it->first).end(); ++ch)
+				myfile << (*ch) << " ";
+			myfile << "\n";
+		}
+	}
+
+
+	myfile.close();
+
+	return true;
+}
+
 
 // Generazione random di samples
 bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path)
@@ -2433,3 +2514,138 @@ bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int
 
 	return exit_status;
 }
+
+set<vector<SYMBOL> > Dfa::get_alphabet_permutations() const{
+
+  int num_symbols=this->get_dim_alphabet();
+
+  SYMBOL to_permute[num_symbols];
+
+  set<vector<SYMBOL>> permutations;
+
+  vector<SYMBOL> initial_config;
+
+  for (int ii=0; ii<num_symbols;++ii){
+    initial_config.push_back(ii);
+    to_permute[ii]=ii;
+  }
+
+  permutations.insert(initial_config);
+
+  while (next_permutation(to_permute,to_permute+num_symbols)){
+    std::vector<SYMBOL> v(to_permute, to_permute+num_symbols);
+    permutations.insert(v);
+  }
+
+  return permutations;
+
+}
+
+set<vector<SYMBOL> > Dfa::succ_ab(int state_a, int state_b, Dfa* subject_dfa){
+
+  set<vector<SYMBOL> > pairs_target_states;
+
+  int num_symbols_subject_dfa=subject_dfa->get_dim_alphabet();
+  int num_symbols_reference_dfa=this->get_dim_alphabet();
+
+  Dfa* target;
+
+  // always execute the permutations on the greatest alphabet
+  set<vector<SYMBOL>> permutations;
+
+  if(num_symbols_reference_dfa>num_symbols_subject_dfa)
+    target=this;
+  else
+    target=subject_dfa;
+
+  permutations=target->get_alphabet_permutations();
+
+
+  // now permutations contains all the simple permutations of the alhpabet
+  // symbols of the target dfa. This is useful because we want to compare
+  // two generic DFAs with no given assumption upon their alphabets. So the idea
+  // is to try all the possible pair combinations and then, after computing all the
+  // similarity scores, we select that particular disposition with the maximum score.
+  int current_disposition=0;
+  int state_c,state_d;
+  for (auto disposition : permutations){
+    current_disposition++;
+    for(int sym : disposition){
+      state_c=this->get_ttable(state_a,sym);
+      state_d=subject_dfa->get_ttable(state_b,sym);
+      vector<SYMBOL> acc;
+      acc.push_back(state_c);acc.push_back(state_d);acc.push_back(sym);
+      acc.push_back(current_disposition);
+      pairs_target_states.insert(acc);
+    }
+  }
+
+  return pairs_target_states;
+}
+
+set<vector<SYMBOL>> Dfa::prev_ab(int state_a, int state_b, Dfa* subject_dfa){
+
+  set<vector<SYMBOL>> pairs_source_states;
+
+  int num_symbols_subject_dfa=subject_dfa->get_dim_alphabet();
+  int num_symbols_reference_dfa=this->get_dim_alphabet();
+
+  Dfa* target;
+
+  // always execute the permutations on the greatest alphabet
+  set<vector<SYMBOL>> permutations;
+
+  if(num_symbols_reference_dfa>num_symbols_subject_dfa)
+    target=this;
+  else
+    target=subject_dfa;
+
+  permutations=target->get_alphabet_permutations();
+
+  // now permutations contains all the simple permutations of the alhpabet
+  // symbols of the target dfa. This is useful because we want to compare
+  // two generic DFAs with no given assumption upon their alphabets. So the idea
+  // is to try all the possible pair combinations and then, after computing all the
+  // similarity scores, we select that particular disposition with the maximum score.
+  int current_disposition=0;
+  int state_c,state_d;
+
+  for (auto disposition : permutations){
+    current_disposition++;
+    for(int sym : disposition){
+
+      for(int x=0; x<this->get_dim_alphabet();x++){
+        if(state_a==this->get_ttable(x,sym)){
+          state_c=x;
+          break;
+        }
+      }
+
+      for(int y=0; y<subject_dfa->get_dim_alphabet();y++){
+        if(state_b==this->get_ttable(y,sym)){
+          state_d=y;
+          break;
+        }
+      }
+
+      vector<SYMBOL> acc;
+      acc.push_back(state_c);acc.push_back(state_d);acc.push_back(sym);
+      acc.push_back(current_disposition);
+      pairs_source_states.insert(acc);
+    }
+  }
+
+  return pairs_source_states;
+}
+
+
+/*
+map<int,map<int, double[3]> > Dfa::compute_scores(Dfa* subject_dfa, double attenuation_ratio){
+
+  map<int,map<int, double[3]> > pair_scores;
+
+  int linear_system_matrix_dim=(this->get_num_states()*subject_dfa->get_num_states());
+
+
+}
+*/

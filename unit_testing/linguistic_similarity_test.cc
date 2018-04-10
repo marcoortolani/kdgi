@@ -5,14 +5,14 @@
 #include "testDfa.h"
 
 
-class Tomita15Test : public ::testing::Test {
+class LinguisticSimilarityTest : public ::testing::Test {
 protected:
 
-	Tomita15Test() {
+	LinguisticSimilarityTest() {
 		// You can do set-up work for each test here.
 	}
 
-	virtual ~Tomita15Test() {
+	virtual ~LinguisticSimilarityTest() {
 		// You can do clean-up work that doesn't throw exceptions here.
 	}
 
@@ -39,7 +39,7 @@ protected:
 };
 
 
-TEST_F(Tomita15Test, coverSet){
+TEST_F(LinguisticSimilarityTest, coverSet){
 
 	vector<string> cover_set_ref={"","a","b","c","aa"};
 	vector<vector<SYMBOL > > cover_set_mapped=reference_Tomita15->get_cover_set();
@@ -49,7 +49,7 @@ TEST_F(Tomita15Test, coverSet){
     vector<string> strvec1;
     for(SYMBOL sy1:phrase1)
     {
-      string tmp1=reference_Tomita15->get_symbol_from_mapped_alphabet(sy1);
+      string tmp1=reference_Tomita15->get_letter_from_mapped_alphabet(sy1);
       strvec1.push_back(tmp1);
     }
     string str1;
@@ -60,7 +60,7 @@ TEST_F(Tomita15Test, coverSet){
 	EXPECT_EQ(1,equal(cover_set_ref.begin(),cover_set_ref.end(),cover_set1.begin()));
 }
 
-TEST_F(Tomita15Test, characterizationSet){
+TEST_F(LinguisticSimilarityTest, characterizationSet){
 	vector<string> characterization_set_ref={"a","b","aa"};
 
 	vector<vector<SYMBOL > > characterization_set_mapped=reference_Tomita15->get_characterization_set();
@@ -70,7 +70,7 @@ TEST_F(Tomita15Test, characterizationSet){
     vector<string> strvec1;
     for(SYMBOL sy1:phrase1)
     {
-      string tmp1=reference_Tomita15->get_symbol_from_mapped_alphabet(sy1);
+      string tmp1=reference_Tomita15->get_letter_from_mapped_alphabet(sy1);
       strvec1.push_back(tmp1);
     }
     string str1;
@@ -82,7 +82,7 @@ TEST_F(Tomita15Test, characterizationSet){
 }
 
 
-TEST_F(Tomita15Test, reflectiveTestSet) {
+TEST_F(LinguisticSimilarityTest, reflectiveTestSet) {
 	vector<string> test_set=reference_Tomita15->get_w_method_test_set(subject_Tomita15);
 
 	int tp=0;
@@ -110,7 +110,7 @@ TEST_F(Tomita15Test, reflectiveTestSet) {
 }
 
 
-TEST_F(Tomita15Test, tableFilling){
+TEST_F(LinguisticSimilarityTest, tableFilling){
 	vector<string> distincts_table_ref={"a", "b", "distinct", "a", "a", "distinct", "a", "distinct", "b", "distinct"};
 
   SYMBOL* distincts_table=reference_Tomita15->table_filling();
@@ -119,7 +119,7 @@ TEST_F(Tomita15Test, tableFilling){
   for(int i=0;i<(n*(n-1)/2);++i){
 		SYMBOL tmp=distincts_table[i];
 		if (tmp<reference_Tomita15->get_dim_alphabet()){
-			string entry = reference_Tomita15->get_symbol_from_mapped_alphabet(distincts_table[i]);
+			string entry = reference_Tomita15->get_letter_from_mapped_alphabet(distincts_table[i]);
 			distincts_table1.push_back(entry);
 		}
     else	distincts_table1.push_back("distinct");
@@ -129,7 +129,7 @@ TEST_F(Tomita15Test, tableFilling){
 }
 
 
-TEST_F(Tomita15Test, accessStrings){
+TEST_F(LinguisticSimilarityTest, accessStrings){
 	vector<string> access_strings_ref={"a","b","aa","c"};
 
 	map<int, vector<SYMBOL> > access_strings=reference_Tomita15->get_access_strings();
@@ -139,7 +139,7 @@ TEST_F(Tomita15Test, accessStrings){
     vector<string> strvectest;
     for (SYMBOL sytest:it.second)
     {
-      string tmptest=reference_Tomita15->get_symbol_from_mapped_alphabet(sytest);
+      string tmptest=reference_Tomita15->get_letter_from_mapped_alphabet(sytest);
       strvectest.push_back(tmptest);
     }
 		string str1;

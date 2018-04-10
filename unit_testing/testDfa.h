@@ -1,11 +1,17 @@
+//******** Thin-wrapper to do unit-testing of protected methods ********
 #include "dfa.h"
 
 class TestDfa : public Dfa{
-  friend class Tomita15Test;
-  FRIEND_TEST(Tomita15Test, coverSet);
-  FRIEND_TEST(Tomita15Test, characterizationSet);
-  FRIEND_TEST(Tomita15Test, accessStrings);
-  FRIEND_TEST(Tomita15Test, tableFilling);
+
+  friend class LinguisticSimilarityTest;
+  friend class StructuralSimilarityTest;
+
+  FRIEND_TEST(LinguisticSimilarityTest, coverSet);
+  FRIEND_TEST(LinguisticSimilarityTest, characterizationSet);
+  FRIEND_TEST(LinguisticSimilarityTest, accessStrings);
+  FRIEND_TEST(LinguisticSimilarityTest, tableFilling);
+
+  FRIEND_TEST(StructuralSimilarityTest, succ_ab);
 
 public:
   using Dfa::Dfa;

@@ -1,3 +1,8 @@
+/*
+ * dfa.h
+ */
+
+
 #ifndef DFA_H_
 #define DFA_H_
 #include <string>
@@ -63,10 +68,10 @@ protected:
 
 
   /**
-   * It returns the associated symbol to an index in a mapped alphabet.
+   * It returns the associated letter to a SYMBOL in a mapped alphabet.
    * @param index
    */
-  string	get_symbol_from_mapped_alphabet(const SYMBOL index) const;
+  string	get_letter_from_mapped_alphabet(const SYMBOL index) const;
 
   /**
    * Return a vector<SYMBOL> string from a sample made up of alphabet symbols.
@@ -158,6 +163,40 @@ protected:
    * @return max depth of a set
    */
   size_t get_set_depth(std::vector<std::vector<SYMBOL> > set) const;
+
+  //******** STRUCTURAL SIMILARITY: ********
+
+  /**
+   * Given a DFA X and a subject DFA Y, for each label 'sigma'
+   * belonging to the union of the two DFAs alphabet, this function
+   * returns the individual pairs of target states that can be reached by
+   * matching transitions.
+   * @param state_a of DFA X
+   * @param state_b of DFA Y
+   * @param subject_dfa
+   * @return pairs_target_states that can be reached by matching transitions,
+   * these are vectors of SYMBOLS of 4 elements: state_c of DFA X reached by
+   * processing the SYMBOL sigma, state_d of DFA Y reached by processing
+   * the SYMBOL sigma, the SYMBOL sigma itself, and the index of the current
+   * permutation of the subject alphabet
+   */
+  //set<vector<SYMBOL>> succ_ab(int state_a, int state_b, Dfa* subject_dfa);
+
+  /**
+   * This is the specular of succ_ab and it returns the matching
+   * incoming transitions
+   * @param state_a of DFA X
+   * @param state_b of DFA Y
+   * @param subject_dfa
+   * @return pairs_source_states from which depart matching transitions,
+   * these are vectors of SYMBOLS of 4 elements: state_c of DFA X reached by
+   * processing the SYMBOL sigma, state_d of DFA Y reached by processing
+   * the SYMBOL sigma, the SYMBOL sigma itself, and the index of the current
+   * permutation of the subject alphabet
+   */
+  set<vector<SYMBOL>> prev_ab(int state_a, int state_b, Dfa* subject_dfa);
+
+
 
 public:
 
@@ -363,10 +402,10 @@ public:
   void 	print_dfa_in_text_file(const string file_path);
 
   /**
-   * It returns the associated symbol to an index in a mapped alphabet.
+   * It returns the associated letter to a index in a mapped alphabet.
    * @param index
    */
-  string	get_symbol_from_mapped_alphabet_test(const SYMBOL index) const;
+  string	get_letter_from_mapped_alphabet_test(const SYMBOL index) const;
 
   /**
    * Calculate the similarity of 2 DFA's languages
@@ -431,11 +470,18 @@ public:
 
   /**
    * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
-   * @param n_pos_samples Number of positive samples to be generated.
-   * @param n_neg_samples Number of negative samples to be generated.
+   * @param samples
+   * @param weights
    * @param file_paht File path with generated samples.
    */
   bool 				write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path);
+
+/**
+   * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
+   * @param samples
+   * @param file_paht File path with generated samples.
+   */
+  bool 				write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path);
 
   /**
    * It generates a set of random strings accepted and rejected by the current DFA and DIRECTLY write them to a file.
@@ -463,6 +509,24 @@ public:
    */
    long double* get_w_method_statistics(vector<string> test_set, Dfa* subject_dfa) const;
 
+   //******** STRUCTURAL SIMILARITY: ********
+
+   /**
+    * Computes the similarity scores for every pair of states of the two DFAs
+    * @param subject_dfa
+    * @param attenuation_ratio k which gives precedence to state pairs
+    *       closer to the original pair of states
+    * @return pair-scores in the form of a 3D array
+    */
+  map<int,map<int, double[3]> > compute_scores(Dfa* subject_dfa, double attenuation_ratio);
+
+  /**
+   * Compute the set of simple permutations of the DFA's alphabet
+   * @return permutations
+   */
+  set<vector<SYMBOL> > get_alphabet_permutations() const;
+
+  set<vector<SYMBOL>> succ_ab(int state_a, int state_b, Dfa* subject_dfa);
 };
 
-#endif
+#endif    /* DFA_H_ */

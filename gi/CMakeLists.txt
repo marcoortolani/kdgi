@@ -1,1 +1,1 @@
-add_library(gi_lib dfa.cc utilities.cc rpni.cc bluefringe.cc redbluedfa.cc)
+add_library(gi_lib dfa.cc utilities.cc)

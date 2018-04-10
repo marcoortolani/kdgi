@@ -290,10 +290,10 @@ void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<string> &t
 	//target is the target dfa
 	for(auto &sample : test_set)
 	{
-		if ( target->membership_query_using_alphabet_symbols(sample) ) //classification of the target (true model of the sample)
+		if ( target->membership_query(sample) ) //classification of the target (true model of the sample)
 	    {
 			++stats.dim_positive;
-			if(dfa1->membership_query_using_alphabet_symbols(sample))
+			if(dfa1->membership_query(sample))
 			   ++stats.tp;
 			else
 			   ++stats.fn;
@@ -301,7 +301,7 @@ void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<string> &t
 		else //in the target sample is rejecting
 		{
 			++stats.dim_negative;
-			if(dfa1->membership_query_using_alphabet_symbols(sample)) //positive in dfa1 and negative in the target dfa
+			if(dfa1->membership_query(sample)) //positive in dfa1 and negative in the target dfa
 			   ++stats.fp;
 			else //in dfa1 is sample is rejecting too
 			   ++stats.tn;

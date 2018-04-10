@@ -1319,7 +1319,7 @@ bool Dfa::membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) cons
 		return false;
 }
 
-bool Dfa::membership_query_using_alphabet_symbols(string str)const{
+bool Dfa::membership_query(string str)const{
 
 	vector<SYMBOL> translated_sample = translate_sample_using_mapped_alphabet(str);
 
@@ -1482,28 +1482,8 @@ vector<int> 			Dfa::get_sink_states() const{
 		return sink_states;
 }
 
+
 string	Dfa::get_letter_from_mapped_alphabet(const SYMBOL index) const
-{
-	string symbol = "";
-
-	// Symbol corresponding to transition index
-	bool found_symbols = false;
-	for(auto it=mapped_alphabet_.begin(); it != mapped_alphabet_.end(); it++)
-		if(it->second == index){
-			symbol = it->first;
-			found_symbols = true;
-		}
-
-	//if(symbol.compare(" "))
-	//	cout << "PROBLEM!! There is a space symbol! ////////////////////////////////////////////////7" << endl;
-
-	if(!found_symbols)
-		cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
-
-	return symbol;
-}
-
-string	Dfa::get_letter_from_mapped_alphabet_test(const SYMBOL index) const
 {
 	string symbol = "";
 
@@ -1610,7 +1590,7 @@ vector<vector<SYMBOL>> Dfa::get_cover_set() const
 	return cover_set;
 }
 
-map<int, vector<SYMBOL> >  Dfa::get_access_strings() const
+map<int, vector<SYMBOL> >  Dfa::get_access_strings_mapped_alphabet() const
 {
 
 	//// Support structers
@@ -2042,11 +2022,11 @@ vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa) const
 	return w_vec;
 }
 
-vector<string>  Dfa::get_access_strings_with_alphabet_symbols() const
+vector<string>  Dfa::get_access_strings() const
 {
 
 	// Access strings using the internal mapped symbol (usually integer)
-	map<int, vector<SYMBOL>> access_strings = get_access_strings();
+	map<int, vector<SYMBOL>> access_strings = get_access_strings_mapped_alphabet();
 
 	// Final access strings usign the DFA alphabet_
 	vector<string> mapped_access_strings;
@@ -2079,8 +2059,8 @@ long double* Dfa::get_w_method_statistics(vector<string> test_set, Dfa* subject_
   int tn=0;
   int fp=0;
   for(auto test : test_set){
-    bool q1=this->membership_query_using_alphabet_symbols(test);
-    bool q2=subject_dfa->membership_query_using_alphabet_symbols(test);
+    bool q1=this->membership_query(test);
+    bool q2=subject_dfa->membership_query(test);
     if(q1){
       if(q2)  tp++;
       else  fn++;
@@ -2514,138 +2494,3 @@ bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int
 
 	return exit_status;
 }
-
-set<vector<SYMBOL> > Dfa::get_alphabet_permutations() const{
-
-  int num_symbols=this->get_dim_alphabet();
-
-  SYMBOL to_permute[num_symbols];
-
-  set<vector<SYMBOL>> permutations;
-
-  vector<SYMBOL> initial_config;
-
-  for (int ii=0; ii<num_symbols;++ii){
-    initial_config.push_back(ii);
-    to_permute[ii]=ii;
-  }
-
-  permutations.insert(initial_config);
-
-  while (next_permutation(to_permute,to_permute+num_symbols)){
-    std::vector<SYMBOL> v(to_permute, to_permute+num_symbols);
-    permutations.insert(v);
-  }
-
-  return permutations;
-
-}
-
-set<vector<SYMBOL> > Dfa::succ_ab(int state_a, int state_b, Dfa* subject_dfa){
-
-  set<vector<SYMBOL> > pairs_target_states;
-
-  int num_symbols_subject_dfa=subject_dfa->get_dim_alphabet();
-  int num_symbols_reference_dfa=this->get_dim_alphabet();
-
-  Dfa* target;
-
-  // always execute the permutations on the greatest alphabet
-  set<vector<SYMBOL>> permutations;
-
-  if(num_symbols_reference_dfa>num_symbols_subject_dfa)
-    target=this;
-  else
-    target=subject_dfa;
-
-  permutations=target->get_alphabet_permutations();
-
-
-  // now permutations contains all the simple permutations of the alhpabet
-  // symbols of the target dfa. This is useful because we want to compare
-  // two generic DFAs with no given assumption upon their alphabets. So the idea
-  // is to try all the possible pair combinations and then, after computing all the
-  // similarity scores, we select that particular disposition with the maximum score.
-  int current_disposition=0;
-  int state_c,state_d;
-  for (auto disposition : permutations){
-    current_disposition++;
-    for(int sym : disposition){
-      state_c=this->get_ttable(state_a,sym);
-      state_d=subject_dfa->get_ttable(state_b,sym);
-      vector<SYMBOL> acc;
-      acc.push_back(state_c);acc.push_back(state_d);acc.push_back(sym);
-      acc.push_back(current_disposition);
-      pairs_target_states.insert(acc);
-    }
-  }
-
-  return pairs_target_states;
-}
-
-set<vector<SYMBOL>> Dfa::prev_ab(int state_a, int state_b, Dfa* subject_dfa){
-
-  set<vector<SYMBOL>> pairs_source_states;
-
-  int num_symbols_subject_dfa=subject_dfa->get_dim_alphabet();
-  int num_symbols_reference_dfa=this->get_dim_alphabet();
-
-  Dfa* target;
-
-  // always execute the permutations on the greatest alphabet
-  set<vector<SYMBOL>> permutations;
-
-  if(num_symbols_reference_dfa>num_symbols_subject_dfa)
-    target=this;
-  else
-    target=subject_dfa;
-
-  permutations=target->get_alphabet_permutations();
-
-  // now permutations contains all the simple permutations of the alhpabet
-  // symbols of the target dfa. This is useful because we want to compare
-  // two generic DFAs with no given assumption upon their alphabets. So the idea
-  // is to try all the possible pair combinations and then, after computing all the
-  // similarity scores, we select that particular disposition with the maximum score.
-  int current_disposition=0;
-  int state_c,state_d;
-
-  for (auto disposition : permutations){
-    current_disposition++;
-    for(int sym : disposition){
-
-      for(int x=0; x<this->get_dim_alphabet();x++){
-        if(state_a==this->get_ttable(x,sym)){
-          state_c=x;
-          break;
-        }
-      }
-
-      for(int y=0; y<subject_dfa->get_dim_alphabet();y++){
-        if(state_b==this->get_ttable(y,sym)){
-          state_d=y;
-          break;
-        }
-      }
-
-      vector<SYMBOL> acc;
-      acc.push_back(state_c);acc.push_back(state_d);acc.push_back(sym);
-      acc.push_back(current_disposition);
-      pairs_source_states.insert(acc);
-    }
-  }
-
-  return pairs_source_states;
-}
-
-
-/*
-map<int,map<int, double[3]> > Dfa::compute_scores(Dfa* subject_dfa, double attenuation_ratio){
-
-  map<int,map<int, double[3]> > pair_scores;
-
-  int linear_system_matrix_dim=(this->get_num_states()*subject_dfa->get_num_states());
-
-
-}
-*/

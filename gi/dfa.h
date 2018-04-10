@@ -133,7 +133,7 @@ protected:
    * Return a map of access strings paired with state indexes, for all the states of DFA.
    * @return A map that pair a state index with its access string.
    */
-  map<int, vector<SYMBOL> >  	get_access_strings() const;
+  map<int, vector<SYMBOL> >  	get_access_strings_mapped_alphabet() const;
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -164,48 +164,16 @@ protected:
    */
   size_t get_set_depth(std::vector<std::vector<SYMBOL> > set) const;
 
-  //******** STRUCTURAL SIMILARITY: ********
 
   /**
-   * Given a DFA X and a subject DFA Y, for each label 'sigma'
-   * belonging to the union of the two DFAs alphabet, this function
-   * returns the individual pairs of target states that can be reached by
-   * matching transitions.
-   * @param state_a of DFA X
-   * @param state_b of DFA Y
-   * @param subject_dfa
-   * @return pairs_target_states that can be reached by matching transitions,
-   * these are vectors of SYMBOLS of 4 elements: state_c of DFA X reached by
-   * processing the SYMBOL sigma, state_d of DFA Y reached by processing
-   * the SYMBOL sigma, the SYMBOL sigma itself, and the index of the current
-   * permutation of the subject alphabet
-   */
-  //set<vector<SYMBOL>> succ_ab(int state_a, int state_b, Dfa* subject_dfa);
-
-  /**
-   * This is the specular of succ_ab and it returns the matching
-   * incoming transitions
-   * @param state_a of DFA X
-   * @param state_b of DFA Y
-   * @param subject_dfa
-   * @return pairs_source_states from which depart matching transitions,
-   * these are vectors of SYMBOLS of 4 elements: state_c of DFA X reached by
-   * processing the SYMBOL sigma, state_d of DFA Y reached by processing
-   * the SYMBOL sigma, the SYMBOL sigma itself, and the index of the current
-   * permutation of the subject alphabet
-   */
-  set<vector<SYMBOL>> prev_ab(int state_a, int state_b, Dfa* subject_dfa);
-
-
-
-public:
-//PROVVISORIO
-/**
    * Make a membership query to dfa with the "str" string. Return "true" if the arrive state for "str" is acceptor, else "false".
    * @param str A string to make a membership query.
    * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
    */
   bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
+
+
+public:
 
   /**
    * Make an instance of null dfa
@@ -408,11 +376,6 @@ public:
    */
   void 	print_dfa_in_text_file(const string file_path);
 
-  /**
-   * It returns the associated letter to a index in a mapped alphabet.
-   * @param index
-   */
-  string	get_letter_from_mapped_alphabet_test(const SYMBOL index) const;
 
   /**
    * Calculate the similarity of 2 DFA's languages
@@ -440,13 +403,13 @@ public:
    * @param str A string to make a membership query.
    * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
    */
-  bool   membership_query_using_alphabet_symbols(string str) const;
+  bool   membership_query(string str) const;
 
   /**
    * Return a set of access strings for all the states of DFA.
    * @return A vector of string (true string!) characterizing current DFA, they adopted the alphabet.
    */
-  vector<string> 				get_access_strings_with_alphabet_symbols() const;
+  vector<string> 				get_access_strings() const;
 
   /**
    * It returns a set random samples (all different) generated from current DFA.
@@ -516,24 +479,6 @@ public:
    */
    long double* get_w_method_statistics(vector<string> test_set, Dfa* subject_dfa) const;
 
-   //******** STRUCTURAL SIMILARITY: ********
-
-   /**
-    * Computes the similarity scores for every pair of states of the two DFAs
-    * @param subject_dfa
-    * @param attenuation_ratio k which gives precedence to state pairs
-    *       closer to the original pair of states
-    * @return pair-scores in the form of a 3D array
-    */
-  map<int,map<int, double[3]> > compute_scores(Dfa* subject_dfa, double attenuation_ratio);
-
-  /**
-   * Compute the set of simple permutations of the DFA's alphabet
-   * @return permutations
-   */
-  set<vector<SYMBOL> > get_alphabet_permutations() const;
-
-  set<vector<SYMBOL>> succ_ab(int state_a, int state_b, Dfa* subject_dfa);
 };
 
 #endif    /* DFA_H_ */

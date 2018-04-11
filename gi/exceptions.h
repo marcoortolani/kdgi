@@ -46,7 +46,7 @@ using namespace std;
 		  public:
 			const char * what () const throw ()
 			{
-				return "Invalid trainin set format in file.";
+				return "Invalid training set format in file.";
 			}
 		};
 

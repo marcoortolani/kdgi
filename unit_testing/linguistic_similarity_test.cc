@@ -60,6 +60,7 @@ TEST_F(LinguisticSimilarityTest, coverSet){
 	EXPECT_EQ(1,equal(cover_set_ref.begin(),cover_set_ref.end(),cover_set1.begin()));
 }
 
+
 TEST_F(LinguisticSimilarityTest, characterizationSet){
 	vector<string> characterization_set_ref={"a","b","aa"};
 
@@ -90,8 +91,8 @@ TEST_F(LinguisticSimilarityTest, reflectiveTestSet) {
   int tn=0;
   int fp=0;
   for(auto test : test_set){
-    bool q1=reference_Tomita15->membership_query_using_alphabet_symbols(test);
-    bool q2=subject_Tomita15->membership_query_using_alphabet_symbols(test);
+    bool q1=reference_Tomita15->membership_query(test);
+    bool q2=subject_Tomita15->membership_query(test);
     if(q1){
       if(q2)  tp++;
       else  fn++;
@@ -132,7 +133,7 @@ TEST_F(LinguisticSimilarityTest, tableFilling){
 TEST_F(LinguisticSimilarityTest, accessStrings){
 	vector<string> access_strings_ref={"a","b","aa","c"};
 
-	map<int, vector<SYMBOL> > access_strings=reference_Tomita15->get_access_strings();
+	map<int, vector<SYMBOL> > access_strings=reference_Tomita15->get_access_strings_mapped_alphabet();
 	vector<string> access_strings1;
   for(auto it : access_strings)
   {

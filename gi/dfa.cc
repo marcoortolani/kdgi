@@ -2053,7 +2053,7 @@ vector<string>  Dfa::get_access_strings() const
 
 long double* Dfa::get_w_method_statistics(vector<string> test_set, Dfa* subject_dfa) const
 {
-  long double statistics[9];
+  static long double statistics[9];
   int tp=0;
   int fn=0;
   int tn=0;

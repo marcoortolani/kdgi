@@ -46,7 +46,7 @@ if (test)
   # Unit Tests
   ##############
   #dare chmod 777 su ogni file
-  add_executable(runUnitTests unit_testing/linguistic_similarity_test.cc)
+  add_executable(runUnitTests unit_testing/linguistic_similarity_test.cc unit_testing/base_dfa_test.cc)
 
   # Standard linking to gtest stuff.
   target_link_libraries(runUnitTests gtest gtest_main)
@@ -56,7 +56,7 @@ if (test)
 
   # This is so you can do 'make test' to see all your tests run, instead of
   # manually running the executable runUnitTests to see those specific tests.
-  add_test(NAME DFAlinguisticSimilarity COMMAND runUnitTests)
+  add_test(NAME DfaTestRoutines COMMAND runUnitTests)
 
   # You can also omit NAME and COMMAND. The second argument could be some other
   # test executable.

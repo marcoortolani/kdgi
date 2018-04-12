@@ -26,3 +26,6 @@ oppure (per il testing):
 
 Se si vuole vedere quale specifico test è riuscito/fallito occorre eseguire, all'interno della cartella build:
 `./runUnitTests`
+
+Per informazioni circa l'utilizzo di `git merge` e `git rebase` per condividere codice tra branches, leggere: 
+HOWTO_branching.txt

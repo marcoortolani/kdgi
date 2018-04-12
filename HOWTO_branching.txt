@@ -1,0 +1,57 @@
+STRUTTURA DELLA REPO
+
+Seguendo la filosofia riportata qui: http://nvie.com/posts/a-successful-git-branching-model/
+la repo è costituita da tre branch:
+1) master			-> contiene la struttura grezza del Dfa, ed è quindi la radice della repo
+2) active-learning
+3) passive-learning
+I branch di active e passive learning sono dei features branch, sui quali vari sviluppatori
+lavoreranno per sviluppare metodi che non saranno inter-feature-branch-dipendenti.
+In altre parole, nella prima fase di sviluppo, chi lavora al passive-learning non deve vedere
+metodi appartenenti all'active-learning, e viceversa.
+
+Può però in certe occasioni nascere l'esigenza di condividere certe porzioni di codice tra tutti i branch.
+
+COME CONDIVIDERE CODICE TRA BRANCH?
+
+Ipotizziamo di star lavorando nel branch passive-learning e di aver individuato e corretto un bug
+in "dfa.cc". Poichè abbiamo toccato il cuore della repo vogliamo che TUTTI possano avere i nuovi
+fixes (nuovi metodi e tutto ciò che si vuole).
+
+Prima di tutto ciò che si deve fare è isolare il codice da voler aggiungere al branch master e fare un push.
+
+Quindi creiamo nella nostra macchina una nuova cartella in cui andremo ad allocare il branch master
+	mkdir kdgi-master
+
+Riscarichiamo il branch master della repo facendo il clone:
+	cd kdgi-master
+	git clone --recursive https://github.com/marcoortolani/kdgi.git -b master
+	cd kdgi
+
+Apportiamo tutte le modifiche che vogliamo apportare alla struttura base del Dfa e aggiorniamo la repo:
+	git add *
+	git commit -m "Descrizione modifiche"
+	git push origin master
+
+Adesso dobbiamo effettivamente propagare i cambiamenti agli altri branch, riportiamo la procedura
+per il branch active-learning, che ovviamente è identica per qualsiasi altro branch.
+
+Come riportato in https://www.atlassian.com/git/tutorials/merging-vs-rebasing
+abbiamo due maniere per propagare i cambiamenti dal branch master:
+1)merge 		-> incorpora i commit di differenza effettuando un ulteriore "merge commit", legando insieme le storie dei due branch
+2)rebase		-> muove l'intero branch corrente, attaccandolo alla testa del branch master. Riscrive l'intera storia del progetto, creandone una più pulita, ma si tratta di un'operazione distruttiva.
+
+Siccome quello che noi stiamo facendo è propagare cambiamenti dal master ad altri branch sottostanti, possiamo usare rebase senza problemi.
+Descriviamo in ogni caso entrambe le procedure:
+
+MERGE
+Posizioniamoci nel branch da aggiornare e diamo il comando di merging:
+	git checkout active-learning
+	git merge origin/master
+	git push
+
+REBASE
+Posizioniamoci nel branch da aggiornare e diamo il comando di rebasing:
+	git checkout active-learning
+	git merge origin/master
+	git push

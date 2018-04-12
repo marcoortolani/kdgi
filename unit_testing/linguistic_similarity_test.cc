@@ -84,7 +84,7 @@ TEST_F(LinguisticSimilarityTest, characterizationSet){
 
 
 TEST_F(LinguisticSimilarityTest, reflectiveTestSet) {
-	vector<string> test_set=reference_Tomita15->get_w_method_test_set(subject_Tomita15);
+	vector<string> test_set=reference_Tomita15->get_w_method_test_set(subject_Tomita15,true);
 
 	int tp=0;
   int fn=0;

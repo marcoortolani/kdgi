@@ -125,9 +125,13 @@ protected:
 
   /**
    * Return a W-METHOD test set of strings for current DFA.
+   * @param target_dfa
+   * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k
+   * in general sigma is true, it false for debugging purposes
    * @return A vectory of strings (i.e. vector<SYMBOL>)
    */
-  set<vector<SYMBOL> > 		    get_w_method_test_set_mapped_alphabet(Dfa* target_dfa) const;
+  set<vector<SYMBOL> > 		    get_w_method_test_set_mapped_alphabet(Dfa* target_dfa, bool sigma) const;
+
 
   /**
    * Return a map of access strings paired with state indexes, for all the states of DFA.
@@ -465,9 +469,13 @@ public:
 
   /**
    * Return a W-METHOD test set of strings for current DFA.
+   * @param target_dfa
+   * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k
+   * in general sigma is true, it false for debugging purposes
    * @return A vector of strings
    */
-  vector<string> 		          get_w_method_test_set(Dfa* target_dfa) const;
+  vector<string> 		          get_w_method_test_set(Dfa* target_dfa, bool sigma) const;
+
 
   /**
    * Given a test set and the reference and subject dfa,

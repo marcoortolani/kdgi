@@ -488,9 +488,9 @@ bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_meas
 		   if( abs(n_states_this_dfa - n_states_dfa_to_compare) <= 10 )//Use W-Method
 		   {
 			   if( n_states_dfa_to_compare >= n_states_this_dfa )
-			      test_set = this->get_w_method_test_set(dfa_to_compare);
+			      test_set = this->get_w_method_test_set(dfa_to_compare,true);
 			   else
-			      test_set = dfa_to_compare->get_w_method_test_set(this);
+			      test_set = dfa_to_compare->get_w_method_test_set(this,true);
 
 			   if(test_set.size() < 100 || test_set.size()>MAX_DIMENSION_WMETHOD_TEST_SET) //too poor test set, use random walk
 			      useRandomWalk=true;
@@ -1931,7 +1931,7 @@ size_t Dfa::get_set_depth(std::vector<std::vector<SYMBOL> > set_mapped) const{
   return max_line_length(set);
 }
 
-set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_dfa) const
+set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_dfa, bool sigma) const
 {
 	set<vector<SYMBOL>> w_method_test_set;
 
@@ -1947,18 +1947,35 @@ set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_
 	cout << "START aug char set ... " << flush;
 	#endif
 
-	int sigma_exponent=(target_dfa->get_set_depth(cover_set_target_dfa)-get_set_depth(cover_set));
+	int sigma_exponent=0;
+	vector<vector<SYMBOL>> characterization_set;
 
-	vector<vector<SYMBOL>> aug_characterization_set;
+	if(sigma){
 
-	try
-	{
-		get_augmented_characterization_set(sigma_exponent, aug_characterization_set);
-	}catch(exception &e){
-		cerr << "ERR: Too memory allocated" << endl;
-		throw ;
+		sigma_exponent=(target_dfa->get_set_depth(cover_set_target_dfa)-get_set_depth(cover_set));
+
+		try
+		{
+			get_augmented_characterization_set(sigma_exponent, characterization_set);
+		}catch(exception &e){
+			cerr << "ERR: Too memory allocated" << endl;
+			throw ;
+		}
+
 	}
 
+	else{	//sigma false so we don't want the central term sigma^k
+
+		try
+		{
+			characterization_set=get_characterization_set();
+		}catch(exception &e){
+			cerr << "ERR: Too memory allocated" << endl;
+			throw ;
+		}
+
+	}
+	//here the characterization_set is ready, with or without sigma, as our choice points out
 
 	#ifdef DEBUG_DFA
 	cout << "END. Size: " << aug_characterization_set.size() << endl;
@@ -1982,7 +1999,7 @@ set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_
 
 
 		// Add concatened strings
-		for(auto &it2 : aug_characterization_set)
+		for(auto &it2 : characterization_set)
 		{
 			vector<SYMBOL> tmp_string = it1;
 
@@ -2003,11 +2020,11 @@ set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_
 	return w_method_test_set;
 }
 
-vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa) const
+vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma) const
 {
 	vector<string> w_vec;
 
-	set<vector<SYMBOL>> w_set = get_w_method_test_set_mapped_alphabet(target_dfa);
+	set<vector<SYMBOL>> w_set = get_w_method_test_set_mapped_alphabet(target_dfa,sigma);
 
 	for(auto &it1 : w_set) {
 		std::vector<char> strvec;
@@ -2494,3 +2511,4 @@ bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int
 
 	return exit_status;
 }
+

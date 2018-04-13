@@ -17,4 +17,6 @@ before_script:
   - cd build
   - cmake -G "Unix Makefiles" -Dtest=on ..
 
-script: make && make test
+script:
+  - ls /usr/include 
+  - make && make test

@@ -22,5 +22,5 @@ before_script:
 
 script:
   - ls /usr/include/boost/multiprecision
-  - ls /var/lib/apt/lists/
+  - ls /var/lib/apt/lists/ppa.launchpad.net_sickpig_boost_ubuntu_dists_trusty_main_binary-amd64_Packages
   - make && make test

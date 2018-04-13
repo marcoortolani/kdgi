@@ -1,5 +1,11 @@
 language: cpp
 
+apt:
+    sources:
+    - boost-latest
+    packages:
+    - libboost1.58-all-dev
+
 compiler:
   - gcc
   - clang

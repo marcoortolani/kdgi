@@ -22,4 +22,5 @@ before_script:
 
 script:
   - ls /usr/include/boost/multiprecision
+  - ls /var/lib/apt/lists/
   - make && make test

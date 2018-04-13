@@ -18,5 +18,5 @@ before_script:
   - cmake -G "Unix Makefiles" -Dtest=on ..
 
 script:
-  - ls /usr/include 
+  - ls /usr/include/boost 
   - make && make test

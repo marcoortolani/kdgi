@@ -1,10 +1,11 @@
 language: cpp
 
-apt:
+addons:
+  apt:
     sources:
-    - boost-latest
+    - sickpig
     packages:
-    - libboost1.58-all-dev
+    - libboost-all-dev
 
 compiler:
   - gcc

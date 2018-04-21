@@ -53,5 +53,5 @@ Posizioniamoci nel branch da aggiornare e diamo il comando di merging:
 REBASE
 Posizioniamoci nel branch da aggiornare e diamo il comando di rebasing:
 	git checkout active-learning
-	git merge origin/master
+	git rebase origin/master
 	git push

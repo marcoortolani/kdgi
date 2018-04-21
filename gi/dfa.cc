@@ -897,7 +897,7 @@ void Dfa::print_dfa_in_text_file(const string file_path)
 
 
 
-void Dfa::print_dfa_dot(string title, const char *file_path)
+void Dfa::print_dfa_dot_mapped_alphabet(string title, const char *file_path)
 {
 	ofstream myfile;
 	myfile.open(file_path);
@@ -963,7 +963,7 @@ void Dfa::print_dfa_dot(string title, const char *file_path)
 
 
 
-void Dfa::print_dfa_dot_mapped_alphabet(string title, const char *file_path)
+void Dfa::print_dfa_dot(string title, const char *file_path)
 {
 	ofstream myfile;
 	myfile.open(file_path);

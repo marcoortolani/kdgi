@@ -2,7 +2,9 @@
 # No Build folder #
 # =============== #
 build/
-
+gi/tests
+gi/bluestar.h
+gi/bluestar.cc
 
 # ============ #
 # OS generated #

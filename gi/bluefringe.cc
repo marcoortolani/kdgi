@@ -162,7 +162,7 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 	    	if(counter!= dim_alphabet){
 	    		cerr<<"Error in reading example: number of red alphabet symbols mismatches with the declared one!"<<endl;
 	    		cerr<<"Expected symbols: "<<dim_alphabet<<endl;
-	    		cerr<<"Red symbols: "<<counter<<endl;
+	    		cerr<<"Read symbols: "<<counter<<endl;
 
 
 	    		exit(EXIT_FAILURE);
@@ -178,6 +178,7 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 	    // Read remaining lines
 		while (iss >> n)
 		{
+			cout<<"Ho letto: "<<n<<endl;
 			if( !n.compare("+") ){
 
 				weight = true;
@@ -201,9 +202,9 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 				flagcn++;
 				continue;
 			}
-
-
+			/*
 			if(weight){
+				cout<<"Sono dentro if(weight) a riga 206: n="<<n<<endl;
 				weight = false;
 
 				if(casopositive)
@@ -215,6 +216,7 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 				//cout << "!T Peso: "<< stringToint(n) << endl;
 
 			} else {
+				cout<<"Sono dentro else a riga 218: n="<<n<<endl;
 
 				// se la stringa è vuota, non è necessario aggiungere nulla
 				if(n.compare(null_symbol) == 0){
@@ -229,7 +231,39 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 				else if(casonegative)
 							negative[flagcn].push_back(tmp);
 			}
+			*/
+			if(weight){
+				cout<<"Sono dentro if(weight) a riga 206: n="<<n<<endl;
+				weight = false;
+				cout<<"stringToint(n)"<<stringToint(n)<<endl;
+				if(casopositive){
+					wp[flagcp] = stringToint(n);
+					cout<<"wp[flagcp]"<<wp[flagcp]<<endl;
+				}
+				else if(casonegative){
+					wn[flagcn] = stringToint(n);
+					cout<<"wn[flagcn]"<<wn[flagcn]<<endl;
+				}
 
+				// DEBUG
+				//cout << "!T Peso: "<< stringToint(n) << endl;
+
+			} 
+				cout<<"Sono dentro else a riga 218: n="<<n<<endl;
+
+				// se la stringa è vuota, non è necessario aggiungere nulla
+				if(n.compare(null_symbol) == 0){
+					continue;
+				}
+
+
+				int tmp = mapped_alphabet[ n];
+
+				if(casopositive)
+							positive[flagcp].push_back(tmp);
+				else if(casonegative)
+							negative[flagcn].push_back(tmp);
+			
 		}
 	}
 }

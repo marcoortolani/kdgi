@@ -212,11 +212,11 @@ double z_alpha_from_u_alpha_two_proportions_test(double prop1, double prop2, int
 		////throw "Constraints approximation to Normal Gaussian distr not satisfied";
 	//}
 
-
+  cout<<"UTILITIES DEBUG: p_est="<<p_est<<" q_est="<<q_est<<" sample_size="<<sample_size<<endl;
 	// Variance and dev. std. under the H0 hypothesis
 	double variance_h0 = (double) (2*p_est*q_est) / (double) sample_size;
 	*dev_std_h0 = sqrt( variance_h0 );
-
+  cout<<"UTILITIES DEBUG: variance_h0="<<variance_h0<<" dev_std_h0="<<*dev_std_h0<<endl;  //both are NAN
 
 	// Z-alpha: u_alpha is the z_alpha value in the normal gaussian distribution, multiplicated for std_err became usefull for the specific distribution
 	z_alpha = u_alpha * (*dev_std_h0);

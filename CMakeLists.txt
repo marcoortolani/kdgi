@@ -21,6 +21,16 @@ add_executable(gilearner main.cc)
 target_link_libraries(gilearner gi_lib)
 
 ################################
+# Python
+################################
+if (python)
+#  find_package (Python)
+  find_package( PythonInterp 2.7 REQUIRED )
+  find_package( PythonLibs 2.7 REQUIRED )
+  add_subdirectory(py)
+endif()
+
+################################
 # Testing
 ################################
 if (test)

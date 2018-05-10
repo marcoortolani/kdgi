@@ -22,6 +22,47 @@
 
 #define ND numeric_limits<int>::max()					/*!< Usually adopted for a non initialized state. */
 
+//****** In sostitution of fpu_control.h which is Linux specific
+/* masking of interrupts */
+#define _FPU_MASK_IM  0x01
+#define _FPU_MASK_DM  0x02
+#define _FPU_MASK_ZM  0x04
+#define _FPU_MASK_OM  0x08
+#define _FPU_MASK_UM  0x10
+#define _FPU_MASK_PM  0x20
+
+/* precision control */
+#define _FPU_EXTENDED 0x300	/* libm requires double extended precision.  */
+#define _FPU_DOUBLE   0x200
+#define _FPU_SINGLE   0x0
+
+/* rounding control */
+#define _FPU_RC_NEAREST 0x0    /* RECOMMENDED */
+#define _FPU_RC_DOWN    0x400
+#define _FPU_RC_UP      0x800
+#define _FPU_RC_ZERO    0xC00
+
+#define _FPU_RESERVED 0xF0C0  /* Reserved bits in cw */
+
+
+/* The fdlibm code requires strict IEEE double precision arithmetic,
+   and no interrupts for exceptions, rounding to nearest.  */
+
+#define _FPU_DEFAULT  0x037f
+
+/* IEEE:  same as above.  */
+#define _FPU_IEEE     0x037f
+
+/* Type of the control word.  */
+typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
+
+/* Macros for accessing the hardware control word.  */
+#define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
+#define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
+
+/* Default control word set at startup.  */
+extern fpu_control_t __fpu_control;
+
 
 typedef unsigned short int SYMBOL;
 
@@ -291,7 +332,7 @@ public:
    * Return a reference to ttable()
    * @return Pointer to ttable
    */
-  int** 	get_ttable();
+  int** 	get_ttable() const;
 
   /**
    * Get value of ttable for index "i", "j"
@@ -486,6 +527,25 @@ public:
    * @return array containing {tp,fn,tn,fp,precision,recall,f-measure,specifity,bcr}
    */
    long double* get_w_method_statistics(vector<string> test_set, Dfa* subject_dfa) const;
+
+   /**
+    * Gives the structural similarity score matrix between every pair of states of two DFAs
+    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
+    * @param subject_dfa
+    * @param eps precision of the termination condition, a by default is eps=0.0001
+    * @return similarity_matrix contains the similarity score of reference_dfa's state i
+    *         with subject_dfa's state j. The last row, so
+    *         similarity_matrix[reference_dfa->num_states][1] contains the overall
+    *         structural similarity score between the two Dfas
+    */
+   double** neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps) const;
+
+  /**
+   * Print the matrix containing the similarity score between pair of nodes
+   * @param similarity_matrix 
+   */
+   void print_structural_similarity(double** similarity_matrix,int num_states_target_dfa) const;
+
 
 };
 

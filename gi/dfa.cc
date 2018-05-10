@@ -678,7 +678,7 @@ void Dfa::set_alphabet(const string* alf, const int d_alf)
 
 }
 
-int** Dfa::get_ttable(){
+int** Dfa::get_ttable() const {
 	return ttable_;
 }
 
@@ -2512,3 +2512,138 @@ bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int
 	return exit_status;
 }
 
+
+double** Dfa::neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps=0.0001) const{
+
+	fpu_control_t oldcw, newcw;
+    _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
+    Graph *ga, *gb;
+    NMSimilarity *s;
+    double similarity;
+	double** similarity_matrix= new double*[this->get_num_states()+1];
+	for(int w=0; w<this->get_num_states();++w)
+		similarity_matrix[w]=new double[subject_dfa->get_num_states()];
+	similarity_matrix[this->get_num_states()]=new double[1];
+
+	//Here we translate the Dfas in their corresponding simple graph following the encoding:
+	/*Input file format
+	 *=================
+	 *The programs use a custom file format. First line specifies the number 
+	 *of the nodes in the graph N. Next N lines contain numbers denoting node 
+	 *colors. The following lines describe edges. Each edge is described by
+	 *a pair of indices of its constituent nodes, the beginning node being 
+	 *written first, and the termination node being writen second. Indices
+	 *of the nodes are zero based. For instance input file
+	 *
+	 *3
+	 *1
+	 *1
+	 *1
+	 *0 1
+	 *1 2
+	 *
+	 *describes the graph 0->1->2.
+	 */
+
+	char *reference_incidence_matrix, *subject_incidence_matrix;
+	int **reference_ttable=this->get_ttable();
+	int **subject_ttable=subject_dfa->get_ttable();
+
+	//get_edge_matrix() is situated in utilities.h
+	reference_incidence_matrix=get_incidence_matrix(reference_ttable,this->get_num_states(),this->get_dim_alphabet());
+	subject_incidence_matrix=get_incidence_matrix(subject_ttable,subject_dfa->get_num_states(),subject_dfa->get_dim_alphabet());
+	vector<int> *reference_labels= new vector<int>[this->get_num_states()]; 
+	vector<int> *subject_labels= new vector<int>[subject_dfa->get_num_states()];	//useful for coloured graphs
+	//we consider every state to have label 1
+	for(int i=0; i<this->get_num_states();++i)
+		(*reference_labels).push_back(1);
+	for(int j=0; j<subject_dfa->get_num_states();++j)
+		(*subject_labels).push_back(1);
+	//cout<<"ciao"<<endl;
+
+	//Reference_dfa to grapha
+	try{
+		ga=new Graph(reference_incidence_matrix, this->get_num_states(), reference_labels);
+	}
+	catch(...){
+		return NULL;
+	}
+	//Subject_dfa to graphb
+	try{
+		gb=new Graph(subject_incidence_matrix, subject_dfa->get_num_states(), subject_labels);
+	}
+	catch(...){
+		return NULL;
+	}
+
+	s=new NMSimilarity(ga,gb);
+
+	//Similarity between pair of states
+	//printf("\nNumber of iterations: %d\n", s->Iterate(eps,100000));
+    //printf("\nSimilarity matrix:\n\n");
+    similarity=0;
+	double sim=0;
+    for(int i=0; i<ga->NodeCount(); i++)
+    {
+        //printf(" [ ");
+        for(int j=0; j<gb->NodeCount(); j++){
+			sim=s->NodeSimilarity(i,j);
+       		//printf("%lf ", sim);
+			similarity_matrix[i][j]=sim;
+		}
+        //printf("]\n");
+    }
+
+    //printf("\n");
+
+	//Overall Dfas similarity
+	long *r;
+    long *solution;
+
+	s->Iterate(eps,100000);
+    
+    r=(long *)malloc(ga->NodeCount()*gb->NodeCount()*sizeof(long));
+    for(int i=0; i<ga->NodeCount(); i++)
+	    for(int j=0; j<gb->NodeCount(); j++)
+	        r[i*gb->NodeCount()+j]=(1-s->NodeSimilarity(i,j))/eps;
+
+    solution=new long[ga->NodeCount()];
+    NMSimilarity::hungarian(&r, ga->NodeCount(), gb->NodeCount(), solution, 0);
+
+    similarity=0;
+    int no=0;
+    for(int i=0; i<ga->NodeCount(); i++)
+      if(solution[i]>=0)
+      {
+        similarity+=s->NodeSimilarity(i,solution[i]);
+	    no++;
+      }
+
+    //cout <<"Similarity between the Dfas: " <<similarity/no << endl;
+
+	similarity_matrix[this->get_num_states()][0]=similarity/no;
+    
+    delete s;
+    delete ga;
+    delete gb;
+
+	return similarity_matrix;
+
+}
+
+void Dfa::print_structural_similarity(double** similarity_matrix, int num_states_subject_dfa) const{
+	printf("\nSimilarity matrix:\n\n");
+    for(int i=0; i<this->get_num_states(); i++)
+    {
+        printf(" [ ");
+        for(int j=0; j<num_states_subject_dfa; j++){
+       		printf("%lf ", similarity_matrix[i][j]);
+		}
+        printf("]\n");
+    }
+
+	printf("\n");
+
+	cout <<"Similarity between the Dfas: " <<similarity_matrix[this->get_num_states()][0] << endl;
+
+}

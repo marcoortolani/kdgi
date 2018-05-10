@@ -2,6 +2,7 @@
 # No Build folder #
 # =============== #
 build/
+gi/tests
 
 
 # ============ #

@@ -540,6 +540,19 @@ public:
     */
    double** neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps) const;
 
+   /**
+    * Gives the structural similarity score matrix between every pair of states of two DFAs
+    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching".
+    * In this COLOR version we give label 1 to accepting states and 0 to rejecting ones.
+    * @param subject_dfa
+    * @param eps precision of the termination condition, a by default is eps=0.0001
+    * @return similarity_matrix contains the similarity score of reference_dfa's state i
+    *         with subject_dfa's state j. The last row, so
+    *         similarity_matrix[reference_dfa->num_states][1] contains the overall
+    *         structural similarity score between the two Dfas
+    */
+   double** neighbour_matching_structural_similarity_color(Dfa* subject_dfa, double eps) const;
+
   /**
    * Print the matrix containing the similarity score between pair of nodes
    * @param similarity_matrix 

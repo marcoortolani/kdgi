@@ -3,7 +3,7 @@
 #include "dfa.h"
 
 int main() {
-	Dfa d;
+	Dfa<int> d;
 
 	return 0;
 }

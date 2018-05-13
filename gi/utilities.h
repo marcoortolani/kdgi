@@ -284,69 +284,6 @@ struct lex_compare {
     };
 
 
-
-
-//code to generate permutations with ripetitions
-//The length of permutation is length_permutation
-//If you pass in second parameter a vector<string> alph={"a","bbb","c"} there will be 3 symbols and the symbols of permutation are in {a,bbb,c}
-//This have to be a container: a vector, a map ecc.
-template <typename Container>
-void permutation_with_ripetitions(const int length_permutation , const Container & c , vector<Container> &results){
-	int temp;
-	vector<int> current_permutation(length_permutation+1);
-	results.resize(pow(c.size(),length_permutation)); //this can be a vector<vector<>> and will contain all the permutations
-
-	int upto = c.size()-1, temp2,num_permutation=0;
-
-	for( temp2 = 1 ; temp2 <= length_permutation; temp2++)
-		current_permutation[temp2]=0;
-
-	current_permutation[length_permutation]=-1; //indispensable to handle the first generated permutation
-	temp=length_permutation;
-
-	while(1){
-
-		if(current_permutation[temp]==upto){
-			temp--;
-			if(temp==0)
-				break;
-		}
-		else{
-			current_permutation[temp]++;
-			while(temp<length_permutation){
-				temp++;
-				current_permutation[temp]=0;
-			}
-
-                        /* PRINT THE PERMUTATIONS
-			cout<<"(";
-			for( temp2 = 1 ; temp2 <= length_permutation; temp2++){
-			      cout<<c[current_permutation[temp2]];
-			}
-			cout<<")";
-			*/
-			for( temp2 = 1 ; temp2 <= length_permutation; temp2++)
-			      results[num_permutation].push_back(c[current_permutation[temp2]]);
-
-			num_permutation++;
-
-		}
-	}
-
-}
-
-template <typename Container1>
-void print_permutations(const Container1 & containerToPrint)
-{
-   for(auto i=containerToPrint.begin() ; i!=containerToPrint.end() ; i++)
-   {
-      cout<<"(";
-      for(auto j=i->begin() ; j!= i->end() ; j++)
-         cout<<(*j);
-      cout<<")"<<endl;
-   }
-}
-
 //Useful for neighbour matching similarity
 class Graph
 {

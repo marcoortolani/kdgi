@@ -282,6 +282,7 @@ double ncd(double comp_x, double comp_y, double comp_xy)
 /////////////////////////////////////////
 /// INFORMATION RETRIEVAL
 
+/*
 void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<string> &test_set,ir_statistical_measures &stats)
 {
 	stats.tp = stats.tn = stats.fp = stats.fn = 0;
@@ -337,9 +338,11 @@ void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<string> &t
 	    stats.matthews      = ( stats.tp / (bigNum) n - s*p ) / sqrt( p * s * (1-s) * (1-p) ) ;
 	if( boost::math::isnan( stats.matthews )  )
 	    stats.matthews      = -1;
-	/*if( std::isnan(stats.matthews) )
-	    stats.matthews      = -1;  //because values are in [-1 1]*/
+	//if( std::isnan(stats.matthews) )
+	 //   stats.matthews      = -1;  //because values are in [-1 1]
 }
+*/
+
 
 void print_ir_stats(ir_statistical_measures &stats)
 {
@@ -377,6 +380,7 @@ void print_ir_stats(ir_statistical_measures &stats)
 			 setw(23)<<"* MATTHEWS"<<setw(8)<<left<<stats.matthews<<setw(10)<<right<<"*"<<endl<<
 			           "*****************************************"<<endl<<endl;
 }
+
 
 //void compute_ir_stats(dfaEDSM* dfa1, ir_statistical_measures &stats, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn)
 //{

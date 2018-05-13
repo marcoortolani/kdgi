@@ -22,46 +22,7 @@
 
 #define ND numeric_limits<int>::max()					/*!< Usually adopted for a non initialized state. */
 
-//****** In sostitution of fpu_control.h which is Linux specific
-/* masking of interrupts */
-#define _FPU_MASK_IM  0x01
-#define _FPU_MASK_DM  0x02
-#define _FPU_MASK_ZM  0x04
-#define _FPU_MASK_OM  0x08
-#define _FPU_MASK_UM  0x10
-#define _FPU_MASK_PM  0x20
 
-/* precision control */
-#define _FPU_EXTENDED 0x300	/* libm requires double extended precision.  */
-#define _FPU_DOUBLE   0x200
-#define _FPU_SINGLE   0x0
-
-/* rounding control */
-#define _FPU_RC_NEAREST 0x0    /* RECOMMENDED */
-#define _FPU_RC_DOWN    0x400
-#define _FPU_RC_UP      0x800
-#define _FPU_RC_ZERO    0xC00
-
-#define _FPU_RESERVED 0xF0C0  /* Reserved bits in cw */
-
-
-/* The fdlibm code requires strict IEEE double precision arithmetic,
-   and no interrupts for exceptions, rounding to nearest.  */
-
-#define _FPU_DEFAULT  0x037f
-
-/* IEEE:  same as above.  */
-#define _FPU_IEEE     0x037f
-
-/* Type of the control word.  */
-typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
-
-/* Macros for accessing the hardware control word.  */
-#define _FPU_GETCW(cw) __asm__ ("fnstcw %0" : "=m" (*&cw))
-#define _FPU_SETCW(cw) __asm__ ("fldcw %0" : : "m" (*&cw))
-
-/* Default control word set at startup.  */
-extern fpu_control_t __fpu_control;
 
 
 typedef unsigned short int SYMBOL;
@@ -113,6 +74,13 @@ protected:
    * @param index
    */
   string	get_letter_from_mapped_alphabet(const SYMBOL index) const;
+
+  /**
+   * Get index of arrive state for dfa_string argument
+   * @param dfa_string String executed on dfa
+   * @return Index of arrive state for "dfa_string"
+   */
+  int		get_arrive_state(const vector<SYMBOL> &dfa_string) const;
 
   /**
    * Return a vector<SYMBOL> string from a sample made up of alphabet symbols.
@@ -321,15 +289,9 @@ public:
   */
   vector<int> 			get_sink_states() const;
 
-  /**
-   * Get index of arrive state for dfa_string argument
-   * @param dfa_string String executed on dfa
-   * @return Index of arrive state for "dfa_string"
-   */
-  int		get_arrive_state(const vector<SYMBOL> &dfa_string) const;
 
   /**
-   * Return a reference to ttable()
+   * Return a reference to ttable_
    * @return Pointer to ttable
    */
   int** 	get_ttable() const;
@@ -558,6 +520,7 @@ public:
    * @param similarity_matrix 
    */
    void print_structural_similarity(double** similarity_matrix,int num_states_target_dfa) const;
+
 
 
 };

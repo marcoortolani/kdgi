@@ -2020,7 +2020,7 @@ set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_
 	return w_method_test_set;
 }
 
-vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma) const
+vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const
 {
 	vector<string> w_vec;
 

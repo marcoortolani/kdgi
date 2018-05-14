@@ -308,10 +308,10 @@ vector<map<string,int>> Dfa::get_ttable() const {
 	return ttable_;
 }
 
-int Dfa::get_ttable(int i, string j){
+int Dfa::get_ttable(int i, string j) const {
 	vector<string> alph=get_alphabet();
 	if(i<num_states_ && std::find(alph.begin(), alph.end(), j) != alph.end())
-		return ttable_[i][j];
+		return ttable_[i].at(j);
 	else{
 		cerr<<"dfa::get_ttable: out of bound"<<endl;
 		throw indexOutOfBoundTtable();
@@ -377,12 +377,12 @@ Dfa* Dfa::unionDFA(Dfa* dfa_hp)
 	// Smaller indexes are given to target dfa, while others to hypothesis
 	for(int j=0; j<num_states_; ++j)									// Target automaton
 		for(string sym : alphabet_)
-			union_dfa->ttable_[j][sym] = ttable_[j][sym];
+			union_dfa->set_ttable_entry(j,sym,get_ttable(j,sym));
 
 
 	for(int j=0; j<dfa_hp->num_states_; ++j)						// Hypothesis automaton
 		for(string sym_hp : alphabet_)					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
-			union_dfa->ttable_[num_states_+j][sym_hp] = dfa_hp->ttable_[j][sym_hp] + num_states_;
+			union_dfa->set_ttable_entry(num_states_+j,sym_hp, (dfa_hp->get_ttable(j,sym_hp) + num_states_));
 
 	return union_dfa;
 }
@@ -418,4 +418,399 @@ string Dfa::random_ttable()
     return random_sequence;
 }
 
+Dfa* Dfa::minimize_TF() const
+{
+	const int num_row = num_states_;
 
+
+	// Matrix of distincts: table for record distinct states
+	bool** distinct = new bool*[num_states_-1];								// Table of distinct pairs of states
+	for(int i=0; i<num_row-1; ++i)											// E.g: 6 states generate a matrix with 5 rows and 6 columns (only 5 of 6 are actually used)
+		distinct[i] = new bool[num_states_];
+
+
+	// Initialization of distinct table
+	for(int i=0; i<num_states_-1; ++i)
+		for(int j=0; j<num_states_; ++j)
+			distinct[i][j]=false;
+
+
+	// Acceptor and rejector states are different by definition, so they are marked. (E.g.: 0 <= i <= 4, j=i+1 (1 <= j <= 5 during the first iteration).
+	for(int i=0; i<(num_states_-1); ++i)
+		for(int j=i+1; j<num_states_; ++j)
+			if(is_accepting(i) != is_accepting(j))			// Check if one is an acceptor and the otherone no.
+				distinct[i][j] = true;
+
+
+	// Minimizing loop
+	bool modified = true;
+	while(modified)
+	{
+		modified = false;
+
+		for(int i=0; i<(num_states_-1); ++i){
+			for(int j=i+1; j<num_states_; ++j){
+				if(!distinct[i][j]){
+
+					for(string sym : get_alphabet())
+					{
+						int arrive_state_1 = get_ttable(i,sym);
+						int arrive_state_2 = get_ttable(j,sym);
+
+
+						if(arrive_state_1 == arrive_state_2)
+							continue;
+
+
+						// By definition, in the table of pair states turns out that j>i always,
+						// then pairs shuould have i<j
+						if(arrive_state_2 < arrive_state_1){
+							int tmp = arrive_state_1;
+							arrive_state_1 = arrive_state_2;
+							arrive_state_2 = tmp;
+						}
+
+
+						// If arrive pair of states is distinct, then is start state pair as well (!)
+						if(distinct[arrive_state_1][arrive_state_2]){
+							distinct[i][j] = true;
+							modified = true;
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+	//// In the following: operations need for a new instance of minimized automaton
+
+	// A list of equivalent pairs of states is built providing a direct access.
+	// If a state is marked with "ND", it have no equivalent state
+	int equivalent_state[num_states_];
+	for(int i=0; i<num_states_; ++i)
+		equivalent_state[i] = ND;
+
+
+	// It counts the number of state and assigns the eventually equivalent state
+	// NB: It have to be checked that, for example, when I met the pairs (0,4) and (0,5), the pair (4,5) should not be count as another state
+	int final_states_counter = num_states_;
+	for(int i=0; i<(num_states_-1); ++i)
+		for(int j=i+1; j<num_states_; ++j)
+			if(!distinct[i][j] && equivalent_state[i] == ND && equivalent_state[j] == ND){
+				equivalent_state[j] = i;
+				final_states_counter--;
+			}
+
+
+	// Print information about equivalent states
+	/*
+	cout << "N of final states: " << final_states_counter << endl;
+	cout << "Equivalent states: " << endl;
+	for(int i=0; i<num_state; ++i)
+		if(distinct[i] != ND)
+			cout << "S:"<<i<<" --> "<<distinct[i]<<endl;
+		else
+			cout << "S:"<<i<<endl
+	*/
+
+
+	///////////////////////////////////////////////////////
+	// A new instance of DFA is built for the minimized DFA
+	Dfa* dfa_min = new Dfa(final_states_counter, alphabet_, 0);
+
+	vector<map<string,int>> ttable__min = dfa_min->get_ttable();
+
+	int count = 0;
+	for(int i=0; i<num_states_; ++i){
+		if(equivalent_state[i] == ND){
+			for(string sym : get_alphabet())
+				ttable__min[count][sym]=get_ttable(i,sym);
+			count++;
+		}
+	}
+
+
+	// Old transitions towards deleteted states are updated towards the new equivalent state
+	for(int i=0; i<num_states_; ++i){
+		if(equivalent_state[i] != ND)
+		{
+			for(int k=0; k<final_states_counter; ++k)
+				for(string sym : get_alphabet())
+					// Transition toward "i" state is substitutes with one towards equivalent state "equivalent_state[i]"
+					if(ttable__min[k][sym] == i)
+						ttable__min[k][sym] = equivalent_state[i];
+		}
+	}
+
+
+	// Final update of state labels. E.g.: if 2 states before the state 6 have been collapsed,
+	// the state 6 is now in the row 4 but old transitions have remained towards row 6
+	// and they need to be updated.
+	int equivalences_found_so_far= 0;
+	for(int i=0; i<num_states_; ++i)
+	{
+		if(equivalent_state[i] != ND)
+			equivalences_found_so_far++;
+
+		if(equivalences_found_so_far != 0)
+		{
+			int nuova_label = i-equivalences_found_so_far;
+			for(int k=0; k<final_states_counter; ++k)
+				for(string sym : get_alphabet())
+					if(ttable__min[k][sym] == i)
+						ttable__min[k][sym] = nuova_label;
+		}
+	}
+
+
+	// Free allocated memory
+	if(distinct != NULL){
+		for(int i=0; i<num_row -1; ++i){
+			if(distinct[i] != NULL){
+				delete[] distinct[i];
+			}
+		}
+		delete [] distinct;
+	}
+
+
+	return dfa_min;
+}
+
+void Dfa::print_dfa_ttable(string title) const
+{
+	// It uses Mapped alphabet_
+
+
+	// Print an header
+	cout << endl<< "--------------------------" << endl;
+	cout << title << endl;
+	string header = "  ";
+	for(int i=0; i<get_dim_alphabet(); ++i)
+		header = header + " | "+ alphabet_[i];
+	header = header + " - A";
+	cout << header << endl;
+
+
+	// Print transitions
+	for(int i=0; i<num_states_; ++i){
+		cout << "S"<<i<<"  ";
+
+		for(string sym : get_alphabet())
+		{
+			// Transition values: a value or "ND"
+			if(get_ttable(i,sym) == ND)
+				cout << " N ";
+			else
+				cout << " "<< get_ttable(i,sym) <<"  ";
+		}
+		// Type of state
+		if(is_accepting(i))
+			cout << " Ac ";
+		else
+			cout << " Ri ";
+
+		cout << endl;
+	}
+
+	cout << "--------------------------" << endl;
+}
+
+void Dfa::print_dfa_dot(string title, const char *file_path)
+{
+	ofstream myfile;
+	myfile.open(file_path);
+
+
+	// Initialization of strings with DOT code
+	string header = "digraph "+title+" {\n";
+	string start_state_ = "__start0 [label=\"\" shape=\"none\"];\n\n";
+
+	start_state_ = start_state_ + "rankdir=LR;\nsize=\"8,5\";\n\n";
+
+
+	//States
+	string states = "";
+	string shape = "";
+	string style="";
+	string color="";
+	for(int i=0; i<num_states_; ++i)
+	{
+		//if(ttable_[i][dim_alphabet_] == DFA_STATE_UNREACHABLE)
+		//	continue;
+
+		if(is_accepting(i)){
+			shape = "doublecircle";
+			style = "rounded,filled";
+		}
+		else{
+			shape = "circle";
+			style = "filled";
+		} 
+		color="white";
+
+		states = states + "s"+std::to_string(i)+" [style=\""+style+"\", color=\"black\", fillcolor=\""+color+"\" shape=\""+shape+"\", label=\""+std::to_string(i)+"\"];\n";
+	}
+
+
+	// Transitions
+	string transitions = "";
+	for(int i=0; i<num_states_; ++i){
+		for(string sym : get_alphabet()){
+			int arrive_state = get_ttable(i,sym);
+			if(arrive_state == ND)
+				continue;
+
+			transitions = transitions + "s"+std::to_string(i)+" -> s"+std::to_string(arrive_state)+" [label=\""+sym+"\"];\n";
+		}
+	}
+
+
+	string end = "__start0 -> 0;";
+	string footer ="\n}";
+
+
+	// Finally, it prints overall DOT code
+	myfile << header << start_state_ << states << transitions << footer;
+
+	myfile.close();
+}
+
+void Dfa::print_dfa_in_text_file(const string file_path)
+{
+
+	// Check if some transitions is "Undefined"
+	for(int i=0; i<num_states_; ++i)
+		for(string sym : get_alphabet())
+			if(get_ttable(i,sym) == ND){
+				cout << "ERROR: DFA is not completely defined, there ND transition" << endl;
+				throw incompleteDfa();
+			}
+
+
+	// **********************
+	//   WRITE DFA in FILE
+	// **********************
+
+	// Opena file
+	ofstream myfile;
+	myfile.open(file_path.c_str());
+
+
+	// Write alphabet_ size
+	myfile << std::to_string(get_dim_alphabet()) << " ";
+
+	// Write num of states
+	myfile << std::to_string(num_states_) << " ";
+
+	// Write dfa name
+	myfile << "dfa" << "\n";
+
+	// Write alphabet_ symbols
+	for(string sym : get_alphabet())
+		myfile << sym << " ";
+	myfile << "\n";
+
+
+	// Write transition table
+	for(int i=0; i<num_states_; ++i){
+		for(string sym : get_alphabet())
+		{
+			myfile << "dfa[" <<std::to_string(i)<<"][";
+			
+			myfile << sym << "]="<< get_ttable(i,sym) <<";\n";
+		}
+
+		myfile << std::to_string(get_dim_alphabet()) << "]=";
+		if(is_accepting(i))
+			myfile << "1";
+		else 
+			myfile << "0";
+
+		myfile <<";\n";
+	}
+
+	myfile.close();
+}
+
+/*
+bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_measures &stats1 , ir_statistical_measures &stats2 )
+{
+	boost::algorithm::to_lower(method);
+	if(method != "w-method" && method != "random-walk")
+	{
+	   cerr<<"Pointed out method to use for comparison is wrong"<<endl;
+	   throw invalidParameters();
+	}
+
+	vector<string> test_set;
+	vector<string> test_set2;
+	int n_states_dfa_to_compare = dfa_to_compare->get_num_states();
+	int n_states_this_dfa = this->get_num_states();
+	int num_pos_samples = 750;
+	int num_neg_samples = 750;
+	bool useRandomWalk=false;
+
+        //If an exception happen (caused from called method here) automatically is rethrow to called function (furthermore there isn't dynamics memory to handle thus try catch isn't necessary)
+		if (method == "w-method")
+		{
+		   //W-Method create very very many samples. To avoid this situation use W-Method alone if the state different isn't greater than 10
+		   if( abs(n_states_this_dfa - n_states_dfa_to_compare) <= 10 )//Use W-Method
+		   {
+			   if( n_states_dfa_to_compare >= n_states_this_dfa )
+			      test_set = this->get_w_method_test_set(dfa_to_compare,true);
+			   else
+			      test_set = dfa_to_compare->get_w_method_test_set(this,true);
+
+			   if(test_set.size() < 100 || test_set.size()>MAX_DIMENSION_WMETHOD_TEST_SET) //too poor test set, use random walk
+			      useRandomWalk=true;
+
+		   }
+		   else //use random walk
+		      useRandomWalk=true;
+	    }
+
+	    if(method == "random-walk" || useRandomWalk) //with random walk samples are generated on target and on model too
+	    {
+				test_set={}; //to delete sample finally generated with W-Method
+				#ifdef DEBUG_OBPA_PRINCIPAL
+				   cout<<"We are using random-walk to generate samples"<<endl;
+				#endif
+
+
+				useRandomWalk = true; //for a correct return value in all cases
+				//vector<string> sentence_temp;
+
+				//convert the structure returned from random walk in a set<vector<SYMBOL>>
+				for(auto &samples_set : this->generate_pos_neg_samples_without_weights(num_pos_samples,num_neg_samples) )
+				{
+					//sentence_temp = {};
+					for(auto & sample : samples_set.first) //samples_set.first is a vector<string>
+						test_set.push_back(sample);
+
+					//test_set.push_back(sentence_temp);
+				}
+
+				for(auto &samples_set : dfa_to_compare->generate_pos_neg_samples_without_weights(num_pos_samples,num_neg_samples) )
+				{
+					//sentence_temp = {};
+					for(auto & sample : samples_set.first) //samples_set.first is a vector<string>
+						test_set2.push_back(sample);
+
+					//test_set2.push_back(sentence_temp);
+				}
+
+		}
+
+
+		//YOU MAKE THE COMPARE
+		//Following call is valid for both methods. This is a global function(gi_utilities.cpp)
+		compute_ir_stats(dfa_to_compare,this,test_set,stats1); //this is the target. Samples generated on the target for random walk
+
+		if(method == "random-walk" || useRandomWalk)
+		   compute_ir_stats(dfa_to_compare,this,test_set2,stats2);//this is the target. Samples generated on the model, i.e. hypothesis  (dfa_to_compare)
+
+	return useRandomWalk;
+}
+*/

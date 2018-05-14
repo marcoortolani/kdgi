@@ -203,7 +203,7 @@ public:
    * @param j
    * @return
    */
-  int 	get_ttable(int i, string j);
+  int 	get_ttable(int i, string j) const;
 
   /**
    * Make a new dfa from the union of current dfa and "dfa_hp".
@@ -225,6 +225,44 @@ public:
    */
   Dfa*  	minimize_TF() const;
 
+  /**
+   * Print the transition table of current dfa, using the INNER alphabet. Before the transition table print the title passse as parameter.
+   * @param title Title printed before the transition table
+   */
+  void 	print_dfa_ttable(string title) const;
+
+  /**
+   * Print a dot file for the current dfa, with title "title", in the path "file_path".
+   * @param title	Title printed before the transition table
+   * @param file_path Path where make a dot file
+   */
+  void    print_dfa_dot(string title, const char *file_path);
+
+  /**
+   * Print a DFA in a text file; adopted format is the same used for reading a DFA from file.
+   * @ file_path A path for the new file to be created.
+   */
+  void 	print_dfa_in_text_file(const string file_path);
+
+  /**
+   * Calculate the similarity of 2 DFA's languages
+   * It's target DFA that must do the calling of the method
+   * If you want use W-Method for technical rasons is possible that random walk is anyway used (too big or too small test set generated with W-Method)
+   * DFA aren't modified
+   * Random walk generate the test set samples (1500) both on the target and on the other dfa
+   * If W-Method is used the 2 DFA (dfa calling) and that in the parameter have to be minimized otherwise an exception is launched
+   * @throw invalidParameters    if second parameter is invalid
+   * @throw wMethodTestSetTooBig if the sample generated with W-Method is too big
+   * @throw mandatoryMinimalDFA  if you use W-Method and one or both dfa's aren't minimal
+   * @param dfa_to_compare is the dfa to compare
+   * @param method is a string indicating method generation samples to compare dfa's. Possible values are:
+   *     - w-method
+   *     - random-walk
+   * @param stats1 It will contain statistical results (it is defined in gi_utilities.h)
+   * @param stats2 It will contain statistical results if random walk is used (it is defined in gi_utilities.h)
+   * @return A flag to etablish which method to generate test set was used. The flag is false if was employed W-Method, true if was used random walk
+   */
+  bool compare_dfa( Dfa *dfa_to_compare,string method,ir_statistical_measures &stats1,ir_statistical_measures &stats2);
 
 };
 

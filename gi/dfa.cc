@@ -30,8 +30,8 @@ using namespace std;
 
 
 // For Table Filling Algorithm
-#define DFA_TF_STATE_N numeric_limits<SYMBOL>::max()		    // Unknown
-#define DFA_TF_STATE_X numeric_limits<SYMBOL>::max() -1  	// Distinct state (accepting vs rejecting)
+#define DFA_TF_STATE_N numeric_limits<short int>::max()		    // Unknown
+#define DFA_TF_STATE_X numeric_limits<short int>::max() -1  	// Distinct state (accepting vs rejecting)
 
 // For W-Method
 #define LIMIT_OF_TESTSET_W_METHOD 1000000000
@@ -1311,6 +1311,279 @@ bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int
 
 	return exit_status;
 }
+
+bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string>* witness_results) {
+
+    bool areEquivalent;
+
+	#ifdef DEBUG_DFA
+		cout << endl << "--------------------------" << endl;
+		cout << "EQUIVALENCE QUERY" << endl;
+		cout << "--------------------------" << endl;
+	#endif
+
+
+	// Build union DFA of target dfa (thisone) and dfa_hp
+	Dfa* dfa_union = this->unionDFA(dfa_hp);
+
+
+	#ifdef DEBUG_2
+		dfa_union->print_dfa_ttable_("DFA UNIONE");
+	#endif
+
+
+	// Table-filling algorithm on union dfa
+	vector<string> distincts_table = dfa_union->table_filling();
+
+	// Extract list of equivalent states from table of distinct states,
+	// every vector contain a list of equivalent states for the state that correspond to the vector.
+	vector<vector<int>> equivalent_states_list = dfa_union->equivalent_states_list_from_table(distincts_table);
+
+	int start_state = get_start_state();
+	int hp_start_state = dfa_hp->get_start_state();
+
+	// Checks if start states of dfas are equivalent:
+	// check if among the set of states equivalent to the 0 state (start state of current automaton)
+	// there is the start state of hp automaton, whose index is "num_state"
+	// If so, it returns an empty vector as counterexample.
+	if(equivalent_states_list[start_state].end() == find(equivalent_states_list[start_state].begin(), equivalent_states_list[start_state].end(), hp_start_state) )
+	{
+		areEquivalent = false;
+		if(witness_results!=NULL) //if witness_results is NULL means that the client isn't interested in witness but in checking only equivalence
+		   *witness_results = dfa_union->witness_from_table(distincts_table, num_states_);
+	}
+	else //The dfa are equivalentes
+	   areEquivalent = true;
+
+	// Free allocated memory
+	/*
+	if(distincts_table != NULL)
+		delete[] distincts_table;
+
+	delete [] equivalent_states_list;
+	*/
+
+	delete dfa_union;
+
+	return areEquivalent;
+}
+
+// It returns a table saved in a linear array, with a list of equivalent/different states; if it is needed it returns also a counterexample string
+vector<string> Dfa::table_filling() const{
+	// The Table considered is only the upper triangular matrix, that can be saved in a linear array of size n(n-1)/2
+	// Conversion of index form matrix to array are:
+	//
+	// From linear index k, to (i,j) for tha matrix (i row, j column)
+	// i = n - 2 - floor(sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5)
+	// j = k + i + 1 - n*(n-1)/2 + (n-i)*((n-i)-1)/2
+	//
+	// From (i,j) to k
+	// Order such that i<j, then:
+	// k = (n*(n-1)/2) - (n-i)*((n-i)-1)/2 + j - i - 1
+	//
+	// check (http://stackoverflow.com/questions/27086195/linear-index-upper-triangular-matrix)
+
+
+	// *** TABLE-FILLING ALGORITHM with witness ***
+	int i,j,k;
+	int n = num_states_;
+	//int tf_l = (num_states_*(num_states_-1))/2;
+
+
+	// Table of distinct pair states.
+	vector<string> table_of_distinct_states;
+
+	// Acceptor and rejector states are surely different, so they are marked.
+	for(i=0; i<(num_states_-1); ++i)
+		for(j=i+1; j<num_states_; ++j){
+			k= (n*(n-1)/2) - (n-i)*((n-i)-1)/2 + j - i - 1;
+			// Check if one state is acceptor and another is rejector
+			if(is_accepting(i) != is_accepting(j)){
+				table_of_distinct_states[k] = to_string(DFA_TF_STATE_X);
+			}else
+				table_of_distinct_states[k]=  to_string(DFA_TF_STATE_N);
+		}
+
+
+	// Minimizing loop
+	// Check at each iteration if the table was modified
+	bool modified = true;
+	while(modified)
+	{
+		modified = false;
+		int arrive_state_1;
+		int arrive_state_2;
+
+		for(i=0; i<(num_states_-1); ++i){
+			for(j=i+1; j<num_states_; ++j){
+
+				k = (n*(n-1)/2) - (n-i)*((n-i)-1)/2 + j - i - 1;
+
+				if(stoi(table_of_distinct_states[k]) == DFA_TF_STATE_N){
+
+					for(string sym : get_alphabet())
+					{
+						arrive_state_1 = get_ttable(i,sym);
+						arrive_state_2 = get_ttable(j,sym);
+
+
+						// If the arrive state of DFA is a self-pair (e.g. (2,2)), it continues to the next one
+						if(arrive_state_1 == arrive_state_2)
+							continue;
+
+
+						// By definition, in the table of pair states turns out that j>i always,
+						// then pairs shuould have i<j
+						if(arrive_state_2 < arrive_state_1){
+							int tmp = arrive_state_1;
+							arrive_state_1 = arrive_state_2;
+							arrive_state_2 = tmp;
+						}
+
+
+						// If arrive_state is the same state at the beginning, it continues to next one
+						if(arrive_state_1 == i && arrive_state_2 == j)
+							continue;
+
+
+						// If arrive pair of states is distinct, then is start state pair as well (!)
+						int i1 = arrive_state_1, j1 = arrive_state_2;
+						int k1 = (n*(n-1)/2) - (n-i1)*((n-i1)-1)/2 + j1 - i1 - 1;
+
+
+						if(stoi(table_of_distinct_states[k1]) != DFA_TF_STATE_N){
+							table_of_distinct_states[k] = sym;
+							modified = true;
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
+
+	// Debug print: it prints the table of pair states
+	//    '@'  	-->	 It is an equivalent pair of states because its cell in the table remained empty
+	// 	  'X'  	-->  It is a distinct pair of states
+	// Otherwise ->	 It prints the symbol distincting the pair of states starting from initial state
+	#ifdef DEBUG_DFA
+	cout << "--------------------------" << endl;
+	cout << "Table of pairs " << endl;
+	cout << "--------------------------" << endl;
+	for(i=0; i<(num_states_-1); ++i){
+		for(j=i+1; j<num_states_; ++j){
+			k=(n*(n-1)/2) - (n-i)*((n-i)-1)/2 + j - i - 1;
+			char toprint= (table_of_distinct_states[k]==DFA_TF_STATE_X)?'X':(table_of_distinct_states[k]==DFA_TF_STATE_N)?'@': (char)(table_of_distinct_states[k] + 48);
+			cout << "("<< i << "," << j << "):" << toprint << "  ";
+		}
+		cout << endl;
+	}
+	cout << "--------------------------" << endl;
+	#endif
+
+
+	return table_of_distinct_states;
+}
+
+vector<vector<int>> Dfa::equivalent_states_list_from_table(vector<string> distincts)
+{
+	#ifdef DEBUG_DFA
+	cout << endl << "--------------------------" << endl;
+	cout << "List of equivalent states:" << endl;
+	cout << "--------------------------" << endl;
+	#endif
+
+
+	int n = num_states_;
+	vector<vector<int>> equivalent_states;
+
+
+	for(int i=0; i<(num_states_-1); ++i)
+		for(int j=i+1; j<num_states_; ++j){
+			int k= (n*(n-1)/2) - (n-i)*((n-i)-1)/2 + j - i - 1;
+			if(stoi(distincts[k]) == DFA_TF_STATE_N)
+				equivalent_states[i].push_back(j);
+		}
+
+
+	#ifdef DEBUG_DFA
+	cout << "Number of confirmed states: " << num_states_ << endl;
+	for(int i=0; i<num_states_; ++i)
+		cout << "S["<<i<<"] --> "<< equivalent_states[i] << endl;
+
+	cout << "--------------------------" << endl;
+	#endif
+
+	return equivalent_states;
+}
+
+vector<string> Dfa::witness_from_table(vector<string> distinct, int start_state__dfa_hp)
+{
+	// If automata are not equivalent, it generates a witness string
+	vector<string> wit = {};
+
+	int i_pair = 0;
+	int j_pair = start_state__dfa_hp;
+
+	string input;
+
+	#ifdef DEBUG_DFA
+	cout << "--- Make a counterexmple --- " << endl;
+	#endif
+
+
+	while(1)
+	{
+		int n = num_states_;
+		int k = (n*(n-1)/2) - (n-i_pair)*((n-i_pair)-1)/2 + j_pair - i_pair - 1;
+
+
+		// Check if provided automata are equivalent
+		if(stoi(distinct[k]) == DFA_TF_STATE_N){
+			cerr << "ERR: a witness string was requested while automata are equivalent!";
+			throw witnessFromEquivalentDFA();
+		}
+
+
+		input = distinct[k];
+
+
+		// Check if one start state is acceptor and the otherone is rejector
+		if(stoi(input) == DFA_TF_STATE_X) {
+			break;
+		}
+
+
+		wit.push_back(input);
+
+
+		i_pair = ttable_[i_pair][input];
+		j_pair = ttable_[j_pair][input];
+
+
+		if(stoi(distinct[k]) == DFA_TF_STATE_X)
+			break;
+
+	}
+
+	#ifdef DEBUG_DFA
+		cout << "Counterexample is: "<< wit << endl;
+	#endif
+
+	return wit;
+}
+
+size_t Dfa::get_set_depth(vector<vector<string> > set) const{
+	size_t max=0;
+	for(vector<string> phrase : set)
+		if(phrase.size()>max)
+			max=phrase.size();
+  	
+  return max;
+}
+
+
 
 /*
 vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const

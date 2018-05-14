@@ -91,7 +91,7 @@ protected:
    * @param witness_results 			A vector<SYMBOL> in which save the witness.if miss is NULL for default,it means that the client isn't interested in witness but in ceck equivalence alone
    * @return true if the two dfas are equivalents, false otherwise
    */
-  bool	   	     equivalence_query(Dfa* dfa_hp, vector<string>* witness_results=NULL);
+  bool	 equivalence_query(Dfa* dfa_hp, vector<string>* witness_results=NULL);
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -99,14 +99,14 @@ protected:
    * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
    * @return A table saved in a linear array, with a list of equivalent/different states.
    */
-  string*		  	   	table_filling() const;
+  vector<string>	table_filling() const;
 
   /**
    * Create a list of states and corrispective equivalent states
    * @param distincts A table build with the Table Filling Algorithm
    * @return A pointer to the first vector<int>. Every vector is a list of equivalent state for the state associate to that vector.
    */
-  vector<int>* 		equivalent_states_list_from_table(string* distincts);
+  vector<vector<int>> 		equivalent_states_list_from_table(vector<string> distincts);
 
   /**
    * Make a conterexample from a table build with Table Filling Algorithm using the union dfa of the two dfa to compare.
@@ -114,13 +114,14 @@ protected:
    * @param start_state_dfa_hp Index of the first state of dfa_hp inside the union dfa.
    * @return A witness that distinguishes the two dfa.
    */
-  vector<string>		witness_from_table(string* distinct, int start_state_dfa_hp);
+  vector<string>		witness_from_table(vector<string> distinct, int start_state_dfa_hp);
 
   /**
-   * Utility function to determine the exponent of Sigma in w-method
+   * Utility function to determine the exponent of Sigma in w-method, which is the depth
+   * of the cover set
    * @return max depth of a set
    */
-  size_t get_set_depth(std::vector<std::vector<string> > set) const;
+  size_t get_set_depth(vector<vector<string> > set) const;
 
   /**
    * Return a cover set of strings for current DFA.
@@ -132,13 +133,13 @@ protected:
    * Return a characterization set of strings for current DFA.
    * @return A vector of strings (i.e. vector<SYMBOL>)
    */
-  vector<vector<string> > 		get_characterization_set() const;
+  vector<vector<string> > 	get_characterization_set() const;
 
   /**
    * Return an augmented characterization set of strings for current DFA.
    * @return A vector of strings (i.e. vector<SYMBOL>)
    */
-  vector<vector<string> > 		get_augmented_characterization_set(int sigma_exponent, vector<vector<string> >& aug_characterization_set)const;
+  vector<vector<string> > 	get_augmented_characterization_set(int sigma_exponent, vector<vector<string> >& aug_characterization_set)const;
 
 
 public:
@@ -239,13 +240,13 @@ public:
    * Get number of states
    * @return Number of states
    */
-  int   	get_num_states() const;
+  int   get_num_states() const;
 
   /**
    * Get index of start state
    * @return Index of start state
    */
-  int   	get_start_state() const;
+  int   get_start_state() const;
 
   /**
    * Return a reference to ttable_
@@ -339,7 +340,7 @@ public:
    * Return a set of access strings for all the states of DFA.
    * @return A vector of string (true string!) characterizing current DFA, they adopted the alphabet.
    */
-  map<int,string> 				get_access_strings() const;
+  map<int,string> 	get_access_strings() const;
 
   /**
    * It returns a set random samples (all different) generated from current DFA.
@@ -366,7 +367,7 @@ public:
    * @param samples Generated samples.
    * @param weights Generated weights.
    */
-  void 				print_set_of_pos_neg_samples(map< vector<string>, int> samples, map< vector<string>, int> weights);
+  void 	print_set_of_pos_neg_samples(map< vector<string>, int> samples, map< vector<string>, int> weights);
 
   /**
    * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
@@ -374,14 +375,14 @@ public:
    * @param weights
    * @param file_paht File path with generated samples.
    */
-  bool 				write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path);
+  bool 	write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path);
 
   /**
    * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
    * @param samples
    * @param file_paht File path with generated samples.
    */
-  bool 				write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path);
+  bool 	write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path);
 
   /**
    * It generates a set of random strings accepted and rejected by the current DFA and DIRECTLY write them to a file.
@@ -389,7 +390,7 @@ public:
    * @param n_neg_samples Number of negative samples to be generated.
    * @param file_paht File path with generated samples.
    */
-  bool 				write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path);
+  bool 	write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path);
 
   /**
    * Return a W-METHOD test set of strings for current DFA.
@@ -398,7 +399,7 @@ public:
    * in general sigma is true, it false for debugging purposes
    * @return A vector of strings
    */
-  vector<string> 		          get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const;
+  vector<string> 	get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const;
 
   /**
    * Given a test set and the reference and subject dfa,

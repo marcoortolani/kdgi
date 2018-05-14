@@ -31,7 +31,7 @@
 #define MINF 	numeric_limits<int>::min()
 #define DMAX 	numeric_limits<double>::max()
 #define DMINF 	numeric_limits<double>::min()
-#define INF 0x7fffffff
+#define INF_UTIL 0x7fffffff
 
 namespace mp=boost::multiprecision;
 
@@ -437,7 +437,6 @@ private:
     Graph *graph_b;
     int graph_a_n;
     int graph_b_n;
-    double epsilon;
     long *solution;
     long *costs;
     int first_time;
@@ -580,10 +579,10 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
     long *tmtx;
     long transposed;
 
-    register long k;
-    register long l;
-    register long j;
-    register long s;
+    long k;
+    long l;
+    long j;
+    long s;
     
     assert(*mtx);
     assert(m);
@@ -643,7 +642,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 	 row_mate[l] = -1;
 	 parent_row[l] = -1;
 	 col_inc[l] = 0;
-	 slack[l] = INF;
+	 slack[l] = INF_UTIL;
     }
     for (k = 0; k < m; k++) {
 	 s = (*mtx)[k*n+0];
@@ -676,7 +675,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 		     s = row_dec[k];
 		    for (l = 0; l < n; l++)
 			if ( slack[l]) {
-			    register long del;
+			    long del;
 			     del = (*mtx)[k*n+l] - s + col_inc[l];
 			    if (del < slack[l]) {
 				if (del == 0) {
@@ -697,7 +696,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 	    }
 
 
-	    s = INF;
+	    s = INF_UTIL;
 	    for (l = 0; l < n; l++)
 		if ( slack[l] && slack[l] < s)
 		    s = slack[l];
@@ -742,7 +741,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 	t = 0;
 	for (l = 0; l < n; l++) {
 	     parent_row[l] = -1;
-	     slack[l] = INF;
+	     slack[l] = INF_UTIL;
 	}
 	for (k = 0; k < m; k++)
 	    if ( col_mate[k] < 0) {

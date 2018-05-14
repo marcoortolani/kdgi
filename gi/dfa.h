@@ -84,6 +84,62 @@ protected:
    */
   void set_ttable_from_sequence(const vector<int> &sequence);
 
+  /**
+   * Make an equivalence query, that return true if the current dfa is equivalent to dfa "dfa_hp", argument of the function.
+   * Otherwise return false and detect a witness, that is a counterexample that distinguishes the two dfa.
+   * @param dfa 						Dfa to compare with the current dfa
+   * @param witness_results 			A vector<SYMBOL> in which save the witness.if miss is NULL for default,it means that the client isn't interested in witness but in ceck equivalence alone
+   * @return true if the two dfas are equivalents, false otherwise
+   */
+  bool	   	     equivalence_query(Dfa* dfa_hp, vector<string>* witness_results=NULL);
+
+  /**
+   * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
+   * and also for generating a witness between different DFAs.
+   * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
+   * @return A table saved in a linear array, with a list of equivalent/different states.
+   */
+  string*		  	   	table_filling() const;
+
+  /**
+   * Create a list of states and corrispective equivalent states
+   * @param distincts A table build with the Table Filling Algorithm
+   * @return A pointer to the first vector<int>. Every vector is a list of equivalent state for the state associate to that vector.
+   */
+  vector<int>* 		equivalent_states_list_from_table(string* distincts);
+
+  /**
+   * Make a conterexample from a table build with Table Filling Algorithm using the union dfa of the two dfa to compare.
+   * @param distinct Table build with Table Filling Algorithm.
+   * @param start_state_dfa_hp Index of the first state of dfa_hp inside the union dfa.
+   * @return A witness that distinguishes the two dfa.
+   */
+  vector<string>		witness_from_table(string* distinct, int start_state_dfa_hp);
+
+  /**
+   * Utility function to determine the exponent of Sigma in w-method
+   * @return max depth of a set
+   */
+  size_t get_set_depth(std::vector<std::vector<string> > set) const;
+
+  /**
+   * Return a cover set of strings for current DFA.
+   * @return A vector of strings (i.e. vector<SYMBOL>)
+   */
+  vector<vector<string> >		get_cover_set() const;
+
+  /**
+   * Return a characterization set of strings for current DFA.
+   * @return A vector of strings (i.e. vector<SYMBOL>)
+   */
+  vector<vector<string> > 		get_characterization_set() const;
+
+  /**
+   * Return an augmented characterization set of strings for current DFA.
+   * @return A vector of strings (i.e. vector<SYMBOL>)
+   */
+  vector<vector<string> > 		get_augmented_characterization_set(int sigma_exponent, vector<vector<string> >& aug_characterization_set)const;
+
 
 public:
   //******** CONSTRUCTORS: ********
@@ -189,7 +245,7 @@ public:
    * Get index of start state
    * @return Index of start state
    */
-  int   	get_start_state();
+  int   	get_start_state() const;
 
   /**
    * Return a reference to ttable_
@@ -245,6 +301,21 @@ public:
   void 	print_dfa_in_text_file(const string file_path);
 
   /**
+   * Get index of arrive state for dfa_string argument
+   * @param dfa_string String executed on dfa
+   * @return Index of arrive state for "dfa_string"
+   */
+  int		get_arrive_state(vector<string> &dfa_string) const;
+
+  /**
+   * Make a membership query to dfa with the "str" string with alphabet symbol.
+   * Return "true" if the arrive state for "str" is acceptor, else "false".
+   * @param str A string to make a membership query.
+   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
+   */
+  bool   membership_query(vector<string> str) const;
+
+  /**
    * Calculate the similarity of 2 DFA's languages
    * It's target DFA that must do the calling of the method
    * If you want use W-Method for technical rasons is possible that random walk is anyway used (too big or too small test set generated with W-Method)
@@ -263,6 +334,112 @@ public:
    * @return A flag to etablish which method to generate test set was used. The flag is false if was employed W-Method, true if was used random walk
    */
   bool compare_dfa( Dfa *dfa_to_compare,string method,ir_statistical_measures &stats1,ir_statistical_measures &stats2);
+
+  /**
+   * Return a set of access strings for all the states of DFA.
+   * @return A vector of string (true string!) characterizing current DFA, they adopted the alphabet.
+   */
+  map<int,string> 				get_access_strings() const;
+
+  /**
+   * It returns a set random samples (all different) generated from current DFA.
+   * They are within a map of vector string; each sample (vector<string>) is made up of symbols (string)
+   * and is associated to a number (0: negative, 1:positive).
+   *
+   * Based on the algorithm described in "STAMINA: a competition to encourage the development
+   * and assessment of software model inference techniques", by N. Walkinshaw,
+   * B. Lambeau, C. Damas, K. Bogdanov, P. Dupont. DOI 10.1007/s10664-012-9210-3
+   * @param n_pos_samples Number of positive samples to be generated.
+   * @param n_neg_samples Number of negative samples to be generated.
+   */
+  map< vector<string>, int>	generate_pos_neg_samples_without_weights(int n_pos_samples,int n_neg_samples) const;
+
+  /*
+   * It returns a set of weigths paired to the samples generated yet.
+   * @param samples Generated samples.
+   * @param upper_bound_for_weights Upper bound for weights.
+   */
+  map< vector<string>, int> 	generate_weights_for_pos_neg_samples(map< vector<string>, int> samples, int upper_bound_for_weights);
+
+  /**
+   * Print the already generated set of random samples generated from current DFA.
+   * @param samples Generated samples.
+   * @param weights Generated weights.
+   */
+  void 				print_set_of_pos_neg_samples(map< vector<string>, int> samples, map< vector<string>, int> weights);
+
+  /**
+   * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
+   * @param samples
+   * @param weights
+   * @param file_paht File path with generated samples.
+   */
+  bool 				write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path);
+
+  /**
+   * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
+   * @param samples
+   * @param file_paht File path with generated samples.
+   */
+  bool 				write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path);
+
+  /**
+   * It generates a set of random strings accepted and rejected by the current DFA and DIRECTLY write them to a file.
+   * @param n_pos_samples Number of positive samples to be generated.
+   * @param n_neg_samples Number of negative samples to be generated.
+   * @param file_paht File path with generated samples.
+   */
+  bool 				write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path);
+
+  /**
+   * Return a W-METHOD test set of strings for current DFA.
+   * @param target_dfa
+   * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k
+   * in general sigma is true, it false for debugging purposes
+   * @return A vector of strings
+   */
+  vector<string> 		          get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const;
+
+  /**
+   * Given a test set and the reference and subject dfa,
+   * this function return a 9-dimensional array with all the statistics
+   * @param test_set
+   * @param subject_dfa
+   * @param reference_dfa
+   * @return array containing {tp,fn,tn,fp,precision,recall,f-measure,specifity,bcr}
+   */
+   vector<long> get_w_method_statistics(vector<string> test_set, Dfa* subject_dfa) const;
+
+   /**
+    * Gives the structural similarity score matrix between every pair of states of two DFAs
+    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
+    * @param subject_dfa
+    * @param eps precision of the termination condition, a by default is eps=0.0001
+    * @return similarity_matrix contains the similarity score of reference_dfa's state i
+    *         with subject_dfa's state j. The last row, so
+    *         similarity_matrix[reference_dfa->num_states][1] contains the overall
+    *         structural similarity score between the two Dfas
+    */
+   double** neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps) const;
+
+   /**
+    * Gives the structural similarity score matrix between every pair of states of two DFAs
+    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching".
+    * In this COLOR version we give label 1 to accepting states and 0 to rejecting ones.
+    * @param subject_dfa
+    * @param eps precision of the termination condition, a by default is eps=0.0001
+    * @return similarity_matrix contains the similarity score of reference_dfa's state i
+    *         with subject_dfa's state j. The last row, so
+    *         similarity_matrix[reference_dfa->num_states][1] contains the overall
+    *         structural similarity score between the two Dfas
+    */
+   double** neighbour_matching_structural_similarity_color(Dfa* subject_dfa, double eps) const;
+
+  /**
+   * Print the matrix containing the similarity score between pair of nodes
+   * @param similarity_matrix 
+   */
+   void print_structural_similarity(double** similarity_matrix,int num_states_target_dfa) const;
 
 };
 

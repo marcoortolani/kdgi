@@ -300,7 +300,7 @@ int Dfa::get_num_states() const{
 	return num_states_;
 }
 
-int Dfa::get_start_state(){
+int Dfa::get_start_state() const{
 	return start_state_;
 }
 
@@ -397,7 +397,7 @@ string Dfa::random_ttable()
     uniform_int_distribution<> dis2(0, 1); //for accepting/rejecting column
 
 	//cout<<"The extracted random ttable_ is :"<<endl;
-	for(int row=0,num_element=0; row<get_num_states(); ++row)
+	for(int row=0; row<get_num_states(); ++row)
 	{
 		for(string sym : get_alphabet())
 		{
@@ -734,6 +734,36 @@ void Dfa::print_dfa_in_text_file(const string file_path)
 	myfile.close();
 }
 
+int Dfa::get_arrive_state(vector<string> &dfa_string) const
+{
+	int state = get_start_state();
+	int next_state=ND;
+
+	for(string sym : dfa_string){
+		next_state = get_ttable(state,sym);
+		if(next_state == ND){
+			state = ND;
+			break;
+		}
+		state = next_state;
+	}
+	// It returns "ND" if the provided string is not compatible, otherwise it returns reached state
+	return state;
+}
+
+bool Dfa::membership_query(vector<string> str)const{
+
+	// Check if arrive_state is ND (for DFA without sink state)
+	int arrive_state = get_arrive_state(str);
+	if(arrive_state == ND)
+		return false;
+
+	if(is_accepting(arrive_state))
+		return true;
+	else
+		return false;
+}
+
 /*
 bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_measures &stats1 , ir_statistical_measures &stats2 )
 {
@@ -812,5 +842,582 @@ bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_meas
 		   compute_ir_stats(dfa_to_compare,this,test_set2,stats2);//this is the target. Samples generated on the model, i.e. hypothesis  (dfa_to_compare)
 
 	return useRandomWalk;
+}
+*/
+
+map<int,string>  Dfa::get_access_strings() const
+{
+
+	//// Support structers
+	// Record the already visited nodes
+	vector<int> 							   	visited_nodes;
+
+	// Queue of nodes to be checked
+	list<int>										queue;
+
+	// Structure to record access strings
+	map<int,string> 	access_strings;
+
+
+	//// Init
+	// Insert as first state the start state
+	queue.push_back(start_state_);
+	visited_nodes.push_back(start_state_);
+	int current_node = start_state_;
+
+
+	// BFS
+	while(!queue.empty())
+	{
+		// Reference to the front of the queue
+		current_node = queue.front();
+		queue.pop_front();
+
+		//cout << "Father node: "<< intTostring(current_node) << endl;
+
+
+		// Cycle on linked node to current node
+		for(string sym : get_alphabet())
+		{
+			int child_node = get_ttable(current_node,sym);
+			//cout << "Child node: "<< intTostring(child_node) << endl;
+
+
+			// If it is a not visited nodes
+			if( std::find(visited_nodes.begin(), visited_nodes.end(), child_node) == visited_nodes.end() )
+			{
+				// Current access string
+				string current_access_string;
+
+				if( access_strings.find(current_node) != access_strings.end()  )
+					current_access_string = access_strings[current_node];
+				current_access_string=current_access_string+sym;
+
+
+				// If the entry does not exist in the table, inserts it,
+				// otherwise compare lenght, if it is shorter inserts it
+				if (access_strings[child_node].empty())
+					access_strings[child_node] = current_access_string;
+				else if(access_strings[child_node].size() > current_access_string.size() )
+					access_strings[child_node] = current_access_string;
+
+
+
+				// Insert analyzed child node into queue and visited node set
+				visited_nodes.push_back(child_node);
+				queue.push_back(child_node);
+					//cout << "Nodo "<< intTostring(child_node) << " inserito nella coda"<<endl;
+			}
+		}
+
+	}
+
+	return access_strings;
+}
+
+// Generazione random di samples
+// Based on the algorithm described in "STAMINA: a competition to encourage the development
+// and assessment of software model inference techniques", by N. Walkinshaw,
+// B. Lambeau, C. Damas, K. Bogdanov, P. Dupont. DOI 10.1007/s10664-012-9210-3
+map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_pos_samples,int n_neg_samples) const
+{
+	// Final random string: string and type (positive or negative)
+	map< vector<string>, int> samples;
+
+	vector<string> alph=get_alphabet();
+
+	srand (time(NULL));
+
+	//int curr_transition_mapped_symbol =0;
+
+	int freq_to_stop = 1+2*(this->get_dim_alphabet());	  // The inverse is probability to stop
+
+	string current_transition_symbol = "";
+
+
+	bool found_one_minimum_accepted_str = false;
+	bool go_next = true;
+	int current_state = 0;
+
+	int num_attempts = 0;
+	int num_neg_attempts = 0;
+
+	//int debug=1;
+	////////////////////////////////////////////////////
+	// POSITIVE SAMPLE
+	while(samples.size() < n_pos_samples)
+	{	
+		//cout<<"Iterazione: "<<debug<<endl;
+		//debug++;
+
+		// Init
+		vector<string> incremental_sample;
+		vector<string> positive_sample;
+
+
+		// New random transition - Input for first transition
+		current_transition_symbol = alph[rand() % get_dim_alphabet()];
+		//cout<<"dim alph="<<this->get_dim_alphabet()<<endl;
+
+		//cout<<current_transition_symbol<<endl;
+		if(current_transition_symbol == ""){
+			cerr  << "ERROR: Random transition have no corresponding alphabet simbol" << endl;
+			continue;
+		}
+
+
+		// Build a positive sample
+		go_next = true;
+		current_state = 0;
+		int num_iteration = 0;
+		bool sink_state = false;
+		found_one_minimum_accepted_str = false;
+
+		while(go_next)
+		{
+			current_state = get_ttable(current_state,current_transition_symbol);
+
+			// Symbol corresponding to transition index
+			if(current_transition_symbol == "")
+					cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
+
+
+			// Increment the final random string
+			incremental_sample.push_back(current_transition_symbol);
+
+			// Visit DFA with input symbol: if accepting state than stop!
+			if(is_accepting(current_state)){
+				found_one_minimum_accepted_str = true;
+				positive_sample = incremental_sample;
+			}
+
+
+			// Stop condition - // If it stops some good strings should have been generated
+			if( ((rand() % freq_to_stop) == 1 && found_one_minimum_accepted_str) || num_iteration > 5000)
+				go_next = false;
+
+
+			// Check if it ended in a sink state
+			if(num_iteration > 5000)
+				sink_state = true;
+
+
+			// Generate new input symbol
+			current_transition_symbol = alph[rand() % get_dim_alphabet()];
+
+
+			++num_iteration;
+		} // END while(go_next)
+
+		if(num_attempts > ITERATION_LIMIT_FOR_EVERY_GENERAL_PROBLEM){
+			cout << "! Poor set of samples ! Actually number of samples: " << samples.size() << endl;
+			break;
+		}
+
+        //if(positive_sample.at(0).compare(" ") != 0)  //THIS IS ORIGINAL INSTRUCTION
+			++num_attempts;
+
+		if(sink_state)
+			continue;
+
+
+		// Record positive sample built
+		samples[positive_sample] = 1;
+
+		//cout << "Positive string generated: " << positive_sample << endl;
+
+
+		
+
+	} // END while(positive_sample)
+
+	//cout << "Actually positive samples: "<< samples.size() << " out of a total of " << n_pos_samples << endl;
+
+
+	////////////////////////////////////////////////////////////////
+	// NEGATIVE SAMPLES
+	while(samples.size() - n_pos_samples < n_neg_samples)
+	{
+		//cout << "Tot: "<<samples.size() <<", Positive: "<<n_pos_samples <<", Negative: "<<n_neg_samples<<endl;
+
+		vector<string> incremental_sample;
+		vector<string> positive_sample;
+
+		int mod_type = rand() % 3;			// 0: substituting, 1:inserting, 2:deleting
+
+		int n_of_editing = getPoisson(3);   // Poisson distribution centred on 3
+		int changes_done = 0;
+
+
+		// Read positive samples to be modified
+		for(auto curr_sample=samples.begin(); curr_sample!=samples.end(); ++curr_sample)
+		{
+			// Read a positive sample
+			if((*curr_sample).second == 1)
+				incremental_sample = (*curr_sample).first;
+			//cout << "\nPositive sample read: "<< incremental_sample << endl;
+
+			if(incremental_sample.size() == 0)
+				continue;
+
+			// Number of edits to be applied
+			n_of_editing = getPoisson(3);
+
+
+			// Do changes
+			changes_done = 0;
+			while(changes_done < n_of_editing)									// Make "n_changes" for the single string up to "n_of_editing"
+			{
+
+				// Random selection of edits to be applied
+				mod_type = rand() % 3;
+
+				// Index of symbol to be modified
+				int index_of_substituted_symbol = rand() % incremental_sample.size();
+
+
+				// 0 - Substitution
+				if(mod_type == 0){
+					//cout << endl<<"Substitution"<<endl;
+
+					// New symbol to be inserted
+					int new_integer_char = rand() % get_dim_alphabet();
+
+					// Map symbol to integer
+					string new_symbol = alph[new_integer_char];
+
+					// Substitution with the new symbol
+					incremental_sample[index_of_substituted_symbol] = new_symbol;
+				}
+				// 1 - Insertion
+				else if(mod_type == 1){
+					//cout <<endl<< "Insertion"<<endl;
+
+					// New symbol to be inserted
+					int new_integer_char = rand() % get_dim_alphabet();
+
+					// Map symbol from integer to referred alphabet_ symbol (from int to string)
+					string new_symbol = alph[new_integer_char];
+
+					incremental_sample.insert(incremental_sample.begin()+index_of_substituted_symbol, new_symbol);
+				}
+				// 2 - Removal
+				else if(mod_type == 2){
+					//cout << endl << "Removal"<<endl;
+
+					// Check if string lenght is less or equal 1
+					if(incremental_sample.size() <= 1)
+						continue;
+
+					// Remove an element
+					incremental_sample.erase(incremental_sample.begin()+index_of_substituted_symbol);
+				}
+
+				changes_done++;
+			}
+
+			// Check if the new string is a negative one and add it to the set
+			// From vector<string> to vector<SYMBOL>
+			/*vector<SYMBOL> symbol_incremental_sample(incremental_sample.size());
+				i=0;
+			    for(auto it=incremental_sample.begin(); it!=incremental_sample.end(); ++it,++i)
+			       symbol_incremental_sample.at(i) = mapped_alphabet_.at(*it);
+			*/
+			if(membership_query(incremental_sample) == 0){
+				samples[incremental_sample] = 0;
+				//cout << "Rightly rejected string:"<<incremental_sample<<";"<<endl;
+			}
+
+            ++num_neg_attempts;
+
+			// Stop when total number of samples have been generated
+			if((samples.size() - n_pos_samples >=  n_neg_samples))
+				break;
+		}
+		if( num_neg_attempts>ITERATION_LIMIT_FOR_EVERY_GENERAL_PROBLEM || num_neg_attempts==0 )
+		   break;
+	}
+
+	return samples;
+}
+
+map< vector<string>, int> Dfa::generate_weights_for_pos_neg_samples(map< vector<string>, int> samples, int upper_bound_for_weights)
+{
+	// Weights of samples: <string, weight>
+	map<vector<string>, int> weights;
+
+
+	// Random weight generation
+	srand(time(NULL));
+	for(auto it=samples.begin(); it!=samples.end(); ++it)
+	{
+		int random_weight = rand() % upper_bound_for_weights;
+		weights[it->first] = random_weight;
+	}
+
+	return weights;
+}
+
+void Dfa::print_set_of_pos_neg_samples(map< vector<string>, int> samples, map< vector<string>, int> weights)
+{
+	// Check if the number of samples and weights is equal
+	if(samples.size() != weights.size())
+		throw wrongSizes();
+
+
+	// Print positive sample
+	cout << "Positive samples:" << endl;
+	for(auto it = samples.begin(), it_weg = weights.begin(); it != samples.end(); ++it, ++it_weg)
+	{
+		if(it->second == 1){
+			cout << "+ ";
+			cout << it_weg->second << " ";
+			for(auto ch = (it->first).begin(); ch!=(it->first).end(); ++ch)
+				cout << (*ch) << " ";
+			cout << "\n";
+		}
+	}
+
+
+	// Write negative sample
+	cout << "Negative samples:" << endl;
+	for(auto it = samples.begin(), it_weg = weights.begin(); it != samples.end(); ++it, ++it_weg)
+	{
+		if(it->second == 0){
+			cout << "- ";
+			cout << it_weg->second << " ";
+			for(auto ch = (it->first).begin(); ch!=(it->first).end(); ++ch)
+				cout << (*ch) << " ";
+			cout << "\n";
+		}
+	}
+}
+
+bool Dfa::write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path)
+{
+	// File variable
+	ofstream myfile;
+
+	// Write positive and negative samples on file
+	//cout << "Writing on: " << file_path << endl;
+
+	myfile.open(file_path);
+
+	myfile << get_dim_alphabet() << "\n";
+
+
+	// Write alphabet_ symbols
+	myfile << "$ ";						// Empty string symbol
+	for(int i=0; i<get_dim_alphabet(); ++i)
+		myfile << alphabet_[i] <<" ";
+	myfile << "\n";
+
+
+	// Write positive sample
+	for(auto it = samples.begin(), it_weg = weights.begin(); it != samples.end(); ++it, ++it_weg)
+	{
+		if(it->second == 1){
+			myfile << "+ ";
+			myfile << it_weg->second << " ";
+			for(auto ch = (it->first).begin(); ch!=(it->first).end(); ++ch)
+				myfile << (*ch) << " ";
+			myfile << "\n";
+		}
+	}
+
+
+	// Write negative sample
+	for(auto it = samples.begin(), it_weg = weights.begin(); it != samples.end(); ++it, ++it_weg)
+	{
+		if(it->second == 0){
+			myfile << "- ";
+			myfile << it_weg->second << " ";
+			for(auto ch = (it->first).begin(); ch!=(it->first).end(); ++ch)
+				myfile << (*ch) << " ";
+			myfile << "\n";
+		}
+	}
+
+
+	myfile.close();
+
+	return true;
+}
+
+bool Dfa::write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path)
+{
+	// File variable
+	ofstream myfile;
+
+	// Write positive and negative samples on file
+	//cout << "Writing on: " << file_path << endl;
+
+	myfile.open(file_path);
+
+	myfile << get_dim_alphabet() << "\n";
+
+
+	// Write alphabet_ symbols
+	myfile << "$ ";						// Empty string symbol
+	for(int i=0; i<get_dim_alphabet(); ++i)
+		myfile << alphabet_[i] <<" ";
+	myfile << "\n";
+
+
+	// Write positive sample
+	for(auto it = samples.begin(); it != samples.end(); ++it)
+	{
+		if(it->second == 1){
+			myfile << "+ ";
+			for(auto ch = (it->first).begin(); ch!=(it->first).end(); ++ch)
+				myfile << (*ch) << " ";
+			myfile << "\n";
+		}
+	}
+
+
+	// Write negative sample
+	for(auto it = samples.begin(); it != samples.end(); ++it)
+	{
+		if(it->second == 0){
+			myfile << "- ";
+			for(auto ch = (it->first).begin(); ch!=(it->first).end(); ++ch)
+				myfile << (*ch) << " ";
+			myfile << "\n";
+		}
+	}
+
+
+	myfile.close();
+
+	return true;
+}
+
+// Generazione random di samples
+bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path)
+{
+
+	// Final random string: string and type (positive or negative)
+	map< vector<string>, int>  samples = generate_pos_neg_samples_without_weights(n_pos_samples, n_neg_samples);
+
+
+	// Generation of random weights for the samples
+	map< vector<string>, int>  weights = generate_weights_for_pos_neg_samples(samples, upper_bound_for_weights);
+
+
+	// Write in file the generated set of samples
+	bool exit_status = write_existent_set_of_pos_neg_samples_in_file( samples, weights, file_path);
+
+
+	return exit_status;
+}
+
+/*
+vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const
+{
+	vector<string> w_vec;
+
+	set<vector<SYMBOL>> w_set = get_w_method_test_set_mapped_alphabet(target_dfa,sigma);
+
+	for(auto &it1 : w_set) {
+		std::vector<char> strvec;
+		for (SYMBOL s: it1) {
+			char c = get_letter_from_mapped_alphabet(s)[0];
+			strvec.push_back(c);
+		}
+		std::string str(strvec.begin(),strvec.end());
+		w_vec.push_back(str);
+	}
+
+	return w_vec;
+}
+
+set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_dfa, bool sigma) const
+{
+	set<vector<SYMBOL>> w_method_test_set;
+
+	#ifdef DEBUG_DFA
+	cout << "START Cover set...";
+	#endif
+
+	vector<vector<SYMBOL>> cover_set = get_cover_set();
+	vector<vector<SYMBOL>> cover_set_target_dfa=target_dfa->get_cover_set();
+
+	#ifdef DEBUG_DFA
+	cout << "END. Size: "<< cover_set.size() << endl;
+	cout << "START aug char set ... " << flush;
+	#endif
+
+	int sigma_exponent=0;
+	vector<vector<SYMBOL>> characterization_set;
+
+	if(sigma){
+
+		sigma_exponent=(target_dfa->get_set_depth(cover_set_target_dfa)-get_set_depth(cover_set));
+
+		try
+		{
+			get_augmented_characterization_set(sigma_exponent, characterization_set);
+		}catch(exception &e){
+			cerr << "ERR: Too memory allocated" << endl;
+			throw ;
+		}
+
+	}
+
+	else{	//sigma false so we don't want the central term sigma^k
+
+		try
+		{
+			characterization_set=get_characterization_set();
+		}catch(exception &e){
+			cerr << "ERR: Too memory allocated" << endl;
+			throw ;
+		}
+
+	}
+	//here the characterization_set is ready, with or without sigma, as our choice points out
+
+	#ifdef DEBUG_DFA
+	cout << "END. Size: " << aug_characterization_set.size() << endl;
+	#endif
+
+	// Limit the number of strings
+	//if(cover_set.size() * aug_characterization_set.size() > 10000000000)
+	//	throw wMethodTestSetTooBig();
+
+
+	#ifdef DEBUG_DFA
+	cout << "START Test set...";
+	#endif
+
+	////// Compute test set: concatenating cover set and aug. charac. set
+	for(auto &it1 : cover_set)
+	{
+		// Add non-concatened string of cover set to final set
+		//if(it1.size() != 0)
+		//	w_method_test_set.insert(it1);
+
+
+		// Add concatened strings
+		for(auto &it2 : characterization_set)
+		{
+			vector<SYMBOL> tmp_string = it1;
+
+			// Concatenating strings
+			tmp_string.insert( tmp_string.end(), it2.begin(), it2.end() );
+
+			// Add string to final set
+			w_method_test_set.insert(tmp_string);
+		}
+	}
+
+
+	#ifdef DEBUG_DFA
+	cout << "END. Size:" << w_method_test_set.size() << endl;
+	#endif
+
+
+	return w_method_test_set;
 }
 */

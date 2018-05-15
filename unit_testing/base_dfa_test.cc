@@ -108,24 +108,21 @@ TEST_F(BaseDfaTest, readDfaFile){
 
 TEST_F(BaseDfaTest, membershipQuery){
     bool flag=true;
-    vector<string> try1={"0","0"};
+    vector<string> try1={"0","0"};  //stringa 00 accettata
     flag=reference->membership_query(try1);
-    vector<string> try2={"0","2","0"};
+    vector<string> try2={"0","2","0"};  //stringa 020 accettata
     flag=reference->membership_query(try2);
-    vector<string> try3={"2"};
+    vector<string> try3={"2"};  //non accettata
     flag=!(reference->membership_query(try3));
     EXPECT_EQ(1,flag);
 }
+
 /*
 TEST_F(BaseDfaTest, equivalenceQuery){
     bool flag=true;
     Dfa* test=nullptr; 
     test=new Dfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
-    Dfa* test2=nullptr; 
-    test=new Dfa(test2->read_dfa_file("../unit_testing/data/tomita14.txt"));
-
     flag=reference->equivalence_query(test);
-    flag=!(reference->equivalence_query(test2));
     EXPECT_EQ(1,flag);
 }
 */

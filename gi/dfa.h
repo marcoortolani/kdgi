@@ -345,7 +345,7 @@ public:
    * Return a set of access strings for all the states of DFA.
    * @return A vector of string (true string!) characterizing current DFA, they adopted the alphabet.
    */
-  map<int,string> 	get_access_strings() const;
+  map<int,vector<string>> 	get_access_strings() const;
 
   /**
    * It returns a set random samples (all different) generated from current DFA.

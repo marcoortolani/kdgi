@@ -2,10 +2,9 @@
 #include "dfa.h"
 
 class TestDfa : public Dfa{
-
-  friend class LinguisticSimilarityTest;
-
   friend class BaseDfaTest;
+  friend class LinguisticSimilarityTest;
+  friend class StructuralSimilarityTest;
 
   FRIEND_TEST(BaseDfaTest, equivalenceQuery);
 

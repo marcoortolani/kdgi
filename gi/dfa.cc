@@ -2088,7 +2088,7 @@ vector<long double> Dfa::get_w_method_statistics(vector<vector<string>> test_set
   return statistics;
 }
 
-vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps) const{
+vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps, bool color) const{
 
 	fpu_control_t oldcw, newcw;
     _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
@@ -2136,11 +2136,25 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 	subject_incidence_matrix=get_incidence_matrix(subject_ttable,subject_dfa->get_num_states(),subject_dfa->get_alphabet());
 	vector<int> *reference_labels= new vector<int>[this->get_num_states()]; 
 	vector<int> *subject_labels= new vector<int>[subject_dfa->get_num_states()];	//useful for coloured graphs
-	//we consider every state to have label 1
-	for(int i=0; i<this->get_num_states();++i)
-		(*reference_labels).push_back(1);
-	for(int j=0; j<subject_dfa->get_num_states();++j)
-		(*subject_labels).push_back(1);
+	//we consider every state to have label 1 if color is FALSE
+	if(!color){
+		for(int i=0; i<this->get_num_states();++i)
+			(*reference_labels).push_back(1);
+		for(int j=0; j<subject_dfa->get_num_states();++j)
+			(*subject_labels).push_back(1);
+	}
+	else{	//If color is TRUE we give label 1 to accepting states and label 0 to rejecting states
+		for(int i=0; i<this->get_num_states();++i)
+			if(this->is_accepting(i))
+				(*reference_labels).push_back(1);
+			else	
+				(*reference_labels).push_back(0);
+		for(int j=0; j<subject_dfa->get_num_states();++j)
+			if(subject_dfa->is_accepting(j))
+				(*subject_labels).push_back(1);
+			else
+				(*reference_labels).push_back(0);
+	}
 
 	//Reference_dfa to grapha
 	try{
@@ -2215,5 +2229,21 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 	sim_v[this->get_num_states()][0]=similarity/no;
 
 	return sim_v;
+}
+
+void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix, int num_states_subject_dfa) const{
+	printf("\nSimilarity matrix:\n\n");
+    for(int i=0; i<this->get_num_states(); i++)
+    {
+        printf(" [ ");
+        for(int j=0; j<num_states_subject_dfa; j++){
+       		printf("%lf ", similarity_matrix[i][j]);
+		}
+        printf("]\n");
+    }
+
+	printf("\n");
+
+	cout <<"Similarity between the Dfas: " <<similarity_matrix[this->get_num_states()][0] << endl;
 
 }

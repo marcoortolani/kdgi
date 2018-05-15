@@ -41,8 +41,7 @@ protected:
 
 
 TEST_F(StructuralSimilarityTest, reflectiveTestSet) {
-
-  vector<vector<double>> similarity_matrix = reference->neighbour_matching_structural_similarity(subject);
-
+  	vector<vector<double>> similarity_matrix = reference->neighbour_matching_structural_similarity(subject);
+	//similarity_matrix[reference->get_num_states()][0] contains the final structural sim score
 	EXPECT_EQ(1,similarity_matrix[reference->get_num_states()][0]);
 }

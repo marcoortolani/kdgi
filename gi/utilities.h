@@ -13,6 +13,7 @@
 #include <iostream>
 #include <string>
 #include <set>
+#include <map>
 #include <cstring>
 #include <cmath>
 #include <vector>
@@ -808,7 +809,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 
 };
 
-inline char* get_incidence_matrix(int** ttable, int num_states, int dim_alphabet){
+inline char* get_incidence_matrix(vector<map<string,int>> ttable, int num_states, vector<string> alphabet){
 
 	char* incidence_matrix=new char[num_states*num_states];
 
@@ -817,8 +818,8 @@ inline char* get_incidence_matrix(int** ttable, int num_states, int dim_alphabet
 
 	int arrive_state=0;
 	for(int row=0;row<num_states;++row)
-		for(int column=0;column<dim_alphabet;++column){
-			arrive_state=ttable[row][column];
+		for(string sym : alphabet){
+			arrive_state=ttable[row][sym];
 			incidence_matrix[row*num_states+arrive_state]=1;
 		}
 

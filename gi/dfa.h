@@ -414,7 +414,7 @@ public:
    * @param reference_dfa
    * @return array containing {tp,fn,tn,fp,precision,recall,f-measure,specifity,bcr}
    */
-   vector<long> get_w_method_statistics(vector<string> test_set, Dfa* subject_dfa) const;
+   vector<long double> get_w_method_statistics(vector<vector<string>> test_set, Dfa* subject_dfa) const;
 
    /**
     * Gives the structural similarity score matrix between every pair of states of two DFAs
@@ -426,7 +426,7 @@ public:
     *         similarity_matrix[reference_dfa->num_states][1] contains the overall
     *         structural similarity score between the two Dfas
     */
-   double** neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps) const;
+   vector<vector<double>> neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps=0.0001) const;
 
    /**
     * Gives the structural similarity score matrix between every pair of states of two DFAs
@@ -439,13 +439,13 @@ public:
     *         similarity_matrix[reference_dfa->num_states][1] contains the overall
     *         structural similarity score between the two Dfas
     */
-   double** neighbour_matching_structural_similarity_color(Dfa* subject_dfa, double eps) const;
+   vector<vector<double>> neighbour_matching_structural_similarity_color(Dfa* subject_dfa, double eps=0.0001) const;
 
   /**
    * Print the matrix containing the similarity score between pair of nodes
    * @param similarity_matrix 
    */
-   void print_structural_similarity(double** similarity_matrix,int num_states_target_dfa) const;
+   void print_structural_similarity(vector<vector<double>> similarity_matrix,int num_states_target_dfa) const;
 
 };
 

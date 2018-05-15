@@ -230,7 +230,7 @@ struct ir_statistical_measures
 };
 
 
-void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<string> &test_set,ir_statistical_measures &stats);
+void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<vector<string>> &test_set,ir_statistical_measures &stats);
 void print_ir_stats(ir_statistical_measures &stats);
 //void compute_ir_stats(dfaEDSM* dfa1, ir_statistical_measures &stats, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn);
 

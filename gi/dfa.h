@@ -27,14 +27,47 @@ using namespace std;
 
 class Dfa {
 
+private:
+
+  vector<map<string,int>> ttable_;			  	/*!< Transition table */
+
 protected:
   //******** DATA MEMBERS: ********
 
   int	  num_states_;									/*!< Number of dfa states */
   int	  start_state_;									/*!< Index of start state */
   vector<string> alphabet_;								/*!< Alphabet symbols */
-  vector<map<string,int>> ttable_;			  	/*!< Transition table */
   vector<int> accepting_states_;      /*!< List of accepting states */
+
+  //******** CONSTRUCTORS: ********
+
+  /**
+   * Make an instance of new dfa with default start state to 0
+   * @param n_state	Number of states
+   * @param dim_alf	Size of alphabet
+   * @param alf		Alphabet symbols
+   */
+  Dfa(const int n_state, const vector<string> alf);
+
+  /**
+   * Make an instance of new dfa. Give possibility to set the start state.
+   * @param n_state	Number of states
+   * @param dim_alf	Size of alphabet
+   * @param alf		Alphabet symbols
+   * @param s_state	Start state
+   */
+  Dfa(const int n_state, const vector<string> alf, const int s_state);
+
+  /**
+   * Make an instance of new dfa.
+   * Set tra transistion table making a copy of "tt_copy" passed as argument.
+   * @param n_state	Number of states
+   * @param dim_alf	Size of alphabet
+   * @param alf		Alphabet symbols
+   * @param s_state	Start state
+   * @param tt_copy	Reference to extern transition table to copy inside current dfa
+   */
+  Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy );
 
   //******** METHODS: ********
 
@@ -91,7 +124,7 @@ protected:
    * @param witness_results 			A vector<SYMBOL> in which save the witness.if miss is NULL for default,it means that the client isn't interested in witness but in ceck equivalence alone
    * @return true if the two dfas are equivalents, false otherwise
    */
-  bool	 equivalence_query(Dfa* dfa_hp, vector<string>* witness_results=NULL);
+  bool	 equivalence_query(Dfa* dfa_hp, vector<string> witness_results=vector<string>());
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -149,34 +182,6 @@ public:
    * Make an instance of null dfa
    */
   Dfa();
-
-  /**
-   * Make an instance of new dfa with default start state to 0
-   * @param n_state	Number of states
-   * @param dim_alf	Size of alphabet
-   * @param alf		Alphabet symbols
-   */
-  Dfa(const int n_state, const vector<string> alf);
-
-  /**
-   * Make an instance of new dfa. Give possibility to set the start state.
-   * @param n_state	Number of states
-   * @param dim_alf	Size of alphabet
-   * @param alf		Alphabet symbols
-   * @param s_state	Start state
-   */
-  Dfa(const int n_state, const vector<string> alf, const int s_state);
-
-  /**
-   * Make an instance of new dfa.
-   * Set tra transistion table making a copy of "tt_copy" passed as argument.
-   * @param n_state	Number of states
-   * @param dim_alf	Size of alphabet
-   * @param alf		Alphabet symbols
-   * @param s_state	Start state
-   * @param tt_copy	Reference to extern transition table to copy inside current dfa
-   */
-  Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy );
 
   /**
    * Constructor for make a copy of a dfa "d1"
@@ -399,7 +404,7 @@ public:
    * in general sigma is true, it false for debugging purposes
    * @return A vector of strings
    */
-  vector<string> 	get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const;
+  vector<vector<string>> 	get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const;
 
   /**
    * Given a test set and the reference and subject dfa,

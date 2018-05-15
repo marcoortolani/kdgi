@@ -764,7 +764,7 @@ bool Dfa::membership_query(vector<string> str)const{
 		return false;
 }
 
-/*
+
 bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_measures &stats1 , ir_statistical_measures &stats2 )
 {
 	boost::algorithm::to_lower(method);
@@ -774,8 +774,8 @@ bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_meas
 	   throw invalidParameters();
 	}
 
-	vector<string> test_set;
-	vector<string> test_set2;
+	vector<vector<string>> test_set;
+	vector<vector<string>> test_set2;
 	int n_states_dfa_to_compare = dfa_to_compare->get_num_states();
 	int n_states_this_dfa = this->get_num_states();
 	int num_pos_samples = 750;
@@ -812,22 +812,22 @@ bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_meas
 				useRandomWalk = true; //for a correct return value in all cases
 				//vector<string> sentence_temp;
 
-				//convert the structure returned from random walk in a set<vector<SYMBOL>>
+				//convert the structure returned from random walk in a set<vector<string>>
 				for(auto &samples_set : this->generate_pos_neg_samples_without_weights(num_pos_samples,num_neg_samples) )
 				{
 					//sentence_temp = {};
-					for(auto & sample : samples_set.first) //samples_set.first is a vector<string>
-						test_set.push_back(sample);
-
+					//for(auto & sample : samples_set.first) //samples_set.first is a vector<string>
+						//test_set.push_back(sample);
+					test_set.push_back(samples_set.first);
 					//test_set.push_back(sentence_temp);
 				}
 
 				for(auto &samples_set : dfa_to_compare->generate_pos_neg_samples_without_weights(num_pos_samples,num_neg_samples) )
 				{
 					//sentence_temp = {};
-					for(auto & sample : samples_set.first) //samples_set.first is a vector<string>
-						test_set2.push_back(sample);
-
+					//for(auto & sample : samples_set.first) //samples_set.first is a vector<string>
+						//test_set2.push_back(sample);
+					test_set2.push_back(samples_set.first);
 					//test_set2.push_back(sentence_temp);
 				}
 
@@ -843,7 +843,7 @@ bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_meas
 
 	return useRandomWalk;
 }
-*/
+
 
 map<int,string>  Dfa::get_access_strings() const
 {
@@ -1312,7 +1312,7 @@ bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int
 	return exit_status;
 }
 
-bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string>* witness_results) {
+bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> witness_results) {
 
     bool areEquivalent;
 
@@ -1349,8 +1349,8 @@ bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string>* witness_results) {
 	if(equivalent_states_list[start_state].end() == find(equivalent_states_list[start_state].begin(), equivalent_states_list[start_state].end(), hp_start_state) )
 	{
 		areEquivalent = false;
-		if(witness_results!=NULL) //if witness_results is NULL means that the client isn't interested in witness but in checking only equivalence
-		   *witness_results = dfa_union->witness_from_table(distincts_table, num_states_);
+		if(!(witness_results.empty())) //if witness_results is NULL means that the client isn't interested in witness but in checking only equivalence
+		   witness_results = dfa_union->witness_from_table(distincts_table, num_states_);
 	}
 	else //The dfa are equivalentes
 	   areEquivalent = true;
@@ -1583,6 +1583,330 @@ size_t Dfa::get_set_depth(vector<vector<string> > set) const{
   return max;
 }
 
+vector<vector<string >> Dfa::get_cover_set() const
+{
+
+	//// Utility structures
+	// Record the already visited nodes
+	vector<int> 							   	visited_nodes;
+
+	// Queue of nodes to be checked
+	list<int>										queue;
+
+	// Structure to record access strings
+	map<int, vector<string>> 	access_strings;
+
+	// Cover set
+	vector<vector<string>> 		cover_set(1, vector<string>());  	// "1" is for epsilon transition
+
+
+	//// Init
+	// Insert as first state the start state
+	queue.push_back(start_state_);
+	visited_nodes.push_back(start_state_);
+	int current_node = start_state_;
+
+
+	//// BFS
+	while(!queue.empty())
+	{
+		// Reference to the front of the queue
+		current_node = queue.front();
+		queue.pop_front();
+
+
+		//cout << "Father node: "<< intTostring(current_node) << endl;
+
+
+		// Cycle on linked node to current node
+		for(string sym : get_alphabet())
+		{
+			int child_node = get_ttable(current_node,sym);
+						//cout << "Child node: "<< intTostring(child_node) << endl;
+
+
+			// Add string for transition towards child nodes
+			vector<string> child_access_string = access_strings[current_node];
+			//cout<<access_strings[current_node];
+			child_access_string.push_back(sym);
+
+
+			// If it is a not visited node
+			if( std::find(visited_nodes.begin(), visited_nodes.end(), child_node) == visited_nodes.end() )
+			{
+				// Current access string
+				vector<string> current_access_string;
+
+				if( access_strings.find(current_node) != access_strings.end()  )
+					current_access_string = access_strings[current_node];
+				current_access_string.push_back(sym);
+						//cout << "String for father: "<<access_strings[current_node] << endl;
+						//cout << "Current string: "<< current_access_string << endl;
+
+
+				// If no entry was in the table, one is added. Otherwise, it compares lenghts, the shorter will be recorded
+				if (access_strings[child_node].empty())
+					access_strings[child_node] = current_access_string;
+				else if(access_strings[child_node].size() > current_access_string.size() )
+					access_strings[child_node] = current_access_string;
+
+
+				// Insert analyzed child node into queue and visited node set
+				visited_nodes.push_back(child_node);
+				queue.push_back(child_node);
+				cover_set.push_back(child_access_string);
+						//cout << "Node "<< intTostring(child_node) << " added to queue" << endl;
+			}
+		}
+
+	}
+
+	return cover_set;
+}
+
+vector<vector<string> > Dfa::get_characterization_set() const{
+	// Characterization set of examples for current DFA
+	vector<vector<string> > characterization_set(0, vector<string>());
+
+
+	// Table-filling algorithm over union dfa
+	vector<string> distincts_table = this->table_filling();
+
+
+	// Extract list of equivalent states from table of distinct states,
+	// every vector contain a list of equivalent states for the state that correspond to the vector.
+	// vector<int>* equivalent_states_list = this->equivalent_states_list_from_table(distincts_table);
+
+		#ifndef DEBUG_OBPA //not exec this control for OBP APPROXIMATED
+	// Check if the curret automaton is minimal
+	Dfa* tmp_minimized_dfa = this->minimize_TF();
+	if(tmp_minimized_dfa->get_num_states() != num_states_){
+		cout << "ERROR: Processed DFA is not minimial! Minimize it" << endl;
+		delete tmp_minimized_dfa;
+		throw mandatoryMinimalDFA();
+	}
+	delete tmp_minimized_dfa;
+		#endif
+
+
+
+	// Extract access strings for the DFA states
+	//map<int, vector<SYMBOL>> access_strings = this->get_access_strings();
+
+
+
+	// Track pairs of states already checked
+	map<int, vector<int>> state_pairs;
+
+
+	// For each pair of states, a string must be defined exploiting the symbols within the table of Table-filling
+	// These symbols makes a difference between the analyzed states.
+	for(int i=0; i<num_states_; ++i)
+	{
+		for(int j=i+1; j<num_states_; ++j)
+		{
+			//cout<<"sono in : ("<<i<<","<<j<<")"<<endl;
+			// If current pair was checked yet, it goes over
+			if( std::find(state_pairs[i].begin(), state_pairs[i].end(), j) != state_pairs[i].end() ){
+				//cout<<"coppia già visitata"<<endl;
+				continue;
+			}
+			// Generated witness for the pairs of states
+			vector<string> wit;
+
+			// Read symbol during the execution
+			string read_symbols;
+
+			int i_pair = i;
+			int j_pair = j;
+
+
+			while(1)
+			{
+
+				// By definition, in the table of pair states turns out that j>i always,
+				// then pairs shuould have i<j
+				if(j_pair < i_pair){
+					int tmp = i_pair;
+					i_pair = j_pair;
+					j_pair = tmp;
+				}
+
+				//cout<<endl<<"sono dentro il while(1) con i_pair="<<i_pair<<" e j_pair="<<j_pair<<endl;
+
+				// Add checked state
+				state_pairs[i_pair].push_back(j_pair);
+
+				int n = num_states_;
+				int k = (n*(n-1)/2) - (n-i_pair)*((n-i_pair)-1)/2 + j_pair - i_pair - 1;
+
+
+				if(stoi(distincts_table[k]) == DFA_TF_STATE_N){
+					cerr << "ERROR! Required counterexample with equivalent states" << endl;
+					throw witnessFromEquivalentDFA();
+				}
+
+
+				// Read the simbol which specifics the difference for the pair of states
+				read_symbols = distincts_table[k];
+
+
+				if(stoi(read_symbols) == DFA_TF_STATE_X)
+				{
+					//cout<<"esco dal while(1) con wit = ";
+					//for(SYMBOL sy : wit)	cout<<sy<<" ";
+					//cout<<endl;
+					break;
+				}
+
+
+				wit.push_back(read_symbols);
+
+				//cout<<endl<<"da "<<i_pair<<" con "<<read_symbols;
+				i_pair = get_ttable(i_pair,read_symbols);
+				//cout<<" vado in "<<i_pair<<endl;
+				//cout<<"da "<<j_pair<<" con "<<read_symbols;
+				j_pair = get_ttable(j_pair,read_symbols);
+				//cout<<" vado in "<<j_pair<<endl;
+			}//end while(1)
+
+
+			// Add generated strings to characterization set
+			if(wit.size() != 0)
+			{
+				// Prefix of characterizing strings is the access strings for analyzed states
+				vector<string> first_characterizing_strings;
+				vector<string> second_characterizing_strings;
+
+
+				// Build characterzing strings concatening access strings with witness for analyzed states
+				first_characterizing_strings.insert( first_characterizing_strings.end(), wit.begin(), wit.end() );
+				second_characterizing_strings.insert( second_characterizing_strings.end(), wit.begin(), wit.end() );
+
+
+				// Check if current sample is in the set yet
+				if( std::find(characterization_set.begin(), characterization_set.end(), first_characterizing_strings) == characterization_set.end() ){
+					characterization_set.push_back(first_characterizing_strings);
+					//cout<<"sto aggiungendo al characterization_set la prima stringa: "<<first_characterizing_strings<<endl;
+				}
+				if( std::find(characterization_set.begin(), characterization_set.end(), second_characterizing_strings) == characterization_set.end() ){
+					characterization_set.push_back(second_characterizing_strings);
+					//cout<<"sto aggiungendo al characterization_set la seconda stringa: "<<second_characterizing_strings<<endl;
+				}
+			}
+
+		}
+	}
+
+		//if (num_states_ == 1) //degenerate case, DFA with only a state. Return only the empty string in characterization set
+		if(characterization_set.size()==0)
+		{
+		vector<string> empty_string;
+		characterization_set.push_back(empty_string);
+	}
+
+	return characterization_set;
+}
+
+vector<vector<string> > 			Dfa::get_augmented_characterization_set(int sigma_exponent, vector<vector<string> >& aug_characterization_set)const
+{
+	//cout<<endl<<"sigma exponent: "<<sigma_exponent<<endl;
+
+	// Get simple characterization_set
+	#ifdef DEBUG_DFA
+	cout << "... START Simple char set creation..." << flush;
+	#endif
+
+	vector<vector<string>> characterization_set = get_characterization_set();
+
+	#ifdef DEBUG_DFA
+	cout << "END Simple char set. Size: "<< characterization_set.size() << flush;
+	#endif
+
+
+	// Prefixes to be concatened
+	vector<vector<string>> prefixes;
+
+
+	///INIT
+	vector<string> alph=get_alphabet();
+	for(int j=0; j<get_dim_alphabet();++j){
+		vector<string> tmp;
+		tmp.push_back(alph[j]);
+		prefixes.push_back(tmp);
+	}
+
+
+		// If diff_of_states >0
+		int prefix_length = sigma_exponent;
+		prefix_length++;
+		// If diff_of_states < 0
+		if(sigma_exponent <= 0)
+			prefix_length = 1;
+
+
+		#ifdef DEBUG_DFA
+		cout << "START creating prefixes to be concatenated..." << flush;
+		#endif
+
+    //cout<<endl<<"prefix_length= "<<prefix_length<<endl;
+		// Create prefixes
+		for(int i=0; i<prefix_length; ++i)
+		{
+			// Compute a new subset of strings
+			vector<vector<string>> new_subset;
+			for(string sym : alph)
+			{
+				for(auto &it : prefixes)
+				{
+					vector<string> tmp_prefix = it;
+					tmp_prefix.push_back(sym);
+					new_subset.push_back(tmp_prefix);
+					//if(new_subset.size() > LIMIT_OF_TESTSET_W_METHOD)
+					//	throw wMethodTestSetTooBig();
+				}
+			}
+
+			// It adds the new calculated sub set of strings at "prefixes"
+			for(auto &it : new_subset)
+				prefixes.push_back(it);
+
+		}
+
+    vector<string> empty_string;
+  	prefixes.push_back(empty_string);
+
+		#ifdef DEBUG_DFA
+		cout << "END prefixes to be concatenated. Size: " << prefixes.size() << endl;
+		cout << "START creating final aug char set..." << flush;
+		#endif
+
+
+		// It concatenates prefixes to the simple characterization_set
+		for(auto &it1 : characterization_set)
+		{
+			//aug_characterization_set.push_back(it1);
+
+			for(auto &it2 : prefixes){
+				vector<string> new_string = it2;
+
+				new_string.insert( new_string.end(), it1.begin(), it1.end());
+
+				aug_characterization_set.push_back(new_string);
+			}
+			//cout << "Current size of aug char set: "<<aug_characterization_set.size() << flush;
+			//if( aug_characterization_set.size() > LIMIT_OF_TESTSET_W_METHOD)
+			//	throw wMethodTestSetTooBig();
+
+		}
+
+
+		#ifdef DEBUG_DFA
+		cout << "END final aug char set. Size: " << aug_characterization_set.size() << flush;
+		#endif
+
+	return aug_characterization_set;
+}
 
 
 /*
@@ -1604,17 +1928,19 @@ vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma=true) cons
 
 	return w_vec;
 }
+*/
 
-set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_dfa, bool sigma) const
+
+vector<vector<string>>	Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma) const
 {
-	set<vector<SYMBOL>> w_method_test_set;
+	set<vector<string>> w_method_test_set;
 
 	#ifdef DEBUG_DFA
 	cout << "START Cover set...";
 	#endif
 
-	vector<vector<SYMBOL>> cover_set = get_cover_set();
-	vector<vector<SYMBOL>> cover_set_target_dfa=target_dfa->get_cover_set();
+	vector<vector<string>> cover_set = get_cover_set();
+	vector<vector<string>> cover_set_target_dfa=target_dfa->get_cover_set();
 
 	#ifdef DEBUG_DFA
 	cout << "END. Size: "<< cover_set.size() << endl;
@@ -1622,7 +1948,7 @@ set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_
 	#endif
 
 	int sigma_exponent=0;
-	vector<vector<SYMBOL>> characterization_set;
+	vector<vector<string>> characterization_set;
 
 	if(sigma){
 
@@ -1675,7 +2001,7 @@ set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_
 		// Add concatened strings
 		for(auto &it2 : characterization_set)
 		{
-			vector<SYMBOL> tmp_string = it1;
+			vector<string> tmp_string = it1;
 
 			// Concatenating strings
 			tmp_string.insert( tmp_string.end(), it2.begin(), it2.end() );
@@ -1690,7 +2016,18 @@ set<vector<SYMBOL>> 					Dfa::get_w_method_test_set_mapped_alphabet(Dfa* target_
 	cout << "END. Size:" << w_method_test_set.size() << endl;
 	#endif
 
+	
+	vector<vector<string>> w_vec(w_method_test_set.begin(),w_method_test_set.end());
 
-	return w_method_test_set;
+	/*
+	for(auto &it1 : w_method_test_set) {
+		string acc="";
+		for (string s: it1)
+			acc=acc+s;
+		w_vec.push_back(acc);
+	}
+	*/
+	
+
+	return w_vec;
 }
-*/

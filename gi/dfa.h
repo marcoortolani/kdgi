@@ -15,42 +15,61 @@
 #include "utilities.h"
 
 // Type of states
-#define DFA_STATE_NON_ACCEPTING 2						/*!< Non accepting state */
+#define DFA_STATE_NON_ACCEPTING 2					/*!< Non accepting state */
 #define DFA_STATE_ACCEPTING 1							/*!< Accepting state */
 #define DFA_STATE_REJECTING 0							/*!< Rejecting state */
-#define DFA_STATE_UNREACHABLE 3							/*!< Unreachable state from other states. Usually is a state to be delete. */
+#define DFA_STATE_UNREACHABLE 3						/*!< Unreachable state from other states. Usually is a state to be delete. */
 
 #define ND numeric_limits<int>::max()					/*!< Usually adopted for a non initialized state. */
 
-
-typedef unsigned short int SYMBOL;
-
 using namespace std;
 
-//******** CLASS DATA MEMBERS CONVENTION: ********
-//Data members of classes, both static and non-static,
-//are named like ordinary nonmember variables,
-//but with a trailing underscore.
 
 class Dfa {
+
+private:
+
+  vector<map<string,int>> ttable_;			  	/*!< Transition table */
 
 protected:
   //******** DATA MEMBERS: ********
 
-  int** ttable_;										/*!< Transition table */
   int	  num_states_;									/*!< Number of dfa states */
   int	  start_state_;									/*!< Index of start state */
-  int	  	dim_alphabet_;								/*!< Size of alphabet */
-  string* alphabet_;									/*!< Alphabet symbols */
-  map<string, SYMBOL> mapped_alphabet_;				/*!< Convert symbols into indices */
+  vector<string> alphabet_;								/*!< Alphabet symbols */
+  vector<int> accepting_states_;      /*!< List of accepting states */
 
-  //******** METHODS: ********
+  //******** CONSTRUCTORS: ********
 
   /**
-   * Set the transition table ("ttable") reference to an extern transition table passed as argument
-   * @param ext_ttab
+   * Make an instance of new dfa with default start state to 0
+   * @param n_state	Number of states
+   * @param dim_alf	Size of alphabet
+   * @param alf		Alphabet symbols
    */
-  void 	set_ttable(int** ext_ttab);
+  Dfa(const int n_state, const vector<string> alf);
+
+  /**
+   * Make an instance of new dfa. Give possibility to set the start state.
+   * @param n_state	Number of states
+   * @param dim_alf	Size of alphabet
+   * @param alf		Alphabet symbols
+   * @param s_state	Start state
+   */
+  Dfa(const int n_state, const vector<string> alf, const int s_state);
+
+  /**
+   * Make an instance of new dfa.
+   * Set tra transistion table making a copy of "tt_copy" passed as argument.
+   * @param n_state	Number of states
+   * @param dim_alf	Size of alphabet
+   * @param alf		Alphabet symbols
+   * @param s_state	Start state
+   * @param tt_copy	Reference to extern transition table to copy inside current dfa
+   */
+  Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy );
+
+  //******** METHODS: ********
 
   /**
    * Set the number of states
@@ -64,35 +83,39 @@ protected:
    * @param alf
    * @param d_alf
    */
-  void 	set_alphabet(const string* alf, const int d_alf);
-
-
-  /**
-   * It returns the associated letter to a SYMBOL in a mapped alphabet.
-   * @param index
-   */
-  string	get_letter_from_mapped_alphabet(const SYMBOL index) const;
+  void 	set_alphabet(const vector<string> alf);
 
   /**
-   * Return a vector<SYMBOL> string from a sample made up of alphabet symbols.
-   * @param str A string to be translated.
-   * @return Translated string.
+   * Set the transition table ("ttable") reference to an extern transition table passed as argument
+   * @param ext_ttab
    */
-  vector<SYMBOL>   translate_sample_using_mapped_alphabet(string str) const;
+  void 	set_ttable(const vector<map<string,int>> ext_ttab);
 
   /**
-   * Make a membership query to dfa with the "str" string. Return "true" if the arrive state for "str" is acceptor, else "false".
-   * @param str A string to make a membership query.
-   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
+   * Set a single value "v" for ttable entry for "i","j"
+   * @param i First coordinate
+   * @param j	Second coordinate - transition symbol
+   * @param v	Value to set
    */
-  //bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
+  void 	set_ttable_entry(int i, string j, int v);
 
   /**
-   * Given a state, it returns a string of SYMBOLS which drives to
-   * an accepting state
-   * @return accepting paths
+   * Set a state as accepting
+   * @param state_to_mark
    */
-  vector<vector<SYMBOL> > 			get_accepted_strings_starting_from_state(int starting_state) const;
+  void set_accepting_state(int state_to_mark);
+
+  /**
+   * Set a state as rejecting
+   * @param state_to_mark
+   */
+  void set_rejecting_state(int state_to_mark);
+
+  /**
+   * Create a ttable from a sequence of numbers
+   * @param sequence The sequence of numbers from which create the table. Dimension of @p sequence have to be a multiple of dim_alphabet+1. Furthermore  (sequence.size() / n_col) have to be equal to num_states
+   */
+  void set_ttable_from_sequence(const vector<int> &sequence);
 
   /**
    * Make an equivalence query, that return true if the current dfa is equivalent to dfa "dfa_hp", argument of the function.
@@ -101,43 +124,7 @@ protected:
    * @param witness_results 			A vector<SYMBOL> in which save the witness.if miss is NULL for default,it means that the client isn't interested in witness but in ceck equivalence alone
    * @return true if the two dfas are equivalents, false otherwise
    */
-  bool	   	     equivalence_query(Dfa* dfa_hp, vector<SYMBOL>* witness_results=NULL);
-
-  //******** W-METHOD: ********
-
-  /**
-   * Return a cover set of strings for current DFA.
-   * @return A vector of strings (i.e. vector<SYMBOL>)
-   */
-  vector<vector<SYMBOL> >		get_cover_set() const;
-
-  /**
-   * Return a characterization set of strings for current DFA.
-   * @return A vector of strings (i.e. vector<SYMBOL>)
-   */
-  vector<vector<SYMBOL> > 		get_characterization_set() const;
-
-  /**
-   * Return an augmented characterization set of strings for current DFA.
-   * @return A vector of strings (i.e. vector<SYMBOL>)
-   */
-  vector<vector<SYMBOL> > 		get_augmented_characterization_set(int sigma_exponent, vector<vector<SYMBOL> >& aug_characterization_set)const;
-
-  /**
-   * Return a W-METHOD test set of strings for current DFA.
-   * @param target_dfa
-   * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k
-   * in general sigma is true, it false for debugging purposes
-   * @return A vectory of strings (i.e. vector<SYMBOL>)
-   */
-  set<vector<SYMBOL> > 		    get_w_method_test_set_mapped_alphabet(Dfa* target_dfa, bool sigma) const;
-
-
-  /**
-   * Return a map of access strings paired with state indexes, for all the states of DFA.
-   * @return A map that pair a state index with its access string.
-   */
-  map<int, vector<SYMBOL> >  	get_access_strings_mapped_alphabet() const;
+  bool	 equivalence_query(Dfa* dfa_hp, vector<string> witness_results=vector<string>());
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -145,14 +132,14 @@ protected:
    * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
    * @return A table saved in a linear array, with a list of equivalent/different states.
    */
-  SYMBOL*		  	   	table_filling() const;
+  vector<string>	table_filling() const;
 
   /**
    * Create a list of states and corrispective equivalent states
    * @param distincts A table build with the Table Filling Algorithm
    * @return A pointer to the first vector<int>. Every vector is a list of equivalent state for the state associate to that vector.
    */
-  vector<int>* 		equivalent_states_list_from_table(SYMBOL* distincts);
+  vector<vector<int>> 		equivalent_states_list_from_table(vector<string> distincts);
 
   /**
    * Make a conterexample from a table build with Table Filling Algorithm using the union dfa of the two dfa to compare.
@@ -160,57 +147,41 @@ protected:
    * @param start_state_dfa_hp Index of the first state of dfa_hp inside the union dfa.
    * @return A witness that distinguishes the two dfa.
    */
-  vector<SYMBOL>		witness_from_table(SYMBOL* distinct, int start_state_dfa_hp);
+  vector<string>		witness_from_table(vector<string> distinct, int start_state_dfa_hp);
 
   /**
-   * Utility function to determine the exponent of Sigma in w-method
+   * Utility function to determine the exponent of Sigma in w-method, which is the depth
+   * of the cover set
    * @return max depth of a set
    */
-  size_t get_set_depth(std::vector<std::vector<SYMBOL> > set) const;
-
+  size_t get_set_depth(vector<vector<string> > set) const;
 
   /**
-   * Make a membership query to dfa with the "str" string. Return "true" if the arrive state for "str" is acceptor, else "false".
-   * @param str A string to make a membership query.
-   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
+   * Return a cover set of strings for current DFA.
+   * @return A vector of strings (i.e. vector<SYMBOL>)
    */
-  bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
+  vector<vector<string> >		get_cover_set() const;
+
+  /**
+   * Return a characterization set of strings for current DFA.
+   * @return A vector of strings (i.e. vector<SYMBOL>)
+   */
+  vector<vector<string> > 	get_characterization_set() const;
+
+  /**
+   * Return an augmented characterization set of strings for current DFA.
+   * @return A vector of strings (i.e. vector<SYMBOL>)
+   */
+  vector<vector<string> > 	get_augmented_characterization_set(int sigma_exponent, vector<vector<string> >& aug_characterization_set)const;
 
 
 public:
+  //******** CONSTRUCTORS: ********
 
   /**
    * Make an instance of null dfa
    */
   Dfa();
-
-  /**
-   * Make an instance of new dfa with default start state to 0
-   * @param n_state	Number of states
-   * @param dim_alf	Size of alphabet
-   * @param alf		Alphabet symbols
-   */
-  Dfa(const int n_state, const int dim_alf, const string *alf);
-
-  /**
-   * Make an instance of new dfa. Give possibility to set the start state.
-   * @param n_state	Number of states
-   * @param dim_alf	Size of alphabet
-   * @param alf		Alphabet symbols
-   * @param s_state	Start state
-   */
-  Dfa(const int n_state, const int dim_alf, const string *alf, const int s_state);
-
-  /**
-   * Make an instance of new dfa.
-   * Set tra transistion table making a copy of "tt_copy" passed as argument.
-   * @param n_state	Number of states
-   * @param dim_alf	Size of alphabet
-   * @param alf		Alphabet symbols
-   * @param s_state	Start state
-   * @param tt_copy	Reference to extern transition table to copy inside current dfa
-   */
-  Dfa(const int n_state, const int dim_alf, const string *alf, const int s_state, const int** tt_copy );
 
   /**
    * Constructor for make a copy of a dfa "d1"
@@ -236,13 +207,7 @@ public:
    */
   ~Dfa();
 
-  /**
-   * Read a dfa from a file
-   * @param file_name Path of the dfa
-   * @return Dfa read from file
-   */
-  static Dfa read_dfa_file(const string file_name);
-
+  //******** METHODS: ********
 
   /**
    * Return size of alphabet
@@ -251,47 +216,48 @@ public:
   int  	get_dim_alphabet() const;
 
   /**
+   * Read a dfa from a file
+   * @param file_name Path of the dfa
+   * @return Dfa read from file
+   */
+  static Dfa read_dfa_file(const string file_name);
+
+  /**
    * Return a pointer to alphabet symbols
    * @return Pointer to alphabet symbols
    */
-  const string*	get_alphabet() const;
+  const vector<string>	get_alphabet() const;
+
+  /**
+   * Return accepting states
+   * @return accepting_states_
+   */
+  const vector<int> get_accepting_states() const;
+
+  /**
+   * Returns true if current state is accepting
+   * @param curr_state to test if is accepting
+   * @return true if curr_state is an accepting one
+   */
+  bool is_accepting(int curr_state) const;
 
   /**
    * Get number of states
    * @return Number of states
    */
-  int   	get_num_states() const;
+  int   get_num_states() const;
 
   /**
    * Get index of start state
    * @return Index of start state
    */
-  int   	get_start_state();
+  int   get_start_state() const;
 
   /**
-  * Get indexes of the accepting states
-  * @return vector of indexes of accepting states
-  */
-  vector<int> 		get_accepting_states() const;
-
-  /**
-  *	Return a list of sink states for the given automata
-  * else it returns numeric_limits<SYMBOL>::max()
-  */
-  vector<int> 			get_sink_states() const;
-
-  /**
-   * Get index of arrive state for dfa_string argument
-   * @param dfa_string String executed on dfa
-   * @return Index of arrive state for "dfa_string"
-   */
-  int		get_arrive_state(const vector<SYMBOL> &dfa_string) const;
-
-  /**
-   * Return a reference to ttable()
+   * Return a reference to ttable_
    * @return Pointer to ttable
    */
-  int** 	get_ttable();
+  vector<map<string,int>> 	get_ttable() const;
 
   /**
    * Get value of ttable for index "i", "j"
@@ -299,39 +265,7 @@ public:
    * @param j
    * @return
    */
-  int 	get_ttable(int i, int j);
-
-  /**
-   * Set a single value "v" for ttable entry for "i","j"
-   * @param i First coordinate
-   * @param j	Second coordinate
-   * @param v	Value to set
-   */
-  void 	set_ttable_entry(int i, int j, int v);
-
-  /**
-   * Create a ttable from a sequence of numbers
-   * @param sequence The sequence of numbers from which create the table. Dimension of @p sequence have to be a multiple of dim_alphabet+1. Furthermore  (sequence.size() / n_col) have to be equal to num_states
-   */
-  void set_ttable_from_sequence(const vector<int> &sequence);
-
-  /**
-   * Each ttable element is extracted in a random way (uniform numbers in [0 num_states-1] instead accepting/rejecting uniform numbers in [0 1] ). Thus the ttable (transition table) is modified.
-   * @return A string representing all the number extracted
-   */
-  string random_ttable();
-
-  /**
-   * Set a state as acceptor, whose index is given in the argument.
-   * @param state Index of state to set as acceptor.
-   */
-  void 	set_acceptor_state(int state);
-
-  /**
-   * Set a state as rejector, whose index is given in the argument.
-   * @param state Index of state to set as rejector.
-   */
-  void 	set_rejector_state(int state);
+  int 	get_ttable(int i, string j) const;
 
   /**
    * Make a new dfa from the union of current dfa and "dfa_hp".
@@ -340,6 +274,12 @@ public:
    * @return Pointer to the union dfa of two dfa
    */
   Dfa*	unionDFA(Dfa* dfa_hp);										// Return a union dfa of (this) and "dfa_hp"
+
+  /**
+   * Each ttable element is extracted in a random way (uniform numbers in [0 num_states-1] instead accepting/rejecting uniform numbers in [0 1] ). Thus the ttable (transition table) is modified.
+   * @return A string representing all the number extracted
+   */
+  string random_ttable();
 
   /**
    * Minimizes the current dfa exploiting the Table-Filling algorithm
@@ -351,13 +291,7 @@ public:
    * Print the transition table of current dfa, using the INNER alphabet. Before the transition table print the title passse as parameter.
    * @param title Title printed before the transition table
    */
-  void 	print_dfa_ttable(string title);
-
-  /**
-   * Print the transition table using the alphabet symbols. Before the transition table print the "title".
-   * @param title Title printed before the transition table
-   */
-  void 	print_dfa_ttable_mapped_alphabet(string title);
+  void 	print_dfa_ttable(string title) const;
 
   /**
    * Print a dot file for the current dfa, with title "title", in the path "file_path".
@@ -367,19 +301,25 @@ public:
   void    print_dfa_dot(string title, const char *file_path);
 
   /**
-   * Print a dot file for the current dfa using the alphabet symbols, with title "title", in the path "file_path".
-   * @param title	Title printed before the transition table
-   * @param file_path Path where make a dot file
-   */
-  void 	print_dfa_dot_mapped_alphabet(string title, const char *file_path);
-
-
-  /**
    * Print a DFA in a text file; adopted format is the same used for reading a DFA from file.
    * @ file_path A path for the new file to be created.
    */
   void 	print_dfa_in_text_file(const string file_path);
 
+  /**
+   * Get index of arrive state for dfa_string argument
+   * @param dfa_string String executed on dfa
+   * @return Index of arrive state for "dfa_string"
+   */
+  int		get_arrive_state(vector<string> &dfa_string) const;
+
+  /**
+   * Make a membership query to dfa with the "str" string with alphabet symbol.
+   * Return "true" if the arrive state for "str" is acceptor, else "false".
+   * @param str A string to make a membership query.
+   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
+   */
+  bool   membership_query(vector<string> str) const;
 
   /**
    * Calculate the similarity of 2 DFA's languages
@@ -402,18 +342,10 @@ public:
   bool compare_dfa( Dfa *dfa_to_compare,string method,ir_statistical_measures &stats1,ir_statistical_measures &stats2);
 
   /**
-   * Make a membership query to dfa with the "str" string with alphabet symbol.
-   * Return "true" if the arrive state for "str" is acceptor, else "false".
-   * @param str A string to make a membership query.
-   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
-   */
-  bool   membership_query(string str) const;
-
-  /**
    * Return a set of access strings for all the states of DFA.
    * @return A vector of string (true string!) characterizing current DFA, they adopted the alphabet.
    */
-  vector<string> 				get_access_strings() const;
+  map<int,string> 	get_access_strings() const;
 
   /**
    * It returns a set random samples (all different) generated from current DFA.
@@ -440,7 +372,7 @@ public:
    * @param samples Generated samples.
    * @param weights Generated weights.
    */
-  void 				print_set_of_pos_neg_samples(map< vector<string>, int> samples, map< vector<string>, int> weights);
+  void 	print_set_of_pos_neg_samples(map< vector<string>, int> samples, map< vector<string>, int> weights);
 
   /**
    * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
@@ -448,14 +380,14 @@ public:
    * @param weights
    * @param file_paht File path with generated samples.
    */
-  bool 				write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path);
+  bool 	write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path);
 
-/**
+  /**
    * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
    * @param samples
    * @param file_paht File path with generated samples.
    */
-  bool 				write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path);
+  bool 	write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path);
 
   /**
    * It generates a set of random strings accepted and rejected by the current DFA and DIRECTLY write them to a file.
@@ -463,9 +395,7 @@ public:
    * @param n_neg_samples Number of negative samples to be generated.
    * @param file_paht File path with generated samples.
    */
-  bool 				write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path);
-
-  //******** W-METHOD: ********
+  bool 	write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path);
 
   /**
    * Return a W-METHOD test set of strings for current DFA.
@@ -474,8 +404,7 @@ public:
    * in general sigma is true, it false for debugging purposes
    * @return A vector of strings
    */
-  vector<string> 		          get_w_method_test_set(Dfa* target_dfa, bool sigma) const;
-
+  vector<vector<string>> 	get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const;
 
   /**
    * Given a test set and the reference and subject dfa,
@@ -485,7 +414,38 @@ public:
    * @param reference_dfa
    * @return array containing {tp,fn,tn,fp,precision,recall,f-measure,specifity,bcr}
    */
-   long double* get_w_method_statistics(vector<string> test_set, Dfa* subject_dfa) const;
+   vector<long double> get_w_method_statistics(vector<vector<string>> test_set, Dfa* subject_dfa) const;
+
+   /**
+    * Gives the structural similarity score matrix between every pair of states of two DFAs
+    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
+    * @param subject_dfa
+    * @param eps precision of the termination condition, a by default is eps=0.0001
+    * @return similarity_matrix contains the similarity score of reference_dfa's state i
+    *         with subject_dfa's state j. The last row, so
+    *         similarity_matrix[reference_dfa->num_states][1] contains the overall
+    *         structural similarity score between the two Dfas
+    */
+   vector<vector<double>> neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps=0.0001) const;
+
+   /**
+    * Gives the structural similarity score matrix between every pair of states of two DFAs
+    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching".
+    * In this COLOR version we give label 1 to accepting states and 0 to rejecting ones.
+    * @param subject_dfa
+    * @param eps precision of the termination condition, a by default is eps=0.0001
+    * @return similarity_matrix contains the similarity score of reference_dfa's state i
+    *         with subject_dfa's state j. The last row, so
+    *         similarity_matrix[reference_dfa->num_states][1] contains the overall
+    *         structural similarity score between the two Dfas
+    */
+   vector<vector<double>> neighbour_matching_structural_similarity_color(Dfa* subject_dfa, double eps=0.0001) const;
+
+  /**
+   * Print the matrix containing the similarity score between pair of nodes
+   * @param similarity_matrix 
+   */
+   void print_structural_similarity(vector<vector<double>> similarity_matrix,int num_states_target_dfa) const;
 
 };
 

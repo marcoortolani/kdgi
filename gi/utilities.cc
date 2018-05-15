@@ -282,7 +282,8 @@ double ncd(double comp_x, double comp_y, double comp_xy)
 /////////////////////////////////////////
 /// INFORMATION RETRIEVAL
 
-void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<string> &test_set,ir_statistical_measures &stats)
+
+void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<vector<string>> &test_set,ir_statistical_measures &stats)
 {
 	stats.tp = stats.tn = stats.fp = stats.fn = 0;
 	cout<<"Test set dimension is "<<test_set.size()<<endl;
@@ -290,7 +291,7 @@ void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<string> &t
 	//target is the target dfa
 	for(auto &sample : test_set)
 	{
-		if ( target->membership_query(sample) ) //classification of the target (true model of the sample)
+		if (target->membership_query(sample)) //classification of the target (true model of the sample)
 	    {
 			++stats.dim_positive;
 			if(dfa1->membership_query(sample))
@@ -337,9 +338,11 @@ void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<string> &t
 	    stats.matthews      = ( stats.tp / (bigNum) n - s*p ) / sqrt( p * s * (1-s) * (1-p) ) ;
 	if( boost::math::isnan( stats.matthews )  )
 	    stats.matthews      = -1;
-	/*if( std::isnan(stats.matthews) )
-	    stats.matthews      = -1;  //because values are in [-1 1]*/
+	//if( std::isnan(stats.matthews) )
+	 //   stats.matthews      = -1;  //because values are in [-1 1]
 }
+
+
 
 void print_ir_stats(ir_statistical_measures &stats)
 {
@@ -377,6 +380,7 @@ void print_ir_stats(ir_statistical_measures &stats)
 			 setw(23)<<"* MATTHEWS"<<setw(8)<<left<<stats.matthews<<setw(10)<<right<<"*"<<endl<<
 			           "*****************************************"<<endl<<endl;
 }
+
 
 //void compute_ir_stats(dfaEDSM* dfa1, ir_statistical_measures &stats, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn)
 //{

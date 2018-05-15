@@ -100,6 +100,12 @@ protected:
   void 	set_ttable_entry(int i, string j, int v);
 
   /**
+   * Create a ttable from a sequence of numbers
+   * @param sequence The sequence of numbers from which create the table. Dimension of @p sequence have to be a multiple of dim_alphabet+1. Furthermore  (sequence.size() / n_col) have to be equal to num_states
+   */
+  void set_ttable_from_sequence(const vector<int> &sequence);
+
+  /**
    * Set a state as accepting
    * @param state_to_mark
    */
@@ -110,12 +116,6 @@ protected:
    * @param state_to_mark
    */
   void set_rejecting_state(int state_to_mark);
-
-  /**
-   * Create a ttable from a sequence of numbers
-   * @param sequence The sequence of numbers from which create the table. Dimension of @p sequence have to be a multiple of dim_alphabet+1. Furthermore  (sequence.size() / n_col) have to be equal to num_states
-   */
-  void set_ttable_from_sequence(const vector<int> &sequence);
 
   /**
    * Make an equivalence query, that return true if the current dfa is equivalent to dfa "dfa_hp", argument of the function.

@@ -56,8 +56,10 @@ Dfa::Dfa(const int n_state, const vector<string> alf, const int s_state){
 	alphabet_.reserve(alf.size());
 	copy(alf.begin(),alf.end(),back_inserter(alphabet_));
 	for(int i=0; i<n_state; ++i){
+		map<string,int> tmp=map<string,int>();
 		for(string sym : alf)
-			ttable_[i][sym]=0;
+			tmp[sym]=0;
+		ttable_.push_back(tmp);
 		accepting_states_.push_back(0);
 	}
 }
@@ -182,6 +184,8 @@ Dfa Dfa::read_dfa_file(const string file_name)
 	read.getline(line,BUFFER_SIZE);
 	counter = sscanf(line, "%d %d %s", &(dim_alphabet), &(res.num_states_), nameDFA);
 
+	//ok
+	//cout<<"dim alph:"<<dim_alphabet<<endl;
 
 	// Check if the first line is complete
 	if(counter != 3){
@@ -202,6 +206,7 @@ Dfa Dfa::read_dfa_file(const string file_name)
 			break;
 
 		alphabet_file.push_back(n);
+		counter++;
 	}
 
 	// check read alphabet_
@@ -236,12 +241,13 @@ Dfa Dfa::read_dfa_file(const string file_name)
 	// "+2" is for algorithm like EDSM with states Type and Colour
 	res.accepting_states_.reserve(res.num_states_);
 	for(int i=0; i<res.num_states_; ++i){
+		map<string,int> tmp=map<string,int>();
 		for(string sym : alphabet_file)
-			res.ttable_[i][sym]=ND;
+			tmp[sym]=ND;
 		res.accepting_states_.push_back(0);	
+		res.ttable_.push_back(tmp);
 	}
 
-	
 	// Parsing the file
 	while(!read.eof())
 	{
@@ -273,8 +279,8 @@ Dfa Dfa::read_dfa_file(const string file_name)
 
 		res.ttable_[cstato][transition_symbol] = ctransizione;
 		// It detects the row for type of state (accepting or rejecting)
-		if(transition_symbol.compare(std::to_string(res.get_dim_alphabet())) == 1)
-			res.accepting_states_[cstato]=1;
+		if(transition_symbol.compare(std::to_string(dim_alphabet)) == 0)
+			res.accepting_states_[cstato]=ctransizione;
 
 	}
 
@@ -313,6 +319,7 @@ int Dfa::get_ttable(int i, string j) const {
 	if(i<num_states_ && std::find(alph.begin(), alph.end(), j) != alph.end())
 		return ttable_[i].at(j);
 	else{
+		cout<<"errore i="<<i<<"string j="<<j<<endl;
 		cerr<<"dfa::get_ttable: out of bound"<<endl;
 		throw indexOutOfBoundTtable();
 	}

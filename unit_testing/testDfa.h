@@ -5,6 +5,10 @@ class TestDfa : public Dfa{
 
   friend class LinguisticSimilarityTest;
 
+  friend class BaseDfaTest;
+
+  FRIEND_TEST(BaseDfaTest, equivalenceQuery);
+
   FRIEND_TEST(LinguisticSimilarityTest, coverSet);
   FRIEND_TEST(LinguisticSimilarityTest, characterizationSet);
   FRIEND_TEST(LinguisticSimilarityTest, accessStrings);

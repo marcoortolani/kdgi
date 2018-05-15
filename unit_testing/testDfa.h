@@ -7,6 +7,7 @@ class TestDfa : public Dfa{
   friend class StructuralSimilarityTest;
 
   FRIEND_TEST(BaseDfaTest, equivalenceQuery);
+  FRIEND_TEST(BaseDfaTest, setAcceptingState);
 
   FRIEND_TEST(LinguisticSimilarityTest, coverSet);
   FRIEND_TEST(LinguisticSimilarityTest, characterizationSet);

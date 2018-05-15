@@ -44,6 +44,14 @@ TEST_F(BaseDfaTest, getDimAlphabet){
 	EXPECT_EQ(3,reference->get_dim_alphabet());
 }
 
+TEST_F(BaseDfaTest, getTransition){
+    EXPECT_EQ(3,reference->get_ttable(1,"0"));
+}
+
+TEST_F(BaseDfaTest, setAcceptingState){
+    reference->set_accepting_state(1);
+    EXPECT_EQ(1,reference->is_accepting(1));
+}
 
 TEST_F(BaseDfaTest, getAlphabet){
     const vector<string> alph={"0","1","2"};

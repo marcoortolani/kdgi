@@ -651,9 +651,6 @@ void Dfa::print_dfa_dot(string title, const char *file_path)
 	string color="";
 	for(int i=0; i<num_states_; ++i)
 	{
-		//if(ttable_[i][dim_alphabet_] == DFA_STATE_UNREACHABLE)
-		//	continue;
-
 		if(is_accepting(i)){
 			shape = "doublecircle";
 			style = "rounded,filled";
@@ -735,7 +732,7 @@ void Dfa::print_dfa_in_text_file(const string file_path)
 			
 			myfile << sym << "]="<< get_ttable(i,sym) <<";\n";
 		}
-
+		myfile << "dfa["<<std::to_string(i)<<"][";
 		myfile << std::to_string(get_dim_alphabet()) << "]=";
 		if(is_accepting(i))
 			myfile << "1";
@@ -748,12 +745,12 @@ void Dfa::print_dfa_in_text_file(const string file_path)
 	myfile.close();
 }
 
-int Dfa::get_arrive_state(vector<string> &dfa_string) const
+int Dfa::get_arrive_state(vector<string> &phrase) const
 {
 	int state = get_start_state();
 	int next_state=ND;
 
-	for(string sym : dfa_string){
+	for(string sym : phrase){
 		next_state = get_ttable(state,sym);
 		if(next_state == ND){
 			state = ND;
@@ -765,10 +762,10 @@ int Dfa::get_arrive_state(vector<string> &dfa_string) const
 	return state;
 }
 
-bool Dfa::membership_query(vector<string> str)const{
+bool Dfa::membership_query(vector<string> phrase)const{
 
 	// Check if arrive_state is ND (for DFA without sink state)
-	int arrive_state = get_arrive_state(str);
+	int arrive_state = get_arrive_state(phrase);
 	if(arrive_state == ND)
 		return false;
 
@@ -1130,13 +1127,6 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 				changes_done++;
 			}
 
-			// Check if the new string is a negative one and add it to the set
-			// From vector<string> to vector<SYMBOL>
-			/*vector<SYMBOL> symbol_incremental_sample(incremental_sample.size());
-				i=0;
-			    for(auto it=incremental_sample.begin(); it!=incremental_sample.end(); ++it,++i)
-			       symbol_incremental_sample.at(i) = mapped_alphabet_.at(*it);
-			*/
 			if(membership_query(incremental_sample) == 0){
 				samples[incremental_sample] = 0;
 				//cout << "Rightly rejected string:"<<incremental_sample<<";"<<endl;
@@ -1705,13 +1695,6 @@ vector<vector<string> > Dfa::get_characterization_set() const{
 	delete tmp_minimized_dfa;
 		#endif
 
-
-
-	// Extract access strings for the DFA states
-	//map<int, vector<SYMBOL>> access_strings = this->get_access_strings();
-
-
-
 	// Track pairs of states already checked
 	map<int, vector<int>> state_pairs;
 
@@ -1770,9 +1753,6 @@ vector<vector<string> > Dfa::get_characterization_set() const{
 
 				if(read_symbols == to_string(DFA_TF_STATE_X))
 				{
-					//cout<<"esco dal while(1) con wit = ";
-					//for(SYMBOL sy : wit)	cout<<sy<<" ";
-					//cout<<endl;
 					break;
 				}
 
@@ -1924,29 +1904,6 @@ vector<vector<string> > 			Dfa::get_augmented_characterization_set(int sigma_exp
 
 	return aug_characterization_set;
 }
-
-
-/*
-vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const
-{
-	vector<string> w_vec;
-
-	set<vector<SYMBOL>> w_set = get_w_method_test_set_mapped_alphabet(target_dfa,sigma);
-
-	for(auto &it1 : w_set) {
-		std::vector<char> strvec;
-		for (SYMBOL s: it1) {
-			char c = get_letter_from_mapped_alphabet(s)[0];
-			strvec.push_back(c);
-		}
-		std::string str(strvec.begin(),strvec.end());
-		w_vec.push_back(str);
-	}
-
-	return w_vec;
-}
-*/
-
 
 vector<vector<string>>	Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma) const
 {

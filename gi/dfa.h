@@ -117,7 +117,7 @@ protected:
    * @param witness_results 	A vector<string> in which save the witness.if miss is NULL for default,it means that the client isn't interested in witness but in ceck equivalence alone.
    * @return true if the two dfas are equivalents, false otherwise.
    */
-  bool	 equivalence_query(Dfa* dfa_hp, vector<string> witness_results=vector<string>());
+  bool	 equivalence_query(Dfa* dfa_hp, vector<string> *witness_results=NULL);
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,

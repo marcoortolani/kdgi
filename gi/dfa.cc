@@ -1334,7 +1334,7 @@ bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int
 	return exit_status;
 }
 
-bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> witness_results) {
+bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> *witness_results) {
 
     bool areEquivalent;
 
@@ -1368,11 +1368,11 @@ bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> witness_results) {
 	// check if among the set of states equivalent to the 0 state (start state of current automaton)
 	// there is the start state of hp automaton, whose index is "num_state"
 	// If so, it returns an empty vector as counterexample.
-	if(equivalent_states_list[start_state].end() == find(equivalent_states_list[start_state].begin(), equivalent_states_list[start_state].end(), hp_start_state) )
+	if(equivalent_states_list[start_state].end() == find(equivalent_states_list[start_state].begin(), equivalent_states_list[start_state].end(), hp_start_state+num_states_) )
 	{
 		areEquivalent = false;
-		if(!(witness_results.empty())) //if witness_results is NULL means that the client isn't interested in witness but in checking only equivalence
-		   witness_results = dfa_union->witness_from_table(distincts_table, dfa_hp->get_start_state()+num_states_);
+		if(witness_results!=NULL) //if witness_results is NULL means that the client isn't interested in witness but in checking only equivalence
+		   *witness_results = dfa_union->witness_from_table(distincts_table, dfa_hp->get_start_state()+num_states_);
 	}
 	else //The dfa are equivalentes
 	   areEquivalent = true;

@@ -195,13 +195,12 @@ TEST_F(BaseDfaTest, unionDfa){
     EXPECT_EQ(1,equal);
 }
 
-/*
-TEST_F(BaseDfaTest, equivalenceQuery){
+
+TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     bool flag=true;
     Dfa* test=nullptr; 
     test=new Dfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
-    vector<string> ok={"a"};
-    flag=reference->equivalence_query(test, ok);
+    flag=reference->equivalence_query(test);
     EXPECT_EQ(1,flag);
 }
-*/
+

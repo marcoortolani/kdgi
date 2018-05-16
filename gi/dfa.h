@@ -272,6 +272,7 @@ public:
   /**
    * Make a new dfa from the union of current dfa and "dfa_hp".
    * The first states are from current dfa, last states from "dfa_hp". The total number of states are sum of the number of states for the 2 dfa.
+   * The start state is assumed to be the one of the method's caller.
    * @param dfa_hp Dfa to add to the current dfa.
    * @return Pointer to the union dfa of two dfa.
    */

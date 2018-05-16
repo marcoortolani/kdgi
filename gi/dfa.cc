@@ -111,7 +111,7 @@ bool Dfa::operator==(const Dfa &d1) const{
     vector<map<string,int>> ttable_ref=d1.get_ttable();
     bool flag=true;
     int i;
-	if(!(equal(d1.alphabet_.begin(), d1.alphabet_.end(), alphabet_.begin())))
+	if(!(equal(d1.alphabet_.begin(), d1.alphabet_.end(), alphabet_.begin()))||start_state_!=d1.start_state_)
 		flag=false;
 	if(flag){
 		for(i=0;i<d1.get_num_states();i++){
@@ -396,34 +396,26 @@ Dfa* Dfa::unionDFA(Dfa* dfa_hp)
 {
 	int count_state = dfa_hp->num_states_ + num_states_;
 
-
 	// Instance of union dfa
-	Dfa* union_dfa = new Dfa(count_state, alphabet_);
-	for(int i=0; i<num_states_;++i)
-		if(is_accepting(i))
-			union_dfa->set_accepting_state(i);
-	for(int j=0; j<dfa_hp->num_states_;++j)
-		if(dfa_hp->is_accepting(j))
-			union_dfa->set_accepting_state(j+num_states_);
+	Dfa* union_dfa = new Dfa(count_state, alphabet_, start_state_);
 
 	// Configuration of Union DFA
 	// Smaller indexes are given to target dfa, while others to hypothesis
 	for(int j=0; j<num_states_; ++j)									// Target automaton
-		for(string sym : alphabet_){
-			//cout<<"UNION stato="<<j<<"  sym="<<sym<<endl;
+		for(string sym : alphabet_)
 			union_dfa->set_ttable_entry(j,sym,get_ttable(j,sym));
-		}
-	//cout<<"success 1"<<endl;
-	//print_dfa_ttable("ref");
-	//dfa_hp->print_dfa_ttable("hp");
 
 	for(int j=0; j<dfa_hp->num_states_; ++j)						// Hypothesis automaton
-		for(string sym_hp : alphabet_){					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
-			//cout<<"UNION stato="<<j<<"  sym_hp="<<sym_hp<<endl;
-			//cout<<"num_states_+j="<<num_states_+j<<"  dfa_hp->get_ttable(j,sym_hp)="<<dfa_hp->get_ttable(j,sym_hp)<<endl;
+		for(string sym_hp : alphabet_)					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
 			union_dfa->set_ttable_entry(num_states_+j,sym_hp, (dfa_hp->get_ttable(j,sym_hp) + num_states_));
-		}
-	//cout<<"success 2"<<endl;
+
+	for(int i=0; i<num_states_;++i)
+		if(is_accepting(i))
+			union_dfa->accepting_states_[i]=1;
+	for(int j=0; j<dfa_hp->num_states_;++j)
+		if(dfa_hp->is_accepting(j))
+			union_dfa->accepting_states_[j+num_states_]=1;
+
 	return union_dfa;
 }
 
@@ -1367,7 +1359,7 @@ bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> witness_results) {
 	// Extract list of equivalent states from table of distinct states,
 	// every vector contain a list of equivalent states for the state that correspond to the vector.
 	vector<vector<int>> equivalent_states_list = dfa_union->equivalent_states_list_from_table(distincts_table);
-cout<<"ciao"<<endl;
+	
 	int start_state = get_start_state();
 	int hp_start_state = dfa_hp->get_start_state();
 
@@ -1380,7 +1372,7 @@ cout<<"ciao"<<endl;
 	{
 		areEquivalent = false;
 		if(!(witness_results.empty())) //if witness_results is NULL means that the client isn't interested in witness but in checking only equivalence
-		   witness_results = dfa_union->witness_from_table(distincts_table, num_states_);
+		   witness_results = dfa_union->witness_from_table(distincts_table, dfa_hp->get_start_state()+num_states_);
 	}
 	else //The dfa are equivalentes
 	   areEquivalent = true;

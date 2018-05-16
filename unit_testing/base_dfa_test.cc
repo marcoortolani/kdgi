@@ -52,7 +52,9 @@ TEST_F(BaseDfaTest, getTransition){
 
 TEST_F(BaseDfaTest, setAcceptingState){
     reference->set_accepting_state(1);
-    EXPECT_EQ(1,reference->is_accepting(1));
+    EXPECT_EQ(1,reference->get_accepting_states()[1]);
+    reference->set_rejecting_state(1);
+    EXPECT_EQ(0,reference->get_accepting_states()[1]);
 }
 
 TEST_F(BaseDfaTest, getAlphabet){
@@ -161,12 +163,45 @@ TEST_F(BaseDfaTest, operatorEqualEqual){
     EXPECT_EQ(1,flag);
 }
 
+
+TEST_F(BaseDfaTest, unionDfa){
+    TestDfa* test = new TestDfa(3,alph,2);
+    const vector<int> sequence2 = {0, 1, 2, 0, 0, 1, 2, 1, 0, 1, 2, 0};
+    test->set_ttable_from_sequence(sequence2);
+    Dfa* uni=reference->unionDFA(test);
+    TestDfa* uni_ref = new TestDfa(8,alph,0);
+    const vector<int> sequence3 = {1, 2, 4, 0, 3, 4, 1, 0, 4, 3, 2, 0, 4, 4, 4, 1, 4, 4, 4, 0, 5, 6, 7, 0, 5, 6, 7, 1, 5, 6, 7, 0};
+    uni_ref->set_ttable_from_sequence(sequence3);
+    vector<map<string,int>> ttable_test=uni->get_ttable();
+    vector<map<string,int>> ttable_ref=uni_ref->get_ttable();
+    bool equal=true;
+    int i;
+    for(i=0;i<uni->get_num_states();i++){
+        if(uni->is_accepting(i)!=uni_ref->is_accepting(i)){
+            cout<<"stato incriminato:"<<i<<endl;
+            equal=false;
+            break;
+        }
+        for(string sym : uni->get_alphabet())
+            if(ttable_test[i][sym]!=ttable_ref[i][sym]){
+                cout<<"i="<<i<<endl<<"sym"<<sym<<endl;
+                cout<<"ttable_test[i][sym]="<<ttable_test[i][sym]<<endl<<"ttable_ref[i][sym]="<<ttable_ref[i][sym]<<endl;
+                equal=false;
+                break;
+            }
+        if(!equal)
+            break;
+    }
+    EXPECT_EQ(1,equal);
+}
+
 /*
 TEST_F(BaseDfaTest, equivalenceQuery){
     bool flag=true;
     Dfa* test=nullptr; 
     test=new Dfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
-    flag=reference->equivalence_query(test);
+    vector<string> ok={"a"};
+    flag=reference->equivalence_query(test, ok);
     EXPECT_EQ(1,flag);
 }
 */

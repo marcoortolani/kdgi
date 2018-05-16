@@ -56,8 +56,10 @@ Dfa::Dfa(const int n_state, const vector<string> alf, const int s_state){
 	alphabet_.reserve(alf.size());
 	copy(alf.begin(),alf.end(),back_inserter(alphabet_));
 	for(int i=0; i<n_state; ++i){
+		map<string,int> tmp=map<string,int>();
 		for(string sym : alf)
-			ttable_[i][sym]=0;
+			tmp[sym]=0;
+		ttable_.push_back(tmp);
 		accepting_states_.push_back(0);
 	}
 }
@@ -96,11 +98,37 @@ const Dfa &Dfa::operator=(const Dfa &d1)
 
 			accepting_states_.clear();
 			accepting_states_.reserve(d1.accepting_states_.size());
-			copy(d1.accepting_states_.begin(),d1.accepting_states_.end(),back_inserter(accepting_states_));
+			for(int i=0; i<num_states_;++i)
+				accepting_states_[i]=d1.accepting_states_[i];
 
 	}
 
 	return *this;
+}
+
+bool Dfa::operator==(const Dfa &d1) const{
+	vector<map<string,int>> ttable_test=get_ttable();
+    vector<map<string,int>> ttable_ref=d1.get_ttable();
+    bool flag=true;
+    int i;
+	if(!(equal(d1.alphabet_.begin(), d1.alphabet_.end(), alphabet_.begin()))||start_state_!=d1.start_state_)
+		flag=false;
+	if(flag){
+		for(i=0;i<d1.get_num_states();i++){
+			if(d1.is_accepting(i)!=is_accepting(i)){
+				flag=false;
+				break;
+			}
+			for(string sym : d1.alphabet_)
+				if(ttable_test[i][sym]!=ttable_ref[i][sym]){
+					flag=false;
+					break;
+				}
+			if(!flag)
+				break;
+		}
+	}
+	return flag;
 }
 
 
@@ -182,6 +210,8 @@ Dfa Dfa::read_dfa_file(const string file_name)
 	read.getline(line,BUFFER_SIZE);
 	counter = sscanf(line, "%d %d %s", &(dim_alphabet), &(res.num_states_), nameDFA);
 
+	//ok
+	//cout<<"dim alph:"<<dim_alphabet<<endl;
 
 	// Check if the first line is complete
 	if(counter != 3){
@@ -202,6 +232,7 @@ Dfa Dfa::read_dfa_file(const string file_name)
 			break;
 
 		alphabet_file.push_back(n);
+		counter++;
 	}
 
 	// check read alphabet_
@@ -236,12 +267,13 @@ Dfa Dfa::read_dfa_file(const string file_name)
 	// "+2" is for algorithm like EDSM with states Type and Colour
 	res.accepting_states_.reserve(res.num_states_);
 	for(int i=0; i<res.num_states_; ++i){
+		map<string,int> tmp=map<string,int>();
 		for(string sym : alphabet_file)
-			res.ttable_[i][sym]=ND;
+			tmp[sym]=ND;
 		res.accepting_states_.push_back(0);	
+		res.ttable_.push_back(tmp);
 	}
 
-	
 	// Parsing the file
 	while(!read.eof())
 	{
@@ -273,8 +305,8 @@ Dfa Dfa::read_dfa_file(const string file_name)
 
 		res.ttable_[cstato][transition_symbol] = ctransizione;
 		// It detects the row for type of state (accepting or rejecting)
-		if(transition_symbol.compare(std::to_string(res.get_dim_alphabet())) == 1)
-			res.accepting_states_[cstato]=1;
+		if(transition_symbol.compare(std::to_string(dim_alphabet)) == 0)
+			res.accepting_states_[cstato]=ctransizione;
 
 	}
 
@@ -313,6 +345,7 @@ int Dfa::get_ttable(int i, string j) const {
 	if(i<num_states_ && std::find(alph.begin(), alph.end(), j) != alph.end())
 		return ttable_[i].at(j);
 	else{
+		cout<<"errore i="<<i<<"string j="<<j<<endl;
 		cerr<<"dfa::get_ttable: out of bound"<<endl;
 		throw indexOutOfBoundTtable();
 	}
@@ -363,15 +396,8 @@ Dfa* Dfa::unionDFA(Dfa* dfa_hp)
 {
 	int count_state = dfa_hp->num_states_ + num_states_;
 
-
 	// Instance of union dfa
-	Dfa* union_dfa = new Dfa(count_state, alphabet_);
-	for(int i=0; i<num_states_;++i)
-		if(is_accepting(i))
-			union_dfa->set_accepting_state(i);
-	for(int j=0; j<dfa_hp->num_states_;++j)
-		if(dfa_hp->is_accepting(j))
-			union_dfa->set_accepting_state(j+num_states_);
+	Dfa* union_dfa = new Dfa(count_state, alphabet_, start_state_);
 
 	// Configuration of Union DFA
 	// Smaller indexes are given to target dfa, while others to hypothesis
@@ -379,10 +405,16 @@ Dfa* Dfa::unionDFA(Dfa* dfa_hp)
 		for(string sym : alphabet_)
 			union_dfa->set_ttable_entry(j,sym,get_ttable(j,sym));
 
-
 	for(int j=0; j<dfa_hp->num_states_; ++j)						// Hypothesis automaton
 		for(string sym_hp : alphabet_)					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
 			union_dfa->set_ttable_entry(num_states_+j,sym_hp, (dfa_hp->get_ttable(j,sym_hp) + num_states_));
+
+	for(int i=0; i<num_states_;++i)
+		if(is_accepting(i))
+			union_dfa->accepting_states_[i]=1;
+	for(int j=0; j<dfa_hp->num_states_;++j)
+		if(dfa_hp->is_accepting(j))
+			union_dfa->accepting_states_[j+num_states_]=1;
 
 	return union_dfa;
 }
@@ -637,9 +669,6 @@ void Dfa::print_dfa_dot(string title, const char *file_path)
 	string color="";
 	for(int i=0; i<num_states_; ++i)
 	{
-		//if(ttable_[i][dim_alphabet_] == DFA_STATE_UNREACHABLE)
-		//	continue;
-
 		if(is_accepting(i)){
 			shape = "doublecircle";
 			style = "rounded,filled";
@@ -721,7 +750,7 @@ void Dfa::print_dfa_in_text_file(const string file_path)
 			
 			myfile << sym << "]="<< get_ttable(i,sym) <<";\n";
 		}
-
+		myfile << "dfa["<<std::to_string(i)<<"][";
 		myfile << std::to_string(get_dim_alphabet()) << "]=";
 		if(is_accepting(i))
 			myfile << "1";
@@ -734,12 +763,12 @@ void Dfa::print_dfa_in_text_file(const string file_path)
 	myfile.close();
 }
 
-int Dfa::get_arrive_state(vector<string> &dfa_string) const
+int Dfa::get_arrive_state(vector<string> &phrase) const
 {
 	int state = get_start_state();
 	int next_state=ND;
 
-	for(string sym : dfa_string){
+	for(string sym : phrase){
 		next_state = get_ttable(state,sym);
 		if(next_state == ND){
 			state = ND;
@@ -751,10 +780,10 @@ int Dfa::get_arrive_state(vector<string> &dfa_string) const
 	return state;
 }
 
-bool Dfa::membership_query(vector<string> str)const{
+bool Dfa::membership_query(vector<string> phrase)const{
 
 	// Check if arrive_state is ND (for DFA without sink state)
-	int arrive_state = get_arrive_state(str);
+	int arrive_state = get_arrive_state(phrase);
 	if(arrive_state == ND)
 		return false;
 
@@ -845,7 +874,7 @@ bool Dfa::compare_dfa( Dfa *dfa_to_compare , string method , ir_statistical_meas
 }
 
 
-map<int,string>  Dfa::get_access_strings() const
+map<int,vector<string>>  Dfa::get_access_strings() const
 {
 
 	//// Support structers
@@ -856,7 +885,7 @@ map<int,string>  Dfa::get_access_strings() const
 	list<int>										queue;
 
 	// Structure to record access strings
-	map<int,string> 	access_strings;
+	map<int,vector<string>> 	access_strings;
 
 
 	//// Init
@@ -887,11 +916,11 @@ map<int,string>  Dfa::get_access_strings() const
 			if( std::find(visited_nodes.begin(), visited_nodes.end(), child_node) == visited_nodes.end() )
 			{
 				// Current access string
-				string current_access_string;
+				vector<string> current_access_string;
 
 				if( access_strings.find(current_node) != access_strings.end()  )
 					current_access_string = access_strings[current_node];
-				current_access_string=current_access_string+sym;
+				current_access_string.push_back(sym);
 
 
 				// If the entry does not exist in the table, inserts it,
@@ -1116,13 +1145,6 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 				changes_done++;
 			}
 
-			// Check if the new string is a negative one and add it to the set
-			// From vector<string> to vector<SYMBOL>
-			/*vector<SYMBOL> symbol_incremental_sample(incremental_sample.size());
-				i=0;
-			    for(auto it=incremental_sample.begin(); it!=incremental_sample.end(); ++it,++i)
-			       symbol_incremental_sample.at(i) = mapped_alphabet_.at(*it);
-			*/
 			if(membership_query(incremental_sample) == 0){
 				samples[incremental_sample] = 0;
 				//cout << "Rightly rejected string:"<<incremental_sample<<";"<<endl;
@@ -1312,7 +1334,7 @@ bool Dfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int
 	return exit_status;
 }
 
-bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> witness_results) {
+bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> *witness_results) {
 
     bool areEquivalent;
 
@@ -1322,10 +1344,8 @@ bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> witness_results) {
 		cout << "--------------------------" << endl;
 	#endif
 
-
 	// Build union DFA of target dfa (thisone) and dfa_hp
 	Dfa* dfa_union = this->unionDFA(dfa_hp);
-
 
 	#ifdef DEBUG_2
 		dfa_union->print_dfa_ttable_("DFA UNIONE");
@@ -1335,22 +1355,24 @@ bool Dfa::equivalence_query(Dfa* dfa_hp,vector<string> witness_results) {
 	// Table-filling algorithm on union dfa
 	vector<string> distincts_table = dfa_union->table_filling();
 
+
 	// Extract list of equivalent states from table of distinct states,
 	// every vector contain a list of equivalent states for the state that correspond to the vector.
 	vector<vector<int>> equivalent_states_list = dfa_union->equivalent_states_list_from_table(distincts_table);
-
+	
 	int start_state = get_start_state();
 	int hp_start_state = dfa_hp->get_start_state();
+
 
 	// Checks if start states of dfas are equivalent:
 	// check if among the set of states equivalent to the 0 state (start state of current automaton)
 	// there is the start state of hp automaton, whose index is "num_state"
 	// If so, it returns an empty vector as counterexample.
-	if(equivalent_states_list[start_state].end() == find(equivalent_states_list[start_state].begin(), equivalent_states_list[start_state].end(), hp_start_state) )
+	if(equivalent_states_list[start_state].end() == find(equivalent_states_list[start_state].begin(), equivalent_states_list[start_state].end(), hp_start_state+num_states_) )
 	{
 		areEquivalent = false;
-		if(!(witness_results.empty())) //if witness_results is NULL means that the client isn't interested in witness but in checking only equivalence
-		   witness_results = dfa_union->witness_from_table(distincts_table, num_states_);
+		if(witness_results!=NULL) //if witness_results is NULL means that the client isn't interested in witness but in checking only equivalence
+		   *witness_results = dfa_union->witness_from_table(distincts_table, dfa_hp->get_start_state()+num_states_);
 	}
 	else //The dfa are equivalentes
 	   areEquivalent = true;
@@ -1387,11 +1409,12 @@ vector<string> Dfa::table_filling() const{
 	// *** TABLE-FILLING ALGORITHM with witness ***
 	int i,j,k;
 	int n = num_states_;
-	//int tf_l = (num_states_*(num_states_-1))/2;
+	int tf_l = (num_states_*(num_states_-1))/2;
 
 
 	// Table of distinct pair states.
 	vector<string> table_of_distinct_states;
+	for(int i=0; i<tf_l;++i)	table_of_distinct_states.push_back("");
 
 	// Acceptor and rejector states are surely different, so they are marked.
 	for(i=0; i<(num_states_-1); ++i)
@@ -1419,7 +1442,7 @@ vector<string> Dfa::table_filling() const{
 
 				k = (n*(n-1)/2) - (n-i)*((n-i)-1)/2 + j - i - 1;
 
-				if(stoi(table_of_distinct_states[k]) == DFA_TF_STATE_N){
+				if(table_of_distinct_states[k] == to_string(DFA_TF_STATE_N)){
 
 					for(string sym : get_alphabet())
 					{
@@ -1451,7 +1474,7 @@ vector<string> Dfa::table_filling() const{
 						int k1 = (n*(n-1)/2) - (n-i1)*((n-i1)-1)/2 + j1 - i1 - 1;
 
 
-						if(stoi(table_of_distinct_states[k1]) != DFA_TF_STATE_N){
+						if(table_of_distinct_states[k1] != to_string(DFA_TF_STATE_N)){
 							table_of_distinct_states[k] = sym;
 							modified = true;
 							break;
@@ -1497,12 +1520,14 @@ vector<vector<int>> Dfa::equivalent_states_list_from_table(vector<string> distin
 
 	int n = num_states_;
 	vector<vector<int>> equivalent_states;
+	for(int i=0;i<(num_states_-1);++i)
+		equivalent_states.push_back(vector<int>());
 
 
 	for(int i=0; i<(num_states_-1); ++i)
 		for(int j=i+1; j<num_states_; ++j){
 			int k= (n*(n-1)/2) - (n-i)*((n-i)-1)/2 + j - i - 1;
-			if(stoi(distincts[k]) == DFA_TF_STATE_N)
+			if(distincts[k] == to_string(DFA_TF_STATE_N))
 				equivalent_states[i].push_back(j);
 		}
 
@@ -1540,7 +1565,7 @@ vector<string> Dfa::witness_from_table(vector<string> distinct, int start_state_
 
 
 		// Check if provided automata are equivalent
-		if(stoi(distinct[k]) == DFA_TF_STATE_N){
+		if(distinct[k] == to_string(DFA_TF_STATE_N)){
 			cerr << "ERR: a witness string was requested while automata are equivalent!";
 			throw witnessFromEquivalentDFA();
 		}
@@ -1550,7 +1575,7 @@ vector<string> Dfa::witness_from_table(vector<string> distinct, int start_state_
 
 
 		// Check if one start state is acceptor and the otherone is rejector
-		if(stoi(input) == DFA_TF_STATE_X) {
+		if(input == to_string(DFA_TF_STATE_X)) {
 			break;
 		}
 
@@ -1562,7 +1587,7 @@ vector<string> Dfa::witness_from_table(vector<string> distinct, int start_state_
 		j_pair = ttable_[j_pair][input];
 
 
-		if(stoi(distinct[k]) == DFA_TF_STATE_X)
+		if(distinct[k] == to_string(DFA_TF_STATE_X))
 			break;
 
 	}
@@ -1688,13 +1713,6 @@ vector<vector<string> > Dfa::get_characterization_set() const{
 	delete tmp_minimized_dfa;
 		#endif
 
-
-
-	// Extract access strings for the DFA states
-	//map<int, vector<SYMBOL>> access_strings = this->get_access_strings();
-
-
-
 	// Track pairs of states already checked
 	map<int, vector<int>> state_pairs;
 
@@ -1741,7 +1759,7 @@ vector<vector<string> > Dfa::get_characterization_set() const{
 				int k = (n*(n-1)/2) - (n-i_pair)*((n-i_pair)-1)/2 + j_pair - i_pair - 1;
 
 
-				if(stoi(distincts_table[k]) == DFA_TF_STATE_N){
+				if(distincts_table[k] == to_string(DFA_TF_STATE_N)){
 					cerr << "ERROR! Required counterexample with equivalent states" << endl;
 					throw witnessFromEquivalentDFA();
 				}
@@ -1751,11 +1769,8 @@ vector<vector<string> > Dfa::get_characterization_set() const{
 				read_symbols = distincts_table[k];
 
 
-				if(stoi(read_symbols) == DFA_TF_STATE_X)
+				if(read_symbols == to_string(DFA_TF_STATE_X))
 				{
-					//cout<<"esco dal while(1) con wit = ";
-					//for(SYMBOL sy : wit)	cout<<sy<<" ";
-					//cout<<endl;
 					break;
 				}
 
@@ -1908,29 +1923,6 @@ vector<vector<string> > 			Dfa::get_augmented_characterization_set(int sigma_exp
 	return aug_characterization_set;
 }
 
-
-/*
-vector<string> Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma=true) const
-{
-	vector<string> w_vec;
-
-	set<vector<SYMBOL>> w_set = get_w_method_test_set_mapped_alphabet(target_dfa,sigma);
-
-	for(auto &it1 : w_set) {
-		std::vector<char> strvec;
-		for (SYMBOL s: it1) {
-			char c = get_letter_from_mapped_alphabet(s)[0];
-			strvec.push_back(c);
-		}
-		std::string str(strvec.begin(),strvec.end());
-		w_vec.push_back(str);
-	}
-
-	return w_vec;
-}
-*/
-
-
 vector<vector<string>>	Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma) const
 {
 	set<vector<string>> w_method_test_set;
@@ -2071,7 +2063,7 @@ vector<long double> Dfa::get_w_method_statistics(vector<vector<string>> test_set
   return statistics;
 }
 
-vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps) const{
+vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps, bool color) const{
 
 	fpu_control_t oldcw, newcw;
     _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
@@ -2080,9 +2072,15 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
     double similarity;
 	double** similarity_matrix= new double*[this->get_num_states()+1];
 	vector<vector<double>> sim_v;
-	for(int w=0; w<this->get_num_states();++w)
+	for(int w=0; w<this->get_num_states();++w){
 		similarity_matrix[w]=new double[subject_dfa->get_num_states()];
+		vector<double> init=vector<double>();
+		for(int i=0;i<subject_dfa->get_num_states();++i)
+			init.push_back(0);
+		sim_v.push_back(init);
+	}
 	similarity_matrix[this->get_num_states()]=new double[1];
+	sim_v.push_back({0});
 
 	//Here we translate the Dfas in their corresponding simple graph following the encoding:
 	/*Input file format
@@ -2113,11 +2111,25 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 	subject_incidence_matrix=get_incidence_matrix(subject_ttable,subject_dfa->get_num_states(),subject_dfa->get_alphabet());
 	vector<int> *reference_labels= new vector<int>[this->get_num_states()]; 
 	vector<int> *subject_labels= new vector<int>[subject_dfa->get_num_states()];	//useful for coloured graphs
-	//we consider every state to have label 1
-	for(int i=0; i<this->get_num_states();++i)
-		(*reference_labels).push_back(1);
-	for(int j=0; j<subject_dfa->get_num_states();++j)
-		(*subject_labels).push_back(1);
+	//we consider every state to have label 1 if color is FALSE
+	if(!color){
+		for(int i=0; i<this->get_num_states();++i)
+			(*reference_labels).push_back(1);
+		for(int j=0; j<subject_dfa->get_num_states();++j)
+			(*subject_labels).push_back(1);
+	}
+	else{	//If color is TRUE we give label 1 to accepting states and label 0 to rejecting states
+		for(int i=0; i<this->get_num_states();++i)
+			if(this->is_accepting(i))
+				(*reference_labels).push_back(1);
+			else	
+				(*reference_labels).push_back(0);
+		for(int j=0; j<subject_dfa->get_num_states();++j)
+			if(subject_dfa->is_accepting(j))
+				(*subject_labels).push_back(1);
+			else
+				(*reference_labels).push_back(0);
+	}
 
 	//Reference_dfa to grapha
 	try{
@@ -2192,5 +2204,21 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 	sim_v[this->get_num_states()][0]=similarity/no;
 
 	return sim_v;
+}
+
+void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix, int num_states_subject_dfa) const{
+	printf("\nSimilarity matrix:\n\n");
+    for(int i=0; i<this->get_num_states(); i++)
+    {
+        printf(" [ ");
+        for(int j=0; j<num_states_subject_dfa; j++){
+       		printf("%lf ", similarity_matrix[i][j]);
+		}
+        printf("]\n");
+    }
+
+	printf("\n");
+
+	cout <<"Similarity between the Dfas: " <<similarity_matrix[this->get_num_states()][0] << endl;
 
 }

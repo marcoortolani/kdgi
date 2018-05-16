@@ -172,7 +172,6 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 	    	second= false;
 	    }
 
-
 	    bool weight = true;
 
 	    // Read remaining lines
@@ -202,52 +201,23 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 				flagcn++;
 				continue;
 			}
+
 			/*
 			if(weight){
 				cout<<"Sono dentro if(weight) a riga 206: n="<<n<<endl;
 				weight = false;
-
-				if(casopositive)
-					wp[flagcp] = stringToint(n);
-				else if(casonegative)
-					wn[flagcn] = stringToint(n);
-
-				// DEBUG
-				//cout << "!T Peso: "<< stringToint(n) << endl;
-
-			} else {
-				cout<<"Sono dentro else a riga 218: n="<<n<<endl;
-
-				// se la stringa è vuota, non è necessario aggiungere nulla
-				if(n.compare(null_symbol) == 0){
-					continue;
-				}
-
-
 				int tmp = mapped_alphabet[ n];
-
-				if(casopositive)
-							positive[flagcp].push_back(tmp);
-				else if(casonegative)
-							negative[flagcn].push_back(tmp);
-			}
-			*/
-			if(weight){
-				cout<<"Sono dentro if(weight) a riga 206: n="<<n<<endl;
-				weight = false;
-				cout<<"stringToint(n)"<<stringToint(n)<<endl;
 				if(casopositive){
-					wp[flagcp] = stringToint(n);
-					cout<<"wp[flagcp]"<<wp[flagcp]<<endl;
+					wp[flagcp] = tmp+1;
+					cout<<"wp[flagcp]="<<wp[flagcp]<<endl;
 				}
 				else if(casonegative){
-					wn[flagcn] = stringToint(n);
-					cout<<"wn[flagcn]"<<wn[flagcn]<<endl;
+					wn[flagcn] = tmp+1;
+					cout<<"wn[flagcn]="<<wn[flagcn]<<endl;
 				}
 
 				// DEBUG
 				//cout << "!T Peso: "<< stringToint(n) << endl;
-
 			} 
 				cout<<"Sono dentro else a riga 218: n="<<n<<endl;
 
@@ -256,6 +226,32 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 					continue;
 				}
 
+				int tmp = mapped_alphabet[ n];
+
+				if(casopositive)
+							positive[flagcp].push_back(tmp);
+				else if(casonegative)
+							negative[flagcn].push_back(tmp);
+		}
+		*/
+
+			if(weight){
+				cout<<"Sono dentro if(weight) a riga 206: n="<<n<<endl;
+				weight = false;
+				if(casopositive)
+					wp[flagcp] = stringToint(n);
+				else if(casonegative)
+					wn[flagcn] = stringToint(n);
+
+				// DEBUG
+				//cout << "!T Peso: "<< stringToint(n) << endl;
+			} 
+				cout<<"Sono dentro else a riga 218: n="<<n<<endl;
+
+				// se la stringa è vuota, non è necessario aggiungere nulla
+				if(n.compare(null_symbol) == 0){
+					continue;
+				}
 
 				int tmp = mapped_alphabet[ n];
 
@@ -263,7 +259,6 @@ void BlueFringe::read_samples(vector<SYMBOL>* &positive, int* dim_positive, vect
 							positive[flagcp].push_back(tmp);
 				else if(casonegative)
 							negative[flagcn].push_back(tmp);
-			
 		}
 	}
 }

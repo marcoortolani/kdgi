@@ -47,10 +47,6 @@ BlueStar::BlueStar(const char * path, double alpha_value, double delta_value):Bl
 BlueStar::~BlueStar(){};
 
 
-
-
-
-
 void BlueStar::set_acceptor_and_rejector_states(RedBlueDfa* dfa1, vector<SYMBOL>* positive, const int dim_positive, vector<SYMBOL>* negative, const int dim_negative, int* &wp, int* &wn)
 {
 
@@ -355,7 +351,7 @@ Dfa* BlueStar::run(string base_path)
 	for(int i = 0; i<dim_negative; i++){
 		cout<<wn[i]<<",";
 	}
-	cout<<"]"<<endl<<"END READ_SEMPLES DEBUG";
+	cout<<"]"<<endl<<"END READ_SEMPLES DEBUG"<<endl;
 
 	// Build APTA
 	dfa1 = build_apta(positive, dim_positive, negative, dim_negative);
@@ -384,13 +380,7 @@ Dfa* BlueStar::run(string base_path)
 	for(int i=0; i<dim_negative; ++i)
 		tot_wn_w += wn[i];
 	
-	/*Se faccio così tot_wp_w e tot_wn_w vengono numeri enormi, e forse non era questa la logica */
-	/*
-	for(int i=0; i<dim_positive; ++i)
-		tot_wp_w += &positive[i];
-	for(int i=0; i<dim_negative; ++i)
-		tot_wn_w += &negative[i];
-	*/
+	
 	cout << "Totale tot_wn_w: "<<tot_wp_w << " e "<< tot_wn_w << endl;
 
 	cout <<" START BlueStar inference process..."<<endl;
@@ -443,7 +433,7 @@ Dfa* BlueStar::run(string base_path)
 
 
 
-			// Errora rate for current dfa (father dfa) -> p1 estimated in paper of Blue*: a blue-fringe procedure for learning DFA with noisy data
+			// Error rate for current dfa (father dfa) -> p1 estimated in paper of Blue*: a blue-fringe procedure for learning DFA with noisy data
 			error_rate_before = error_rate(dfa1, positive, dim_positive, negative, dim_negative, wp, wn, tot_wp_w, tot_wn_w);
 
 			// IR stats

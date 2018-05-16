@@ -192,6 +192,12 @@ public:
   const Dfa &operator=(const Dfa &d1);
 
   /**
+   * Definition of equivalence operator==.
+   * @param d1	Dfa to compare.
+   */
+  bool operator==(const Dfa &d1) const;
+
+  /**
    * Definition of assignement operator<.
    * @param d1	Dfa to compare.
    * @return true if calling DFA has less states than DFA @p d1.

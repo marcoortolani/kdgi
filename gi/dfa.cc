@@ -98,11 +98,37 @@ const Dfa &Dfa::operator=(const Dfa &d1)
 
 			accepting_states_.clear();
 			accepting_states_.reserve(d1.accepting_states_.size());
-			copy(d1.accepting_states_.begin(),d1.accepting_states_.end(),back_inserter(accepting_states_));
+			for(int i=0; i<num_states_;++i)
+				accepting_states_[i]=d1.accepting_states_[i];
 
 	}
 
 	return *this;
+}
+
+bool Dfa::operator==(const Dfa &d1) const{
+	vector<map<string,int>> ttable_test=get_ttable();
+    vector<map<string,int>> ttable_ref=d1.get_ttable();
+    bool flag=true;
+    int i;
+	if(!(equal(d1.alphabet_.begin(), d1.alphabet_.end(), alphabet_.begin())))
+		flag=false;
+	if(flag){
+		for(i=0;i<d1.get_num_states();i++){
+			if(d1.is_accepting(i)!=is_accepting(i)){
+				flag=false;
+				break;
+			}
+			for(string sym : d1.alphabet_)
+				if(ttable_test[i][sym]!=ttable_ref[i][sym]){
+					flag=false;
+					break;
+				}
+			if(!flag)
+				break;
+		}
+	}
+	return flag;
 }
 
 

@@ -8,6 +8,8 @@ class TestDfa : public Dfa{
 
   FRIEND_TEST(BaseDfaTest, equivalenceQuery);
   FRIEND_TEST(BaseDfaTest, setAcceptingState);
+  FRIEND_TEST(BaseDfaTest, operatorEqual);
+  FRIEND_TEST(BaseDfaTest, operatorEqualEqual);
 
   FRIEND_TEST(LinguisticSimilarityTest, coverSet);
   FRIEND_TEST(LinguisticSimilarityTest, characterizationSet);

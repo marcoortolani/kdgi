@@ -25,6 +25,7 @@ protected:
 		// Code here will be called immediately after the constructor (right
 		// before each test).
 		reference->set_ttable_from_sequence(sequence);
+        subject->set_ttable_from_sequence(sequence);
 	}
 
 	virtual void TearDown() {
@@ -36,6 +37,7 @@ protected:
 	vector<string> alph={"0","1","2"};
 	const vector<int> sequence = {1, 2, 4, 0, 3, 4, 1, 0, 4, 3, 2, 0, 4, 4, 4, 1, 4, 4, 4, 0};
 	TestDfa* reference = new TestDfa(5,alph);
+    TestDfa* subject = new TestDfa(5,alph);
 
 };
 
@@ -122,6 +124,40 @@ TEST_F(BaseDfaTest, membershipQuery){
     flag=reference->membership_query(try2);
     vector<string> try3={"2"};  //non accettata
     flag=!(reference->membership_query(try3));
+    EXPECT_EQ(1,flag);
+}
+
+TEST_F(BaseDfaTest, operatorEqual){
+    TestDfa* test = new TestDfa();
+    *test = *reference;
+    vector<map<string,int>> ttable_test=test->get_ttable();
+    vector<map<string,int>> ttable_ref=reference->get_ttable();
+    bool equal=true;
+    int i;
+    for(i=0;i<reference->get_num_states();i++){
+        if(reference->is_accepting(i)!=test->is_accepting(i)){
+            cout<<"stato incriminato:"<<i<<endl;
+            equal=false;
+            break;
+        }
+        for(string sym : reference->get_alphabet())
+            if(ttable_test[i][sym]!=ttable_ref[i][sym]){
+                cout<<"i="<<i<<endl<<"sym"<<sym<<endl;
+                cout<<"ttable_test[i][sym]="<<ttable_test[i][sym]<<endl<<"ttable_ref[i][sym]="<<ttable_ref[i][sym]<<endl;
+                equal=false;
+                break;
+            }
+        if(!equal)
+            break;
+    }
+    EXPECT_EQ(1,equal);
+}
+
+TEST_F(BaseDfaTest, operatorEqualEqual){
+    bool flag=true;
+    flag=(*reference==*subject);
+    reference->set_ttable_entry(0,"0",0);
+    flag=!(*reference==*subject);
     EXPECT_EQ(1,flag);
 }
 

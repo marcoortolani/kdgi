@@ -225,7 +225,7 @@ public:
   static Dfa read_dfa_file(const string file_name);
 
   /**
-   * Return a pointer to alphabet symbols.
+   * Return a vector with alphabet symbols.
    * @return Pointer to alphabet symbols (i.e. strings).
    */
   const vector<string>	get_alphabet() const;
@@ -291,7 +291,7 @@ public:
   Dfa*  	minimize_TF() const;
 
   /**
-   * Print the transition table of current dfa, using the INNER alphabet. Before the transition table print the title passse as parameter.
+   * Print the transition table of current dfa. Before the transition table print the title passse as parameter.
    * @param title Title printed before the transition table.
    */
   void 	print_dfa_ttable(string title) const;

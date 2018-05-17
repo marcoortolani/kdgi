@@ -33,5 +33,5 @@ Inoltre, il porting della libreria `gi` su python utilizza il progetto pybind11,
 
 nella directory `py`
 
-Per informazioni circa l'utilizzo di `git merge` e `git rebase` per condividere codice tra branches, leggere:
-HOWTO_branching.txt
+Per informazioni circa l'utilizzo di `git merge`  per condividere codice tra branches, leggere:
+git_merge.txt

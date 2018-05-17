@@ -27,5 +27,11 @@ oppure (per il testing):
 Se si vuole vedere quale specifico test è riuscito/fallito occorre eseguire, all'interno della cartella build:
 `./runUnitTests`
 
-Per informazioni circa l'utilizzo di `git merge` e `git rebase` per condividere codice tra branches, leggere: 
-HOWTO_branching.txt
+Inoltre, il porting della libreria `gi` su python utilizza il progetto pybind11, aggiunto mediante il comando:
+
+`git submodule add https://github.com/pybind/pybind11.git`
+
+nella directory `py`
+
+Per informazioni circa l'utilizzo di `git merge`  per condividere codice tra branches leggere:
+git_merge.txt

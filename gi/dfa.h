@@ -61,8 +61,9 @@ protected:
    * @param alf		Alphabet symbols.
    * @param s_state	Start state.
    * @param tt_copy	Reference to extern transition table to copy inside current dfa.
+   * @param accepting_states Accepting states.
    */
-  Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy );
+  Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy, vector<int> accepting_states );
 
   //******** METHODS: ********
 
@@ -189,7 +190,7 @@ public:
    * Definition of assignement operator=.
    * @param d1	Dfa to copy.
    */
-  const Dfa &operator=(const Dfa &d1);
+  Dfa &operator=(const Dfa &d1);
 
   /**
    * Definition of equivalence operator==.
@@ -419,6 +420,12 @@ public:
    */
    vector<long double> get_w_method_statistics(vector<vector<string>> test_set, Dfa* subject_dfa) const;
 
+  /**
+   * Print the w-method statistics
+   * @param statistics
+   */
+  void print_w_method(vector<long double> statistics) const;
+
    /**
     * Gives the structural similarity score matrix between every pair of states of two DFAs
     * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
@@ -437,6 +444,16 @@ public:
    * @param num_states_target_dfa
    */
    void print_structural_similarity(vector<vector<double>> similarity_matrix,int num_states_target_dfa) const;
+
+  /**
+   * Returns and print the similarity score between dfas, taking into account both linguistical
+   * and structural sides.
+   * @param target_dfa
+   * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
+   * @param eps precision of the termination condition, a by default is eps=0.0001
+   * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
+   */
+  long double dfa_similarity(Dfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false) const;
 
 };
 

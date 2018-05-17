@@ -28,8 +28,6 @@ PYBIND11_MODULE(gi_gipy, m) {
       //===========================================================================================
 
       //*** Operators overload ***
-      //.def(py::self = py::self, "Definition of assignement operator=.")
-
       .def(py::self == py::self, "Definition of equivalence operator==.")
 
       .def(py::self < py::self, "Definition of minor operator<. Return true if calling DFA has less states than DFA @p d1.")
@@ -65,16 +63,21 @@ PYBIND11_MODULE(gi_gipy, m) {
 
       //*** W-Method ***
       .def("get_w_method_test_set", &Dfa::get_w_method_test_set, "Return a W-METHOD test set of strings for current DFA.",py::arg("target_dfa"), py::arg("sigma") = 1)
+      
       .def("get_w_method_statistics", &Dfa::get_w_method_statistics, "Return a 9-dimensional array with all the w-method statistics.")
       
+      .def("print_w_method", &Dfa::print_w_method, "Print the w-method statistics")
+
       //===========================================================================================
 
       //*** Structural similarity ***
       .def("neighbour_matching_structural_similarity", &Dfa::neighbour_matching_structural_similarity, "Gives the structural similarity score matrix between every pair of states of two DFAs",py::arg("target_dfa"), py::arg("eps") = 0.0001, py::arg("color") = 0)
+      
       .def("print_structural_similarity", &Dfa::print_structural_similarity, "Print the matrix containing the similarity score between pair of nodes.")
       
       //===========================================================================================
-
+      
+      .def("dfa_similarity", &Dfa::dfa_similarity, "Returns and print the similarity score between dfas, taking into account both linguistical and structural sides.",py::arg("target_dfa"), py::arg("sigma") = 1, py::arg("eps") = 0.0001, py::arg("color") = 0)
       ;
 
 }

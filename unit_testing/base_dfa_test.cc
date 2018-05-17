@@ -204,3 +204,8 @@ TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     EXPECT_EQ(1,flag);
 }
 
+TEST_F(BaseDfaTest, copyConstructor){
+    TestDfa* test = new TestDfa(*reference);
+    test->print_dfa_ttable("test");
+    EXPECT_EQ(1,*test==*reference);
+}

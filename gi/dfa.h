@@ -61,8 +61,9 @@ protected:
    * @param alf		Alphabet symbols.
    * @param s_state	Start state.
    * @param tt_copy	Reference to extern transition table to copy inside current dfa.
+   * @param accepting_states Accepting states.
    */
-  Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy );
+  Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy, vector<int> accepting_states );
 
   //******** METHODS: ********
 
@@ -189,7 +190,7 @@ public:
    * Definition of assignement operator=.
    * @param d1	Dfa to copy.
    */
-  const Dfa &operator=(const Dfa &d1);
+  Dfa &operator=(const Dfa &d1);
 
   /**
    * Definition of equivalence operator==.
@@ -198,7 +199,7 @@ public:
   bool operator==(const Dfa &d1) const;
 
   /**
-   * Definition of assignement operator<.
+   * Definition of minor operator<.
    * @param d1	Dfa to compare.
    * @return true if calling DFA has less states than DFA @p d1.
    */
@@ -225,7 +226,7 @@ public:
   static Dfa read_dfa_file(const string file_name);
 
   /**
-   * Return a pointer to alphabet symbols.
+   * Return a vector with alphabet symbols.
    * @return Pointer to alphabet symbols (i.e. strings).
    */
   const vector<string>	get_alphabet() const;
@@ -291,7 +292,7 @@ public:
   Dfa*  	minimize_TF() const;
 
   /**
-   * Print the transition table of current dfa, using the INNER alphabet. Before the transition table print the title passse as parameter.
+   * Print the transition table of current dfa. Before the transition table print the title passed as parameter.
    * @param title Title printed before the transition table.
    */
   void 	print_dfa_ttable(string title) const;
@@ -419,6 +420,12 @@ public:
    */
    vector<long double> get_w_method_statistics(vector<vector<string>> test_set, Dfa* subject_dfa) const;
 
+  /**
+   * Print the w-method statistics
+   * @param statistics
+   */
+  void print_w_method(vector<long double> statistics) const;
+
    /**
     * Gives the structural similarity score matrix between every pair of states of two DFAs
     * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
@@ -438,13 +445,15 @@ public:
    */
    void print_structural_similarity(vector<vector<double>> similarity_matrix,int num_states_target_dfa) const;
 
-   //PROVVISORIO 10/04/18
-   /**
-   * Make a membership query to dfa with the "str" string. Return "true" if the arrive state for "str" is acceptor, else "false".
-   * @param str A string to make a membership query.
-   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
+  /**
+   * Returns and print the similarity score between dfas, taking into account both linguistical
+   * and structural sides.
+   * @param target_dfa
+   * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
+   * @param eps precision of the termination condition, a by default is eps=0.0001
+   * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
    */
-  bool			  	membership_query_using_mapped_alphabet(const vector<SYMBOL> &str) const;
+  long double dfa_similarity(Dfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false) const;
 
 };
 

@@ -69,18 +69,23 @@ Dfa::Dfa(const int n_state, const vector<string> alf)
 :Dfa(n_state, alf, 0){}
 
 
-Dfa::Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy )
+Dfa::Dfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy, vector<int> accepting_states )
 :Dfa(n_state, alf, 0){
+	ttable_.clear();
 	ttable_.reserve(tt_copy.size());
 	copy(tt_copy.begin(),tt_copy.end(),back_inserter(ttable_));
+	accepting_states_.clear();
+	accepting_states_.reserve(accepting_states.size());
+	for(int i=0; i<num_states_;++i)
+		accepting_states_[i]=accepting_states[i];
 }
 
 
 Dfa::Dfa(const Dfa &d1)
-:Dfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.ttable_){}
+:Dfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.ttable_, d1.accepting_states_){}
 
 
-const Dfa &Dfa::operator=(const Dfa &d1)
+Dfa &Dfa::operator=(const Dfa &d1)
 {
 	if(! (this == &d1) ) //avoid self-assignement
 	{
@@ -100,8 +105,19 @@ const Dfa &Dfa::operator=(const Dfa &d1)
 			accepting_states_.reserve(d1.accepting_states_.size());
 			for(int i=0; i<num_states_;++i)
 				accepting_states_[i]=d1.accepting_states_[i];
-
+			/*
+			for(int i=0; i<num_states_; ++i){
+				map<string,int> tmp=map<string,int>();
+				for(string sym : alphabet_){
+					cout<<"d1.get_ttable(i,sym)="<<d1.get_ttable(i,sym)<<endl;
+					tmp[sym]=d1.get_ttable(i,sym);
+				}
+				accepting_states_.push_back(d1.accepting_states_[i]);	
+				ttable_.push_back(tmp);
+			}*/
+			
 	}
+
 
 	return *this;
 }
@@ -303,10 +319,14 @@ Dfa Dfa::read_dfa_file(const string file_name)
         //TODO: YOU could control that transition_symbol is in the alphabet_
 		string transition_symbol = calfabeto;
 
+		//cout<<"cstato="<<cstato<<" transition_symbol="<<transition_symbol<<" ctransizione="<<ctransizione<<endl;
 		res.ttable_[cstato][transition_symbol] = ctransizione;
+		//cout<<"res.ttable_[cstato][transition_symbol]="<<res.ttable_[cstato][transition_symbol]<<endl;
+		//res.set_ttable_entry(cstato,transition_symbol,ctransizione);
 		// It detects the row for type of state (accepting or rejecting)
 		if(transition_symbol.compare(std::to_string(dim_alphabet)) == 0)
 			res.accepting_states_[cstato]=ctransizione;
+			//res.set_accepting_state(cstato);
 
 	}
 
@@ -2063,6 +2083,22 @@ vector<long double> Dfa::get_w_method_statistics(vector<vector<string>> test_set
   return statistics;
 }
 
+void Dfa::print_w_method(vector<long double> statistics)const{
+	cout<<"============================"<<endl;
+	cout<<"***** W-METHOD RESULTS *****"<<endl;
+	cout<<"True Positives = "<<statistics[0]<<endl;
+	cout<<"True Negatives = "<<statistics[2]<<endl;
+	cout<<"False Positives = "<<statistics[1]<<endl;
+	cout<<"False Negatives = "<<statistics[3]<<endl;
+	cout<<"----------------------------"<<endl;
+	cout<<"Precision = "<<statistics[4]<<endl;
+	cout<<"Recall = "<<statistics[5]<<endl;
+	cout<<"F-measure = "<<statistics[6]<<endl;
+	cout<<"Specifity = "<<statistics[7]<<endl;
+	cout<<"Balanced Classification Rate = "<<statistics[8]<<endl;
+	cout<<"============================"<<endl;
+}
+
 vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subject_dfa, double eps, bool color) const{
 
 	fpu_control_t oldcw, newcw;
@@ -2151,26 +2187,22 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 	//Similarity between pair of states
 	//printf("\nNumber of iterations: %d\n", s->Iterate(eps,100000));
     //printf("\nSimilarity matrix:\n\n");
+	s->Iterate(eps,100000);
     similarity=0;
 	double sim=0;
     for(int i=0; i<ga->NodeCount(); i++)
     {
-        //printf(" [ ");
         for(int j=0; j<gb->NodeCount(); j++){
 			sim=s->NodeSimilarity(i,j);
-       		//printf("%lf ", sim);
 			similarity_matrix[i][j]=sim;
 		}
-        //printf("]\n");
     }
-
-    //printf("\n");
 
 	//Overall Dfas similarity
 	long *r;
     long *solution;
 
-	s->Iterate(eps,100000);
+	//s->Iterate(eps,100000);
     
     r=(long *)malloc(ga->NodeCount()*gb->NodeCount()*sizeof(long));
     for(int i=0; i<ga->NodeCount(); i++)
@@ -2189,8 +2221,6 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 	    no++;
       }
 
-    //cout <<"Similarity between the Dfas: " <<similarity/no << endl;
-
 	similarity_matrix[this->get_num_states()][0]=similarity/no;
     
     delete s;
@@ -2207,6 +2237,8 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 }
 
 void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix, int num_states_subject_dfa) const{
+	cout<<"======================================"<<endl;
+	cout<<"***** NEIGHBOUR MATCHING RESULTS *****";
 	printf("\nSimilarity matrix:\n\n");
     for(int i=0; i<this->get_num_states(); i++)
     {
@@ -2216,9 +2248,19 @@ void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix, 
 		}
         printf("]\n");
     }
+	cout<<"--------------------------------------"<<endl;
+	cout <<"Structural similarity between the Dfas: " <<similarity_matrix[this->get_num_states()][0] << endl;
+	cout<<"======================================"<<endl;
+}
 
-	printf("\n");
-
-	cout <<"Similarity between the Dfas: " <<similarity_matrix[this->get_num_states()][0] << endl;
-
+long double Dfa::dfa_similarity(Dfa* subject_dfa, bool sigma, double eps, bool color)const{
+	vector<vector<string>> test_set = get_w_method_test_set(subject_dfa,sigma);
+	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
+	print_w_method(stats);
+	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
+	print_structural_similarity(sim_matrix,subject_dfa->get_num_states());
+	long double similarity = (stats[6]+sim_matrix[num_states_][0])/2;
+	cout<<"***** GLOBAL SIMILARITY *****"<<endl;
+	cout<<"The global similarity score between the two dfas is: "<<similarity<<endl;
+	return similarity;
 }

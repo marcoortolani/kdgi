@@ -14,8 +14,6 @@
 #define ND 	 numeric_limits<int>::max()
 #define MINF numeric_limits<int>::min()
 
-typedef unsigned short int SYMBOL;
-
 using namespace std;
 
 

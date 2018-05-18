@@ -18,8 +18,8 @@ RedBlueDfa::RedBlueDfa()
 }
 
 
-RedBlueDfa::RedBlueDfa(const int n_state, const int dim_alf, const string *alf, const int s_state)		// Constructor 1
-:Dfa(n_state, dim_alf, alf, s_state){
+RedBlueDfa::RedBlueDfa(const int n_state, const vector<string> alf, const int s_state)		// Constructor 1
+:Dfa(n_state, alf, s_state){
 
 	blue_states = new vector<int>();
 	red_states = new vector<int>();
@@ -27,8 +27,8 @@ RedBlueDfa::RedBlueDfa(const int n_state, const int dim_alf, const string *alf, 
 }
 
 
-RedBlueDfa::RedBlueDfa(const int n_state, const int dim_alf, const string *alf)							// Default start state to 0
-:RedBlueDfa(n_state, dim_alf, alf, 0){}
+RedBlueDfa::RedBlueDfa(const int n_state, const vector<string> alf)							// Default start state to 0
+:RedBlueDfa(n_state, alf, 0){}
 
 
 RedBlueDfa::RedBlueDfa(const Dfa &d1)
@@ -40,7 +40,7 @@ RedBlueDfa::RedBlueDfa(const Dfa &d1)
 
 
 RedBlueDfa::RedBlueDfa(const RedBlueDfa &d1)
-:Dfa(d1.num_states_, d1.dim_alphabet_, d1.alphabet_, d1.start_state_, (const int**) d1.ttable_){
+:Dfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.get_ttable(), d1.get_accepting_states()){
 
 	blue_states = new vector<int>;
 	red_states = new vector<int>;
@@ -65,10 +65,11 @@ RedBlueDfa::~RedBlueDfa(){
 	}
 }
 
-
+/*
 Dfa* RedBlueDfa::to_dfa(){
-	return new Dfa(this->num_states_,this->dim_alphabet_, this->alphabet_, this->start_state_, (const int**) this->ttable_);
+	return new Dfa(this->num_states_, this->alphabet_, this->start_state_, this->get_ttable(), this->get_accepting_states());
 }
+*/
 
 
 RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
@@ -86,20 +87,21 @@ RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
 
 	// Creo un nuovo automa senza stati irragiungibili
 	int count = 0;
-	RedBlueDfa* finalDFA = new RedBlueDfa(n_final_states, get_dim_alphabet(), get_alphabet());
+	RedBlueDfa* finalDFA = new RedBlueDfa(n_final_states, get_alphabet());
 	map<int, int> updated_transition;
 
 	for (int i = 0; i < num_states_; ++i) {
 		if (is_inside_red_states(i)) {
 
-			for (int j = 0; j <get_dim_alphabet() + 1; ++j) {
+			for (string sym : get_alphabet()) {
 
 				// Aggiungo lo stato al nuovo automa
-				finalDFA->get_ttable()[count][j] = ttable_[i][j];
+				finalDFA->get_ttable()[count][sym] = get_ttable(i,sym);
 
 				updated_transition[i] = count;
 			}
 			++count;
+			finalDFA->accepting_states_[i]=accepting_states_[i];
 		}
 	}
 	updated_transition[ND] = ND;
@@ -115,13 +117,13 @@ RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
 	bool stato_pozzo = false;
 	// Aggiorno le transizioni
 	for (int i = 0; i < finalDFA->get_num_states(); ++i)
-		for (int j = 0; j < finalDFA->get_dim_alphabet(); ++j) {
+		for (string sym : finalDFA->get_alphabet()) {
 
-			if (finalDFA->get_ttable()[i][j] == ND)										// Rilevo che c'è una transizione mancante, quindi serve uno stato pozzo
+			if (finalDFA->get_ttable()[i][sym] == ND)										// Rilevo che c'è una transizione mancante, quindi serve uno stato pozzo
 				stato_pozzo = true;
 
-			if(updated_transition.find(finalDFA->get_ttable()[i][j]) != updated_transition.end())
-				finalDFA->set_ttable_entry(i, j, updated_transition[ finalDFA->get_ttable()[i][j] ]);
+			if(updated_transition.find(finalDFA->get_ttable()[i][sym]) != updated_transition.end())
+				finalDFA->set_ttable_entry(i, sym, updated_transition[ finalDFA->get_ttable()[i][sym] ]);
 			else {
 				cerr << "Errore nell'aggiornamento delle stringhe"<<endl;
 				exit(EXIT_FAILURE);
@@ -141,20 +143,22 @@ RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
 	// Controllo stato pozzo
 	// - Se ci sono transizioni non definite le imposto tutte verso lo stato pozzo
 	if (stato_pozzo) {
-		RedBlueDfa* finalDFAPozzo = new RedBlueDfa(finalDFA->get_num_states() + 1, finalDFA->get_dim_alphabet(), finalDFA->get_alphabet(), 0);
+		RedBlueDfa* finalDFAPozzo = new RedBlueDfa(finalDFA->get_num_states() + 1, finalDFA->get_alphabet(), 0);
 
-		int** table = finalDFAPozzo->get_ttable();
+		vector<map<string,int>> table = finalDFAPozzo->get_ttable();
 
-		for (int i = 0; i < finalDFA->get_num_states(); ++i)
-			for (int j = 0; j < finalDFA->get_dim_alphabet() + 1; ++j) {
-				if (finalDFA->get_ttable()[i][j] == ND)
-					table[i][j] = finalDFA->get_num_states();
+		for (int i = 0; i < finalDFA->get_num_states(); ++i){
+			for (string sym : finalDFA->get_alphabet()) {
+				if (finalDFA->get_ttable()[i][sym] == ND)
+					table[i][sym] = finalDFA->get_num_states();
 				else
-					table[i][j] = finalDFA->get_ttable()[i][j];
+					table[i][sym] = finalDFA->get_ttable()[i][sym];
 			}
+			accepting_states_[i] = finalDFA->accepting_states_[i];
+		}
 
-		for (int j = 0; j < finalDFA->get_dim_alphabet(); ++j)
-			table[finalDFA->get_num_states()][j] = finalDFA->get_num_states();
+		for (string sym : finalDFA->get_alphabet())
+			table[finalDFA->get_num_states()][sym] = finalDFA->get_num_states();
 
 		delete finalDFA;
 		finalDFA = finalDFAPozzo;
@@ -166,14 +170,12 @@ RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
 
 int RedBlueDfa::get_actual_num_states()
 {
-	int n_reacheable_states = 0;
-
 	set<int> reacheable_states;
 
 	for(int i=0; i<num_states_; ++i){
-		for(int j=0; j<dim_alphabet_; ++j)
-			if(ttable_[i][j] != i && ttable_[i][j] != ND)
-				reacheable_states.insert(ttable_[i][j]);
+		for(string sym : alphabet_)
+			if(get_ttable(i,sym) != i && get_ttable(i,sym) != ND)
+				reacheable_states.insert(get_ttable(i,sym));
 	}
 
 
@@ -181,7 +183,6 @@ int RedBlueDfa::get_actual_num_states()
 	reacheable_states.insert(start_state_);
 
 	return reacheable_states.size();
-
 }
 
 
@@ -283,35 +284,31 @@ void RedBlueDfa::print_dfa_with_color(string title)
 	cout << endl<< "--------------------------" << endl;
 	cout << title << endl;
 	string header = "    ";
-		for(int i=0; i<dim_alphabet_; ++i)
-			header = header + " | "+ intTostring(i);
+		for(string sym : alphabet_)
+			header = header + " | "+ sym;
 		header = header + " - A  - C";
 	cout << header << endl;
 
 	for(int i=0; i<num_states_; ++i){
 		cout << "S"<<i<<"  ";
 
-		for(int j=0; j<dim_alphabet_+1; ++j)
+		for(string sym : alphabet_)//+1
 		{
 
-			if(j < dim_alphabet_ && ttable_[i][j] == ND)				// Valori delle transizioni, o ND o il valore
+			if(get_ttable(i,sym) == ND)				// Valori delle transizioni, o ND o il valore
 				cout << " N ";
+				cout << " "<< get_ttable(i,sym) <<" ";
 
-			else if(j < dim_alphabet_)
-				cout << " "<< ttable_[i][j] <<" ";
+		}
 
-			else if(j == dim_alphabet_)								// Tipo dello stato: accettante o meno
-			{
-				if(ttable_[i][j] == DFA_STATE_NON_ACCEPTING )
+				if(accepting_states_[i] == DFA_STATE_NON_ACCEPTING )
 					cout << "  / ";
-				else if(ttable_[i][j] == DFA_STATE_ACCEPTING)
+				else if(accepting_states_[i] == DFA_STATE_ACCEPTING)
 					cout << " Ac ";
-				else if(ttable_[i][j] == DFA_STATE_REJECTING)
+				else if(accepting_states_[i] == DFA_STATE_REJECTING)
 					cout << " Ri ";
 				else
 					cout << "  X ";
-			}
-		}
 
 		if(!this->is_inside_blue_states(i) && !this->is_inside_red_states(i))
 			cout << " W ";
@@ -324,58 +321,6 @@ void RedBlueDfa::print_dfa_with_color(string title)
 	}
 
 	cout << "--------------------------" << endl;
-}
-
-
-void RedBlueDfa::print_dfa_with_color_mapped_alphabet(string title)
-{
-	// STAMPA IL DFA
-	// Nel numero di colonne è inclusa la colonna finale di stato accettante o meno (accettante -> 1)
-
-	cout << endl<< "--------------------------" << endl;
-	cout << title << endl;
-	string header = "    ";
-		for(int i=0; i<dim_alphabet_; ++i)
-			header = header + " | "+ alphabet_[i];
-		header = header + " - A  - C";
-	cout << header << endl;
-
-	for(int i=0; i<num_states_; ++i){
-		cout << "S"<<i<<"  ";
-
-		for(int j=0; j<dim_alphabet_+1; ++j)
-		{
-
-			if(j < dim_alphabet_ && ttable_[i][j] == ND)				// Valori delle transizioni, o ND o il valore
-				cout << " N ";
-			else if(j < dim_alphabet_)
-				cout << " "<< alphabet_[ttable_[i][j]] <<" ";
-
-			else if(j == dim_alphabet_)								// Tipo dello stato: accettante o meno
-			{
-				if(ttable_[i][j] == DFA_STATE_NON_ACCEPTING )
-					cout << "  / ";
-				else if(ttable_[i][j] == DFA_STATE_ACCEPTING)
-					cout << " Ac ";
-				else if(ttable_[i][j] == DFA_STATE_REJECTING)
-					cout << " Ri ";
-				else
-					cout << "  X ";
-			}
-		}
-
-		if(!this->is_inside_blue_states(i) && !this->is_inside_red_states(i))
-			cout << " W ";
-		else if(this->is_inside_blue_states(i))
-			cout << " B";
-		else
-			cout << " R";
-
-		cout << endl;
-	}
-
-	cout << "--------------------------" << endl;
-
 }
 
 
@@ -396,14 +341,14 @@ void RedBlueDfa::print_dfa_dot(string title, const char *file_path)
 	string color="";
 	for(int i=0; i<num_states_; ++i)
 	{
-		if(ttable_[i][dim_alphabet_] == DFA_STATE_UNREACHABLE)
+		if(accepting_states_[i] == DFA_STATE_UNREACHABLE)
 			continue;
 
-		if(ttable_[i][dim_alphabet_] == DFA_STATE_ACCEPTING){
+		if(accepting_states_[i] == DFA_STATE_ACCEPTING){
 			shape = "doublecircle";
 			style = "rounded,filled";
 		}
-		else if(ttable_[i][dim_alphabet_] == DFA_STATE_REJECTING){
+		else if(accepting_states_[i] == DFA_STATE_REJECTING){
 			shape = "circle";
 			style = "filled";
 		} else {
@@ -424,12 +369,12 @@ void RedBlueDfa::print_dfa_dot(string title, const char *file_path)
 	// Transizioni
 	string transitions = "";
 	for(int i=0; i<num_states_; ++i){
-		for(int j=0; j<dim_alphabet_; ++j){
-			int arrive_state = ttable_[i][j];
+		for(string sym : alphabet_){
+			int arrive_state = get_ttable(i,sym);
 			if(arrive_state == ND)
 				continue;
 
-			transitions = transitions + "s"+intTostring(i)+" -> s"+intTostring(arrive_state)+" [label=\""+	intTostring(j)+"\"];\n";
+			transitions = transitions + "s"+intTostring(i)+" -> s"+intTostring(arrive_state)+" [label=\""+	sym+"\"];\n";
 		}
 	}
 
@@ -441,7 +386,7 @@ void RedBlueDfa::print_dfa_dot(string title, const char *file_path)
 	myfile.close();
 }
 
-
+/*
 void RedBlueDfa::print_dfa_dot_mapped_alphabet(string title, const char *file_path)
 {
 	string state_name_prefix = "q";
@@ -530,7 +475,8 @@ void RedBlueDfa::print_dfa_dot_mapped_alphabet(string title, const char *file_pa
 	string end = "__start0 -> 0;";
 	string footer ="\n}";
 
-	myfile << header << start_state <<  states << start_arrow << transitions /*<< end*/<<footer;
+	myfile << header << start_state <<  states << start_arrow << transitions <<footer;
 
 	myfile.close();
 }
+*/

@@ -43,19 +43,17 @@ public:
 	/**
 	 * Make an instance of new RedBlueDfa. Give possibility to set the start state.
 	 * @param n_state	Number of states
-	 * @param dim_alf	Size of alphabet
 	 * @param alf		Alphabet symbols
 	 */
-	RedBlueDfa(const int n_state, const int dim_alf, const string *alf);
+	RedBlueDfa(const int n_state, const vector<string> alf);
 
 	/**
 	 * Make an instance of new RedBlueDfa. Give possibility to set the start state.
 	 * @param n_state	Number of states
-	 * @param dim_alf	Size of alphabet
 	 * @param alf		Alphabet symbols
 	 * @param s_state	Start state
 	 */
-	RedBlueDfa(const int n_state, const int dim_alf, const string *alf, const int s_state);
+	RedBlueDfa(const int n_state, const vector<string> alf, const int s_state);
 
 	/**
 	 * Destroy a DFA object, freeing the memory.
@@ -75,7 +73,9 @@ public:
 	 */
 	RedBlueDfa* to_canonical_RedBlueDfa_from_red_states();
 
-
+	/**
+	 * Returns number of reachable states
+	 */
 	int get_actual_num_states();
 
 
@@ -162,24 +162,12 @@ public:
 	void 	print_dfa_with_color(string title);
 
 	/**
-	 * Print the transition table with the color of the states, using the alphabet symbol. Before it, print the "title"
-	 * @param title Title printed before the transition table
-	 */
-	void 	print_dfa_with_color_mapped_alphabet(string title);
-
-	/**
 	 * Print a dot file for the current dfa, with title "title", in the path "file_path", coloring the states.
 	 * @param title	Title printed before the transition table
 	 * @param file_path Path where make a dot file
 	 */
 	void 	print_dfa_dot(string title, const char *file_path);
 
-	/**
-	 * Print a dot file for the current dfa using the alphabet symbols, with title "title", in the path "file_path", coloring the states.
-	 * @param title	Title printed before the transition table
-	 * @param file_path Path where make a dot file
-	 */
-	void 	print_dfa_dot_mapped_alphabet(string title, const char *file_path);
 };
 
 #endif		/* REDBLUEDFA_H_ */

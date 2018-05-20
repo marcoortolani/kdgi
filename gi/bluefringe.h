@@ -27,20 +27,16 @@ class BlueFringe
 protected:
 
 	// EXAMPLES
-	char *path_samples;									/*!< Path of example file (training data) */
+	char *path_samples_;									/*!< Path of example file (training data) */
 
-	// ALPHABET
-	int dim_alphabet;										/*!< Alphabet size (number of symbols) */
-
-	map<string, int> mapped_alphabet;
-	string* inverse_mapped_alphabet;
+	vector<string> alphabet_;
 
 
 	// STATISTICS
-	int num_actual_merge;								/*!< Number of merge actuated by EDSM */
-	int num_heuristic_merge_valued;				/*!< Number of merge calculetd for evalution of heuristic by EDSM */
-	vector<int> fringe_size[2];						/*!< Number of red (0) and blue (1) states*/
-	int while_count;											/*!< Iterations of EDSM */
+	int num_actual_merge_;								/*!< Number of merge actuated by EDSM */
+	int num_heuristic_merge_valued_;				/*!< Number of merge calculetd for evalution of heuristic by EDSM */
+	vector<int> fringe_size_[2];						/*!< Number of red (0) and blue (1) states*/
+	int while_count_;											/*!< Iterations of EDSM */
 
 
 
@@ -51,7 +47,7 @@ protected:
 	 * @param negative
 	 * @param dim_negative
 	 */
-	void read_samples(vector<SYMBOL>* &positive, int* dim_positive, vector<SYMBOL>* &negative,  int *dim_negative,int* &wp, int* &wn);
+	void read_samples(vector<string>* &positive, int* dim_positive, vector<string>* &negative,  int *dim_negative,int* &wp, int* &wn);
 
 
 	// TODO: Aggiornare la funzione per la creazione di un PTA
@@ -65,7 +61,7 @@ protected:
 	 * @param dim_negative
 	 * @return A pointer to built APTA.
 	 */
-	RedBlueDfa* build_apta(const vector<SYMBOL>* positive, const int dim_positive, const vector<SYMBOL>* negative, const int dim_negative);
+	RedBlueDfa* build_apta(const vector<string>* positive, const int dim_positive, const vector<string>* negative, const int dim_negative);
 
 
 	/**
@@ -102,7 +98,7 @@ protected:
 	 * @param dim_negative
 	 * @return A score for a DFA, greater is better.
 	 */
-	virtual int  merge_heuristic_score(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* wp , int* wn) = 0;
+	virtual int  merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* wp , int* wn) = 0;
 
 
 	virtual double merge_heuristic_score(double error_rate_before, double error_rate_after, int dim_strings, double alpha, int earn_states) = 0;

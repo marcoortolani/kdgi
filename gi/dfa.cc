@@ -1245,7 +1245,7 @@ bool Dfa::write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int
 
 	myfile.open(file_path);
 
-	myfile << get_dim_alphabet() << "\n";
+	myfile << get_dim_alphabet() << " w" << "\n";
 
 
 	// Write alphabet_ symbols

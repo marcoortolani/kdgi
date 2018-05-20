@@ -381,6 +381,10 @@ void Dfa::set_ttable_entry(int i, string j, int v){
 		}
 }
 
+void Dfa::set_accepting_states_entry(int state, int value){
+	accepting_states_[state] = value;
+}
+
 void Dfa::set_accepting_state(int state_to_mark){
 	if(state_to_mark<get_dim_alphabet())
 		accepting_states_[state_to_mark]=1;

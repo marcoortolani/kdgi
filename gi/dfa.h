@@ -94,6 +94,13 @@ protected:
   void 	set_ttable_entry(int i, string j, int v);
 
   /**
+   * Insert a particular value in accepting_states_
+   * @param state
+   * @param value
+   */
+  void set_accepting_states_entry(int state, int value);
+
+  /**
    * Create a ttable from a sequence of numbers.
    * @param sequence The sequence of numbers from which create the table. Dimension of @p sequence have to be a multiple of dim_alphabet+1. Furthermore  (sequence.size() / n_col) have to be equal to num_states.
    */
@@ -173,6 +180,7 @@ protected:
 
 
 public:
+  friend class BlueFringe;
   //******** CONSTRUCTORS: ********
 
   /**

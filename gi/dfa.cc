@@ -386,7 +386,6 @@ void Dfa::set_accepting_states_entry(int state, int value){
 }
 
 void Dfa::set_accepting_state(int state_to_mark){
-	if(state_to_mark<get_dim_alphabet())
 		accepting_states_[state_to_mark]=1;
 }
 
@@ -1572,7 +1571,7 @@ vector<string> Dfa::witness_from_table(vector<string> distinct, int start_state_
 	// If automata are not equivalent, it generates a witness string
 	vector<string> wit = {};
 
-	int i_pair = 0;
+	int i_pair = get_start_state();
 	int j_pair = start_state__dfa_hp;
 
 	string input;
@@ -1598,7 +1597,7 @@ vector<string> Dfa::witness_from_table(vector<string> distinct, int start_state_
 		input = distinct[k];
 
 
-		// Check if one start state is acceptor and the otherone is rejector
+		// Check if one start state is acceptor and the other one is rejector
 		if(input == to_string(DFA_TF_STATE_X)) {
 			break;
 		}

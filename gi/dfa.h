@@ -181,6 +181,7 @@ protected:
 
 public:
   friend class BlueFringe;
+  friend class AngluinDfa;
   //******** CONSTRUCTORS: ********
 
   /**

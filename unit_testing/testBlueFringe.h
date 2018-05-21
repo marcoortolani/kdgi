@@ -1,9 +1,11 @@
 //******** Thin-wrapper to do unit-testing of abstract classes ********
+#ifndef TEST_BLUEFRINGE_H_
+#define TEST_BLUEFRINGE_H_
 #include "bluefringe.h"
 
 class TestBlueFringe : public BlueFringe{
 
- friend class BlueFringeTest;
+  friend class BlueFringeTest;
 
   FRIEND_TEST(BlueFringeTest, readSamples);
 
@@ -16,3 +18,5 @@ class TestBlueFringe : public BlueFringe{
 public:
   using BlueFringe::BlueFringe;
 };
+
+#endif

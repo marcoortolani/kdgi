@@ -67,13 +67,13 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 	int cp = 0;														// Numero di stringhe positive del linguaggio
 	int cn = 0;														//   -    -     -     negative  -      -
 	char ch;
+	int dim_alphabet;
 
 	string null_symbol;
 
 	cout << path_samples_ << endl;
 
 	fstream fin(path_samples_, fstream::in);
-
 	if(!fin){
 		cerr<<"An error occurred in opening file :("<<endl;
 		exit(EXIT_FAILURE);
@@ -131,10 +131,11 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 	    {
 	    	if (!(iss >> a)) { break; } // error
 	    	//cout << "dimensione alfabeto " << a << endl;
+			dim_alphabet = a;
 	    	first = false;
 	    	second = true;
-			if((iss >> w) && w=='w')
-				weights=true;
+			if((iss >> w) && w == 'w')
+				weights = true;
 
 	    	continue;
 	    }
@@ -143,19 +144,18 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 	    // Read second line for alphabet symbol
 	    if(second)
 	    {
-
+			//cout<<"sono dentro if(second)"<<endl;
 	    	int counter=-1;
 	    	while (iss >> n){
 	    		if(counter==-1){
 	    			null_symbol = n;
-
 	    			++counter;
 	    			continue;
-	    		}else if(counter>=alphabet_.size())
+	    		}else if(counter>=dim_alphabet)
 	    			break;
-
-	    		//mapped_alphabet[n] = counter;
+				//cout<<"aggiungo all'alfabeto la lettera: "<<n<<endl;
 	    		alphabet_.push_back(n);
+				++counter;
 	    	}
 
 	    	// Alphabet
@@ -172,11 +172,10 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 	    	second= false;
 	    }
 
-
 	    // Read remaining lines
 		while (iss >> n)
 		{
-			cout<<"Ho letto: "<<n<<endl;
+			//cout<<"Ho letto: "<<n<<endl;
 			if( !n.compare("+") ){
 				if(weights)	weight=true;
 				casopositive = true;
@@ -202,7 +201,7 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 
 
 			if(weight){
-				cout<<"Sono dentro if(weight) a riga 206: n="<<n<<endl;
+				//cout<<"Sono dentro if(weight) a riga 206: n="<<n<<endl;
 				weight = false;
 				if(casopositive)
 					wp[flagcp] = stringToint(n);
@@ -213,7 +212,7 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 				//cout << "!T Peso: "<< stringToint(n) << endl;
 			} 
 			else{
-				cout<<"Sono dentro else a riga 218: n="<<n<<endl;
+				//cout<<"Sono dentro else a riga 218: n="<<n<<endl;
 
 				// se la stringa è vuota, non è necessario aggiungere nulla
 				if(n.compare(null_symbol) == 0){
@@ -227,6 +226,14 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 			}
 		}
 	}
+	/*
+	cout<<"positive.size()="<<positive->size()<<" dim_positive=" <<*dim_positive<<endl;
+	for(int i=0; i<*dim_positive;++i)
+		cout<<"positive[i]="<<positive[i]<<endl;
+	for(int i=0; i<*dim_negative;++i)
+		cout<<"positive[i]="<<negative[i]<<endl;
+	*/
+	
 }
 
 
@@ -400,7 +407,6 @@ void BlueFringe::merge(RedBlueDfa* dfa1, int redstate, int blustate)
 
 void BlueFringe::fold(RedBlueDfa* originale, int redstate, int blustate)
 {
-	int colonna_tipo = originale->get_dim_alphabet();
 	vector<map<string,int>> current_ttable = originale->get_ttable();
 
 	// Se q2 è accettante, setto ad altrettanto q1
@@ -483,7 +489,6 @@ void BlueFringe::nuoviBlu(RedBlueDfa* dfa1)
 
 void BlueFringe::eliminaStati(RedBlueDfa* dfa1)
 {
-	int colonna_tipo = dfa1->get_dim_alphabet();
 	vector<int> accepting_states = dfa1->get_accepting_states();
 
 	// Setto gli stati Eliminati

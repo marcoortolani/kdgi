@@ -1,4 +1,6 @@
 //******** Thin-wrapper to do unit-testing of protected methods ********
+#ifndef TEST_DFA_H_
+#define TEST_DFA_H_
 #include "dfa.h"
 
 class TestDfa : public Dfa{
@@ -20,3 +22,5 @@ class TestDfa : public Dfa{
 public:
   using Dfa::Dfa;
 };
+
+#endif

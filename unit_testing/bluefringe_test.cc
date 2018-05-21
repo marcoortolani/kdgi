@@ -1,5 +1,8 @@
 #include <iostream>
 #include <numeric>
+#include <vector>
+#include <string>
+using namespace std;
 #include "gtest/gtest.h"
 
 #include "testBlueFringe.h"
@@ -28,62 +31,43 @@ protected:
 	}
 
 	// Objects declared here can be used by all tests in the test case for Project1.
-    const char* path="./data/read_samples_test.txt";
-	TestBlueFringe test(path);
+    const char* path="../unit_testing/data/read_samples_test.txt";
+	TestBlueFringe* test = new TestBlueFringe(path);
 
 };
 
 
 TEST_F(BlueFringeTest, readSamples){
     
-    vector<SYMBOL>* positive = NULL;
-    vector<SYMBOL>* negative = NULL;
+    vector<string>* positive = NULL;
+    vector<string>* negative = NULL;
     int dim_positive = 0; 		
 	int dim_negative = 0; 		
-	int *wp, *wn;
+	int *wp = NULL;
+    int *wn = NULL;
 
-    test.read_samples(positive, &dim_positive, negative, &dim_negative, wp, wn);
+    test->read_samples(positive, &dim_positive, negative, &dim_negative, wp, wn);
+    
+    vector<string> ref_positive={"a","aa","aaa","aaaa"};
 
-    vector<SYMBOL>* ref_positive=NULL;
-    ref_positive[0].push_back(0);
-    ref_positive[1].push_back(0);
-    ref_positive[1].push_back(0);
-    ref_positive[2].push_back(0);
-    ref_positive[2].push_back(0);
-    ref_positive[2].push_back(0);
-    ref_positive[3].push_back(0);
-    ref_positive[3].push_back(0);
-    ref_positive[3].push_back(0);
-    ref_positive[3].push_back(0);
-
-    vector<SYMBOL>* ref_negative=NULL;
-    ref_negative[0].push_back(1);
-    ref_negative[1].push_back(1);
-    ref_negative[1].push_back(1);
-    ref_negative[2].push_back(1);
-    ref_negative[2].push_back(1);
-    ref_negative[2].push_back(0);
-    ref_negative[3].push_back(1);
-    ref_negative[3].push_back(0);
-    ref_negative[4].push_back(1);
-    ref_negative[4].push_back(1);
-    ref_negative[4].push_back(1);
-    ref_negative[4].push_back(0);
-    ref_negative[5].push_back(1);
-    ref_negative[5].push_back(1);
-    ref_negative[5].push_back(1);
+    vector<string> ref_negative={"b","bb","bba","ba","bbba","bbb"};
 
     bool compare = true;
 
     for(int i = 0; i<dim_positive; i++){
-		if(positive[i]!=ref_positive[i])
+        vector<string> tmp = positive[i];
+        string a = std::accumulate(tmp.begin(), tmp.end(), string(""));
+		if(a!=ref_positive[i])
             compare=false;
 	}
 
     for(int j = 0; j<dim_negative; j++){
-		if(negative[j]!=ref_negative[j])
+        vector<string> tmp = negative[j];
+        string a = std::accumulate(tmp.begin(), tmp.end(), string(""));
+		if(a!=ref_negative[j])
             compare=false;
 	}
+    
 
 	EXPECT_EQ(1,compare);
 

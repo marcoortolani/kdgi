@@ -3,7 +3,7 @@
 # =============== #
 build/
 gi/tests
-
+gi/Debug
 
 # ============ #
 # OS generated #

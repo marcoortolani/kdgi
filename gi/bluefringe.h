@@ -156,9 +156,10 @@ public:
 	/**
 	 * Start an EDSM inference process.
 	 * @param path It's the base path where create all the output files of EDSM.
+	 * @param exec_time time elapsed, by default is 0, DO NOT pass it as argument if not interested
 	 * @return Inferred DFA
 	 */
-	virtual 	Dfa* run(string path) = 0;						// Argument is the base path where create files
+	virtual 	Dfa* run(string path, double exec_time=0) = 0;						// Argument is the base path where create files
 
 
 

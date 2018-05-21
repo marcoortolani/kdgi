@@ -379,6 +379,7 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 
 void BlueFringe::merge(RedBlueDfa* dfa1, int redstate, int blustate)
 {
+	//dfa1->print_dfa_ttable("dfa1 - merge");
 	int predecessore=0;
 	string lettera;
 	int num_predecessori=0;
@@ -393,14 +394,14 @@ void BlueFringe::merge(RedBlueDfa* dfa1, int redstate, int blustate)
 				num_predecessori++;
 			}
 	}
+	//cout<<"predecessori stato blue"<<endl;
 
 	if(num_predecessori != 1)
 		cerr << "Num predec:"<< num_predecessori<<" PROBLEMA: "<< num_predecessori << "per lo stato "<<blustate<<", controlla algoritmo!"<<endl;
 
 	// Setto la transizione del precedessore (di bluestate) a redstate,
 	// adesso q2 è IRRAGIUNGIBILE nell'albero originale
-	dfa1->get_ttable()[predecessore][lettera] = redstate;
-
+	dfa1->set_ttable_entry(predecessore,lettera,redstate);
 	fold(dfa1, redstate, blustate);
 }
 
@@ -408,10 +409,11 @@ void BlueFringe::merge(RedBlueDfa* dfa1, int redstate, int blustate)
 void BlueFringe::fold(RedBlueDfa* originale, int redstate, int blustate)
 {
 	vector<map<string,int>> current_ttable = originale->get_ttable();
-
+	vector<int> accepting = originale->get_accepting_states();
 	// Se q2 è accettante, setto ad altrettanto q1
-	if(originale->is_accepting(blustate))
-		originale->accepting_states_[redstate] = DFA_STATE_ACCEPTING;
+	if(accepting[blustate]){
+		originale->set_accepting_states_entry(redstate, DFA_STATE_ACCEPTING);
+	}
 
 	// Per ogni lettera, effettuo il controllo se nell'albero originale è definita
 	// una transizione presente anche nel subtree:
@@ -422,18 +424,17 @@ void BlueFringe::fold(RedBlueDfa* originale, int redstate, int blustate)
 		int statefrom_redstate = current_ttable[redstate][sym];
 
 		// Ormai posso eliminare lo stato blue, lo faccio settando a ND la sua transizione per la lettera corrente
-		current_ttable[blustate][sym] = ND;
+		originale->set_ttable_entry(blustate,sym, ND);
 
 		// TODO: Potrei già eliminare qui lo stato dai blue? penso di si, ma fai debug prima di attivarlo
 		//current_ttable[blustate][colonna_tipo+1] = DFA_STATE_WHITE;
 		//originale->remove_blue_state(blustate);
-
 		if(statefrom_bluestate != ND){
 			if(statefrom_redstate != ND)
 				fold(originale, statefrom_redstate, statefrom_bluestate);
 			else{
 				// Aggiungo la transizione esistente nel subtree ma non nello stato in cui faccio il merge
-				current_ttable[redstate][sym] = statefrom_bluestate;
+				originale->set_ttable_entry(redstate,sym,statefrom_bluestate);
 				//current_ttable[blustate][i] = ND;
 			}
 		}

@@ -13,6 +13,7 @@ class TestDfa : public Dfa{
   FRIEND_TEST(BaseDfaTest, operatorEqual);
   FRIEND_TEST(BaseDfaTest, operatorEqualEqual);
   FRIEND_TEST(BaseDfaTest, unionDfa);
+  FRIEND_TEST(BaseDfaTest, copyConstructor);
 
   FRIEND_TEST(LinguisticSimilarityTest, coverSet);
   FRIEND_TEST(LinguisticSimilarityTest, characterizationSet);

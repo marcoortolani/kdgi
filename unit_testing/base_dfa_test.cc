@@ -80,8 +80,8 @@ TEST_F(BaseDfaTest, getStartState){
 }
 
 TEST_F(BaseDfaTest, getAcceptingStates){
-    vector<int> acc={0,0,0,1,0};
-    vector<int> acc_ref=reference->get_accepting_states();
+    vector<int> acc_ref={0,0,0,1,0};
+    vector<int> acc=reference->get_accepting_states();
     bool flag=true;
     for(int i=0; i<reference->get_num_states();++i)
         if(acc[i]!=acc_ref[i]){
@@ -206,6 +206,5 @@ TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
 
 TEST_F(BaseDfaTest, copyConstructor){
     TestDfa* test = new TestDfa(*reference);
-    test->print_dfa_ttable("test");
     EXPECT_EQ(1,*test==*reference);
 }

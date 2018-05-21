@@ -8,8 +8,6 @@
 
 #include "bluefringe.h"
 
-typedef unsigned short int SYMBOL;
-
 
 using namespace std;
 
@@ -34,7 +32,7 @@ private:
 	 * @param dim_negative
 	 * @return A score for a DFA, greater is better.
 	 */
-	int merge_heuristic_score(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* wp , int* wn);
+	int merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* wp , int* wn);
 
 	double merge_heuristic_score(double error_rate_before, double error_rate_after, int dim_strings, double alpha, int earn_states){};
 
@@ -58,12 +56,13 @@ public:
 	/**
 	 * Start an RPNI inference process.
 	 * @param path It's the base path where create all the output files of RPNI.
+	 * @param exec_time time elapsed, by default is 0, DO NOT pass it as argument if not interested
 	 * @return Inferred DFA
 	 */
-	Dfa* run(string path);						// Argument is the base path where create files
+	Dfa* run(string path, double exec_time = 0);						// Argument is the base path where create files
 
 
-	double run_elapsed_time(string base_path, Dfa** res);
+	//double run_elapsed_time(string base_path, Dfa** res);
 
 
 };

@@ -184,6 +184,7 @@ protected:
 public:
   friend class BlueFringe;
   friend class AngluinDfa;
+  friend class Rpni;
   //******** CONSTRUCTORS: ********
 
   /**

@@ -76,8 +76,7 @@ Dfa::Dfa(const int n_state, const vector<string> alf, const int s_state, vector<
 	copy(tt_copy.begin(),tt_copy.end(),back_inserter(ttable_));
 	accepting_states_.clear();
 	accepting_states_.reserve(accepting_states.size());
-	for(int i=0; i<num_states_;++i)
-		accepting_states_[i]=accepting_states[i];
+	copy(accepting_states.begin(),accepting_states.end(),back_inserter(accepting_states_));
 }
 
 
@@ -103,8 +102,7 @@ Dfa &Dfa::operator=(const Dfa &d1)
 
 			accepting_states_.clear();
 			accepting_states_.reserve(d1.accepting_states_.size());
-			for(int i=0; i<num_states_;++i)
-				accepting_states_[i]=d1.accepting_states_[i];
+			copy(d1.accepting_states_.begin(),d1.accepting_states_.end(),back_inserter(accepting_states_));
 			/*
 			for(int i=0; i<num_states_; ++i){
 				map<string,int> tmp=map<string,int>();
@@ -390,7 +388,6 @@ void Dfa::set_accepting_state(int state_to_mark){
 }
 
 void Dfa::set_rejecting_state(int state_to_mark){
-	if(state_to_mark<get_dim_alphabet())
 		accepting_states_[state_to_mark]=0;
 }
 
@@ -668,7 +665,6 @@ void Dfa::print_dfa_ttable(string title) const
 
 		cout << endl;
 	}
-
 	cout << "--------------------------" << endl;
 }
 

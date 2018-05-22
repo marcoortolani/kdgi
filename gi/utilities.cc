@@ -747,6 +747,7 @@ DfaSim::DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_
       linguistical_f_measure_=w_method_stats[6];
       specifity_=w_method_stats[7];
       bcr_=w_method_stats[8];
+      exec_time_=w_method_stats[9];
 
       nodes_sim_matrix_.reserve(neighbour_matching_stats.size());
 	    copy(neighbour_matching_stats.begin(),neighbour_matching_stats.end(),back_inserter(nodes_sim_matrix_));
@@ -763,7 +764,7 @@ DfaSim::~DfaSim(){
 }
 
 void DfaSim::print_sim()const{
-	cout<<"======================================"<<endl;
+	cout<<endl<<"======================================"<<endl;
 	cout<<"********** W-METHOD RESULTS **********"<<endl;
 	cout<<"True Positives = "<<true_positives_<<endl;
 	cout<<"True Negatives = "<<true_negatives_<<endl;
@@ -775,7 +776,7 @@ void DfaSim::print_sim()const{
 	cout<<"F-measure = "<<linguistical_f_measure_<<endl;
 	cout<<"Specifity = "<<specifity_<<endl;
 	cout<<"Balanced Classification Rate = "<<bcr_<<endl;
-	cout<<"======================================"<<endl;
+	cout<<"======================================"<<endl<<endl;
 	cout<<"***** NEIGHBOUR MATCHING RESULTS *****";
 	printf("\nNode structural similarity matrix:\n\n");
     for(int i=0; i<nodes_sim_matrix_.size(); i++)
@@ -788,7 +789,15 @@ void DfaSim::print_sim()const{
     }
 	cout<<"--------------------------------------"<<endl;
 	cout <<"Structural similarity between the Dfas: " <<structural_f_measure_ << endl;
-	cout<<"======================================"<<endl;
+	cout<<"======================================"<<endl<<endl;
+  cout<<"********** GLOBAL SIMILARITY *********"<<endl;
+	cout<<"The global similarity score between the two dfas is: "<<(linguistical_f_measure_+structural_f_measure_)/2<<endl;
+  cout <<"The algorithm executed in: " <<exec_time_<<" milliseconds."<<endl<<endl;
+}
+
+void DfaSim::which_dfas()const{
+  dfa_reference_->print_dfa_ttable("Reference dfa");
+  dfa_subject_->print_dfa_ttable("Subject dfa");
 }
 
 //-----------------------------------------------------------------------------

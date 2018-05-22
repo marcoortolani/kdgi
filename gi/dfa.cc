@@ -2266,10 +2266,17 @@ void Dfa::print_dfa_similarity(Dfa* subject_dfa, bool sigma, double eps, bool co
 }
 
 DfaSim Dfa::dfa_similarity(Dfa* subject_dfa, bool print, bool sigma, double eps, bool color)const{
+	long double exec_time=0;
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	vector<vector<string>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
 	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
+
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	exec_time = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+
+	stats.push_back(exec_time);
 	
 	DfaSim sim = DfaSim(this,subject_dfa,stats,sim_matrix);
 

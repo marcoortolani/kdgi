@@ -472,6 +472,7 @@ public:
    * Returns a DfaSim object which contains all the similarity score between dfas,
    * taking into account both linguistical and structural sides.
    * @param target_dfa
+   * @param print a boolean that if true permits to display the results.
    * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
    * @param eps precision of the termination condition, a by default is eps=0.0001
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.

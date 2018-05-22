@@ -146,6 +146,8 @@ class DfaSim {
     /****** NEIGHBOUR MATCHING STATS ******/
     vector<vector<double>> nodes_sim_matrix_;
     double structural_f_measure_;
+
+	long double exec_time_;
   
   public:
 
@@ -161,6 +163,11 @@ class DfaSim {
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
    */
   void print_sim()const;
+
+  /**
+   * Print the ttable of reference and subject dfas
+   */
+  void which_dfas()const;
 
 };
 

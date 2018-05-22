@@ -658,10 +658,14 @@ void Dfa::print_dfa_ttable(string title) const
 				cout << " "<< get_ttable(i,sym) <<"  ";
 		}
 		// Type of state
-		if(is_accepting(i))
+		if(accepting_states_[i] == DFA_STATE_NON_ACCEPTING )
+			cout << "  / ";
+		else if(accepting_states_[i] == DFA_STATE_ACCEPTING)
 			cout << " Ac ";
-		else
+		else if(accepting_states_[i] == DFA_STATE_REJECTING)
 			cout << " Ri ";
+		else
+		cout << "  X ";
 
 		cout << endl;
 	}

@@ -125,6 +125,44 @@ void MurmurHash3_x64_128 ( const void * key, int len, uint32_t seed, void * out 
     };
 };*/
 
+class DfaSim {
+
+  private:
+
+    const Dfa* dfa_reference_;
+    const Dfa* dfa_subject_;
+
+    /****** W-METHOD STATS ******/
+    long double true_positives_;
+    long double true_negatives_;
+    long double false_positives_;
+    long double false_negatives_;
+    long double precision_;
+    long double recall_;
+    long double linguistical_f_measure_;
+    long double specifity_;
+    long double bcr_;
+
+    /****** NEIGHBOUR MATCHING STATS ******/
+    vector<vector<double>> nodes_sim_matrix_;
+    double structural_f_measure_;
+  
+  public:
+
+    DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_method_stats, vector<vector<double>> &neighbour_matching_stats);
+    
+	~DfaSim();
+
+  /**
+   * Print the similarity score between dfas, taking into account both linguistical
+   * and structural sides.
+   * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
+   * @param eps precision of the termination condition, a by default is eps=0.0001
+   * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
+   */
+  void print_sim()const;
+
+};
 
 
 template <typename T>

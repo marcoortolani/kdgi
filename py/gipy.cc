@@ -47,7 +47,7 @@ PYBIND11_MODULE(gi_gipy, m) {
 
       .def("get_start_state",&Dfa::get_start_state,"Get index of start state.")
 
-      .def("print_dfa_ttable",&Dfa::print_dfa_ttable,"Print the transition table of current dfa. Before the transition table print the title passed as parameter.")
+      //.def("print_dfa_ttable",&Dfa::print_dfa_ttable,"Print the transition table of current dfa. Before the transition table print the title passed as parameter.")
       
       .def_static("read_dfa_file", &Dfa::read_dfa_file, "Read a dfa from a file.")
       
@@ -77,7 +77,7 @@ PYBIND11_MODULE(gi_gipy, m) {
       
       //===========================================================================================
       
-      .def("dfa_similarity", &Dfa::dfa_similarity, "Returns and print the similarity score between dfas, taking into account both linguistical and structural sides.",py::arg("target_dfa"), py::arg("sigma") = 1, py::arg("eps") = 0.0001, py::arg("color") = 0)
+      .def("dfa_similarity", &Dfa::dfa_similarity, "Returns and print the similarity score between dfas, taking into account both linguistical and structural sides.",py::arg("target_dfa"),py::arg("print") = 0, py::arg("sigma") = 1, py::arg("eps") = 0.0001, py::arg("color") = 0)
       ;
 
 }

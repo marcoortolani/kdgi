@@ -733,4 +733,62 @@ void MurmurHash3_x64_128 ( const void * key, const int len,
   ((uint64_t*)out)[1] = h2;
 }
 
+DfaSim::DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_method_stats, vector<vector<double>> &neighbour_matching_stats)
+{
+      dfa_reference_=reference;
+      dfa_subject_=subject;
+
+      true_positives_=w_method_stats[0];
+      false_negatives_=w_method_stats[1];
+      true_negatives_=w_method_stats[2];
+      false_positives_=w_method_stats[3];
+      precision_=w_method_stats[4];
+      recall_=w_method_stats[5];
+      linguistical_f_measure_=w_method_stats[6];
+      specifity_=w_method_stats[7];
+      bcr_=w_method_stats[8];
+
+      nodes_sim_matrix_.reserve(neighbour_matching_stats.size());
+	    copy(neighbour_matching_stats.begin(),neighbour_matching_stats.end(),back_inserter(nodes_sim_matrix_));
+      structural_f_measure_=neighbour_matching_stats[neighbour_matching_stats.size()-1][0];
+
+      nodes_sim_matrix_.pop_back();
+
+}
+	
+DfaSim::~DfaSim(){
+		nodes_sim_matrix_.clear();
+		delete dfa_reference_;
+		delete dfa_subject_;
+}
+
+void DfaSim::print_sim()const{
+	cout<<"======================================"<<endl;
+	cout<<"********** W-METHOD RESULTS **********"<<endl;
+	cout<<"True Positives = "<<true_positives_<<endl;
+	cout<<"True Negatives = "<<true_negatives_<<endl;
+	cout<<"False Positives = "<<false_positives_<<endl;
+	cout<<"False Negatives = "<<false_negatives_<<endl;
+	cout<<"--------------------------------------"<<endl;
+	cout<<"Precision = "<<precision_<<endl;
+	cout<<"Recall = "<<recall_<<endl;
+	cout<<"F-measure = "<<linguistical_f_measure_<<endl;
+	cout<<"Specifity = "<<specifity_<<endl;
+	cout<<"Balanced Classification Rate = "<<bcr_<<endl;
+	cout<<"======================================"<<endl;
+	cout<<"***** NEIGHBOUR MATCHING RESULTS *****";
+	printf("\nNode structural similarity matrix:\n\n");
+    for(int i=0; i<nodes_sim_matrix_.size(); i++)
+    {
+        printf(" [ ");
+        for(int j=0; j<nodes_sim_matrix_[0].size(); j++){
+       		printf("%lf ", nodes_sim_matrix_[i][j]);
+		}
+        printf("]\n");
+    }
+	cout<<"--------------------------------------"<<endl;
+	cout <<"Structural similarity between the Dfas: " <<structural_f_measure_ << endl;
+	cout<<"======================================"<<endl;
+}
+
 //-----------------------------------------------------------------------------

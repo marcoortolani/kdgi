@@ -2236,10 +2236,11 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 	return sim_v;
 }
 
-void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix, int num_states_subject_dfa) const{
+void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix) const{
 	cout<<"======================================"<<endl;
 	cout<<"***** NEIGHBOUR MATCHING RESULTS *****";
 	printf("\nSimilarity matrix:\n\n");
+	int num_states_subject_dfa = similarity_matrix[0].size();
     for(int i=0; i<this->get_num_states(); i++)
     {
         printf(" [ ");
@@ -2253,14 +2254,29 @@ void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix, 
 	cout<<"======================================"<<endl;
 }
 
-long double Dfa::dfa_similarity(Dfa* subject_dfa, bool sigma, double eps, bool color)const{
+void Dfa::print_dfa_similarity(Dfa* subject_dfa, bool sigma, double eps, bool color)const{
 	vector<vector<string>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
 	print_w_method(stats);
 	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
-	print_structural_similarity(sim_matrix,subject_dfa->get_num_states());
+	print_structural_similarity(sim_matrix);
 	long double similarity = (stats[6]+sim_matrix[num_states_][0])/2;
 	cout<<"***** GLOBAL SIMILARITY *****"<<endl;
 	cout<<"The global similarity score between the two dfas is: "<<similarity<<endl;
-	return similarity;
+}
+
+DfaSim Dfa::dfa_similarity(Dfa* subject_dfa, bool print, bool sigma, double eps, bool color)const{
+
+	vector<vector<string>> test_set = get_w_method_test_set(subject_dfa,sigma);
+	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
+	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
+	
+	DfaSim sim = DfaSim(this,subject_dfa,stats,sim_matrix);
+
+	if(print){
+		sim.print_sim();
+	}
+
+	return sim;
+	
 }

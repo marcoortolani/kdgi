@@ -569,15 +569,13 @@ Dfa* Dfa::minimize_TF() const
 
 	///////////////////////////////////////////////////////
 	// A new instance of DFA is built for the minimized DFA
-	Dfa* dfa_min = new Dfa(final_states_counter, alphabet_, 0);
-
-	vector<map<string,int>> ttable__min = dfa_min->get_ttable();
+	Dfa* dfa_min = new Dfa(final_states_counter, alphabet_, start_state_);
 
 	int count = 0;
 	for(int i=0; i<num_states_; ++i){
 		if(equivalent_state[i] == ND){
 			for(string sym : get_alphabet())
-				ttable__min[count][sym]=get_ttable(i,sym);
+				dfa_min->set_ttable_entry(coun,sym,get_ttable(i,sym));
 			count++;
 		}
 	}
@@ -590,8 +588,8 @@ Dfa* Dfa::minimize_TF() const
 			for(int k=0; k<final_states_counter; ++k)
 				for(string sym : get_alphabet())
 					// Transition toward "i" state is substitutes with one towards equivalent state "equivalent_state[i]"
-					if(ttable__min[k][sym] == i)
-						ttable__min[k][sym] = equivalent_state[i];
+					if(dfa_min->get_ttable(k,sym) == i)
+						dfa_min->set_ttable_entry(k,sym,equivalent_state[i]);
 		}
 	}
 
@@ -610,8 +608,8 @@ Dfa* Dfa::minimize_TF() const
 			int nuova_label = i-equivalences_found_so_far;
 			for(int k=0; k<final_states_counter; ++k)
 				for(string sym : get_alphabet())
-					if(ttable__min[k][sym] == i)
-						ttable__min[k][sym] = nuova_label;
+					if(dfa_min->get_ttable(k,sym) == i)
+						dfa_min->set_ttable_entry(k,sym,nuova_label);
 		}
 	}
 

@@ -15,6 +15,8 @@
 #include "utilities.h"
 
 // Type of states
+#define DFA_STATE_UNREACHABLE 3							/*!< Unreachable state from other states. Usually is a state to be delete. */
+#define DFA_STATE_NON_ACCEPTING 2						/*!< Non accepting state */
 #define DFA_STATE_ACCEPTING 1							/*!< Accepting state */
 #define DFA_STATE_REJECTING 0							/*!< Rejecting state */
 

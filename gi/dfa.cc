@@ -579,6 +579,7 @@ Dfa* Dfa::minimize_TF() const
 				dfa_min->set_ttable_entry(count,sym,get_ttable(i,sym));
 			count++;
 		}
+		dfa_min->set_accepting_states_entry(i,get_accepting_states()[i]);
 	}
 
 

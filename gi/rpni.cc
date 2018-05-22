@@ -65,11 +65,11 @@ int Rpni::merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int 
 Dfa* Rpni::run(string base_path, double exec_time)
 {
 	// Samples from txtfile
-	int n_symbols=0;				//
+//	int n_symbols=0;				//
 	int dim_positive=0;			// number of positive examples
 	int dim_negative=0; 			// number of negative examples
 	
-	int max_count;
+//	int max_count;
 	int *curr_count=NULL;
 	int j_merge=ND;
 	
@@ -94,11 +94,11 @@ Dfa* Rpni::run(string base_path, double exec_time)
 	//Get positive and negative samples
 	read_samples(positive, &dim_positive, negative, &dim_negative, wp, wn);
 
-//	cout << "**** STRINGHE ****"<<endl;
-//	for(int i=0; i< dim_positive; ++i)
-//		cout << "i: "<<i<<"  "<<positive[i]<<endl;
-//	for(int i=0; i< dim_negative; ++i)
-//			cout << "i: "<<i<<"  "<<negative[i]<<endl;
+	// cout << "**** STRINGHE ****"<<endl;
+	// for(int i=0; i< dim_positive; ++i)
+	// 	cout << "i: "<<i<<"  "<<positive[i]<<endl;
+	// for(int i=0; i< dim_negative; ++i)
+	// 		cout << "i: "<<i<<"  "<<negative[i]<<endl;
 	/////////////////////////////////
 	// START TIME
 
@@ -125,7 +125,6 @@ Dfa* Rpni::run(string base_path, double exec_time)
 	set_fringe_size(n_red,n_blue);
 
 	cout <<" START RPNI inference process..."<<endl;
-
 
 	while_count_=-1;
 	// RPNI
@@ -162,6 +161,7 @@ Dfa* Rpni::run(string base_path, double exec_time)
 			#pragma omp for
 			for(int j=0; j<n_red; ++j){
 				merged[j] = new RedBlueDfa(*dfa1);
+				
 				merge(merged[j], dfa1->get_red_states()->at(j), actual_blue_state );
 				// TODO: Questa riga si può probabilmente eliminare, da fare debug estensivo
 				merged[j]->remove_blue_state(actual_blue_state);
@@ -230,20 +230,20 @@ Dfa* Rpni::run(string base_path, double exec_time)
 	
 
 	// Setto gli stati Accettanti
-	int colonna_tipo = dfa1->get_dim_alphabet();
-	for(int i=0; i<dim_positive; ++i){
-		int accettante = dfa1->get_arrive_state(positive[i]);
+//	int colonna_tipo = dfa1->get_dim_alphabet();
+//	for(int i=0; i<dim_positive; ++i){
+//		int accettante = dfa1->get_arrive_state(positive[i]);
 
 //			if(accettante != ND)
 //				dfa1->get_ttable()[accettante][colonna_tipo] = DFA_STATE_ACCEPTING;
-	}
+//	}
 
 	// Setto gli stati Rigettanti
 	for(int i=0; i<dim_negative; ++i){
 		int rigettante = dfa1->get_arrive_state(negative[i]);
 		if(rigettante != ND){
 			//cout << "Stato di arrivoN: "<<rigettante<<endl;
-			dfa1->set_accepting_states_entry(rigettante, DFA_STATE_REJECTING);
+			dfa1->set_accepting_states_entry(rigettante, 0);
 		}
 	}
 
@@ -251,19 +251,16 @@ Dfa* Rpni::run(string base_path, double exec_time)
 	eliminaStati(dfa1);
 	//dfa1->print_dfa_with_color("AUTOMA FINALE");
 
-
 	///////////////////////////////////////////////////////////////
 	// Delete the unreachable states and insert, if needed, the sink state
 	RedBlueDfa* finalDFA = dfa1->to_canonical_RedBlueDfa_from_red_states();
-
-
 	//////////////////////////////////////////////////////////////
-	// Minimize returna a new dfa, then delete the older
+	// Minimize returns a new dfa, then delete the older
 	Dfa* finalDFAmin = finalDFA->minimize_TF();
-
+	
 	end = std::chrono::system_clock::now();
 	std::chrono::duration<double> elapsed_seconds = end-start;
-	if(exec_time!=0){
+	if(exec_time!=-1){
 		exec_time=elapsed_seconds.count()*1000.0;
 	}
 
@@ -277,232 +274,3 @@ Dfa* Rpni::run(string base_path, double exec_time)
 	return finalDFAmin;
 
 }
-
-
-
-// double Rpni::run_elapsed_time(string base_path, Dfa** res)
-// {
-// 	// Samples from txtfile
-// 	int n_symbols=0;				//
-// 	int dim_positive=0;			// number of positive examples
-// 	int dim_negative=0; 			// number of negative examples
-
-// 	int max_count;
-// 	int *curr_count=NULL;
-// 	int j_merge=ND;
-
-// 	int	n_red=0, n_blue=0, actual_blue_state=0;
-
-// 	// example strings
-// 	vector<string>* positive=NULL;
-// 	vector<string>* negative=NULL;
-// 	char* symbols = NULL;
-// 	int* wp, *wn;
-
-// 	//bool *promotion=NULL;
-// 	bool promoted =false;
-
-// 	RedBlueDfa *dfa1 =NULL, /* *dfa_best = NULL,*/ **merged = NULL; // dfa...
-
-// 	// One dfa_best for every Blue state
-// 	vector<RedBlueDfa*> dfa_best;
-// 	vector<int> dfa_score;
-
-
-// 	//Get positive and negative samples
-// 	read_samples(positive, &dim_positive, negative, &dim_negative, wp, wn);
-
-// //	cout << "**** STRINGHE ****"<<endl;
-// //	for(int i=0; i< dim_positive; ++i)
-// //		cout << "i: "<<i<<"  "<<positive[i]<<endl;
-// //	for(int i=0; i< dim_negative; ++i)
-// //			cout << "i: "<<i<<"  "<<negative[i]<<endl;
-
-
-// 	/////////////////////////////////
-// 	// START TIME
-// 	std::chrono::time_point<std::chrono::system_clock> start, end;
-// 	start = std::chrono::system_clock::now();
-
-// 	// Build APTA
-// 	dfa1 = build_apta(positive, dim_positive, negative, dim_negative);
-
-// //	// Print it!
-// //	if(dfa1->get_num_states() < 1000)
-// //	{
-// //		dfa1->print_dfa_dot("APTA", (base_path+"APTA.dot").c_str() );
-// //		dfa1->print_dfa_dot_mapped_alphabet("APTAALF", (base_path+"APTA_ALF.dot").c_str());
-// //	}else{
-// //		clog<<"APTA too big! I can't print it"<<endl;
-// //	}
-
-// 	n_blue = dfa1->get_num_blue_states();
-// 	n_red = dfa1->get_num_red_states();
-
-// 	set_fringe_size(n_red,n_blue);
-
-// //	cout <<" START RPNI inference process..."<<endl;
-
-
-// 	while_count=-1;
-// 	// RPNI
-// 	while(n_blue>0)
-// 	{
-// 		while_count++;
-
-
-// 		// BLUE ciclo
-// 		for(int i=0; i<n_blue; ++i)
-// 		{
-// 			//T cout << "N blue states: "<< dfa1->get_num_blue_states() << ", i: "<<i<< endl;
-// 			actual_blue_state = dfa1->get_blue_states()->at(i);
-
-// 			///// Reset variable for the new run ////
-// 			// array for the heuristic values of the red group
-// 			if(curr_count != NULL)
-// 				delete[] curr_count;
-// 			curr_count= new int [n_red];
-
-// 			// dfa coming from possible merges
-// 			if(merged != NULL)
-// 				delete[] merged;
-// 			merged = new RedBlueDfa*[n_red];
-
-// 			// initialize values
-// 			for(int j=0; j<n_red; ++j){
-// 				curr_count[j] = false;
-// 				merged[j] = NULL;
-// 			}
-
-// 			// RED ciclo
-// 			#pragma omp parallel default(shared)
-// 			{
-// 			#pragma omp for
-// 			for(int j=0; j<n_red; ++j)
-// 			{
-// 					merged[j] = new RedBlueDfa(*dfa1);
-
-// 					merge(merged[j], dfa1->get_red_states()->at(j), actual_blue_state );
-
-// 					// TODO: Questa riga si può probabilmente eliminare, da fare debug estensivo
-// 					merged[j]->remove_blue_state(actual_blue_state);
-
-// 					curr_count[j] = merge_heuristic_score(merged[j], positive, dim_positive, negative, dim_negative);
-
-// 			}
-// 			}
-// 			// end for RED
-
-// 			// For Statistical purpose
-// 			num_heuristic_merge_valued +=  n_red;
-
-// 			// ORIGINALE
-// 			// check if there some merge, else start process for promote
-// 			promoted = true;
-// 			j_merge=ND;
-// 			for(int j=0; j<n_red; ++j){
-// 				if(curr_count[j]>0 && promoted)
-// 				{
-// 					j_merge = j;
-
-// 					promoted=false;
-
-// 					//T cout << "Merge detected!"<<endl;
-// 				} else {
-// 					if(merged[j] != NULL)
-// 						delete merged[j];
-// 				}
-// 			}
-
-// 			break;
-// 		}// end for BLUE
-
-
-// 		// PROMOTION
-// 		if(promoted){
-// 			//T cout << "PROMOZIONE"<<endl;
-// 			// "Promote" add also the new blue states
-// 			promote(dfa1, actual_blue_state);
-
-// 		// MERGE
-// 		} else {
-// 			dfa1 = merged[j_merge];
-
-// 			promoted=false;
-// 			nuoviBlu(dfa1);
-
-// 			//T cout << "MERGE"<<endl;
-// 		}
-
-
-// 		eliminaStati(dfa1);
-
-// 		delete[] merged;
-// 		merged = NULL;
-
-// 		//T cout << "New blue states..."<<endl;
-// 		// update values for the dfa
-// 		n_blue = dfa1->get_num_blue_states();
-// 		n_red = dfa1->get_num_red_states();
-
-// 		set_fringe_size(n_red,n_blue);
-// 	}
-
-
-// 	if(curr_count != NULL) delete[] curr_count;
-
-
-// 	// Setto gli stati Accettanti
-// 	int colonna_tipo = dfa1->get_dim_alphabet();
-// 	for(int i=0; i<dim_positive; ++i){
-// 		int accettante = dfa1->get_arrive_state(positive[i]);
-
-// //			if(accettante != ND)
-// //				dfa1->get_ttable()[accettante][colonna_tipo] = DFA_STATE_ACCEPTING;
-// 	}
-
-// 	// Setto gli stati Rigettanti
-// 	for(int i=0; i<dim_negative; ++i){
-// 		int rigettante = dfa1->get_arrive_state(negative[i]);
-// 		if(rigettante != ND){
-// 			//cout << "Statp di arrivoN: "<<rigettante<<endl;
-// 			dfa1->get_ttable()[rigettante][colonna_tipo] = DFA_STATE_REJECTING;
-// 		}
-// 	}
-
-// 	// Setto gli stati Eliminati
-// 	eliminaStati(dfa1);
-// 	//dfa1->print_dfa_with_color("AUTOMA FINALE");
-
-
-// 	///////////////////////////////////////////////////////////////
-// 	// Delete the unreachable states and insert, if needed, the sink state
-// 	RedBlueDfa* finalDFA = dfa1->to_canonical_RedBlueDfa_from_red_states();
-
-
-// 	//////////////////////////////////////////////////////////////
-// 	// Minimize returna a new dfa, then delete the older
-// 	Dfa* finalDFAmin = finalDFA->minimize_TF();
-
-// 	// STOP TIME
-// 	end = std::chrono::system_clock::now();
-// 	std::chrono::duration<double> elapsed_seconds = end-start;
-
-// 	//cout << "Elapsed time: "<<elapsed_seconds.count() << endl;
-
-
-
-// 	if(finalDFA) delete finalDFA;
-
-// 	if(positive) delete[] positive;
-// 	if(negative) delete[] negative;
-// 	if(symbols) delete[] symbols;
-
-
-// 	(*res) = finalDFAmin;
-
-// 	return  elapsed_seconds.count()*1000.0;
-
-
-// }
-

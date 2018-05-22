@@ -185,6 +185,8 @@ public:
   friend class BlueFringe;
   friend class AngluinDfa;
   friend class Rpni;
+  friend class Edsm;
+  friend class BlueStar;
   //******** CONSTRUCTORS: ********
 
   /**

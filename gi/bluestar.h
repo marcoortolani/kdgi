@@ -32,7 +32,7 @@ private:
 
 
 
-	void set_acceptor_and_rejector_states(RedBlueDfa* dfa1, vector<SYMBOL>* positive, const int dim_positive, vector<SYMBOL>* negative, const int dim_negative, int* &wp, int* &wn);
+	void set_acceptor_and_rejector_states(RedBlueDfa* dfa1, vector<string>* positive, const int dim_positive, vector<string>* negative, const int dim_negative, int* &wp, int* &wn);
 
 
 	/**
@@ -51,7 +51,7 @@ private:
 	double merge_heuristic_score(double error_rate_before, double error_rate_after, int dim_strings, double alpha, int earn_states){};
 
 
-	int  merge_heuristic_score(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* wp , int* wn){};
+	int  merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* wp , int* wn){};
 
 
 	/**
@@ -78,7 +78,7 @@ private:
 	 * @param dim_negative
 	 * @return
 	 */
-	static double error_rate(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn, const int tot_wp_w, const int tot_wn_w);
+	static double error_rate(RedBlueDfa* dfa1, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* &wp, int* &wn, const int tot_wp_w, const int tot_wn_w);
 
 	/**
 	 * Return a score for a dfa. It's calculated by heuristic emerged during Abbadingo Competition (1998).
@@ -110,15 +110,16 @@ public:
 	/**
 	 * Start an bluestar inference process.
 	 * @param path It's the base path where create all the output files of bluestar.
+	 * @param exec_time time elapsed, by default is -1, DO NOT pass it as argument if not interested
 	 * @return Inferred DFA
 	 */
-	Dfa* run(string path);											// Argument is the base path where create files
+	Dfa* run(string path, double exec_time = -1);											// Argument is the base path where create files
 
 
 	double get_error_rate_final_dfa();
 
 
-	static void compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn);
+	static void compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* &wp, int* &wn);
 
 };
 

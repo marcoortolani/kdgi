@@ -233,7 +233,13 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 	for(int i=0; i<*dim_negative;++i)
 		cout<<"positive[i]="<<negative[i]<<endl;
 	*/
-	
+	if(!weights){
+		//inizializzo wp e wn a 1
+		for(int i=0;i<cp;++i)
+			wp[i]=1;
+		for(int j=0;j<cn;++j)
+			wn[j]=1;
+	}
 }
 
 
@@ -242,6 +248,13 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 {
 	// Flag per rilevare la presenza della stringa vuota (positiva o negativa)
 	bool empty_string_positive = false;
+	/*
+	cout << "**** STRINGHE ****"<<endl;
+	for(int i=0; i< dim_positive; ++i)
+		cout << "i: "<<i<<"  "<<positive[i]<<endl;
+	for(int i=0; i< dim_negative; ++i)
+		cout << "i: "<<i<<"  "<<negative[i]<<endl;
+	*/
 
 
 	cout << "Costruzione APTA..."<<endl;
@@ -256,9 +269,10 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 	// add empty string
 	vector<string> emptyVec(0);
 	prefissi[emptyVec] = 0;
-
+	cout<<"dim positive="<<dim_positive<<" dim negative="<<dim_negative<<endl;
 	for(int i=0; i<dim_positive; ++i){
 		if(positive[i].size() == 0){
+			cout<<"empty_string_positive"<<endl;
 			empty_string_positive = true;
 			continue;
 		}
@@ -274,8 +288,10 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 	}
 
 	for(int i=0; i<dim_negative; ++i){
-		if(negative[i].size() == 0)
+		if(negative[i].size() == 0){
+			cout<<"empty_string_negative"<<endl;
 			continue;
+		}
 
 		It_posneg w = negative[i].begin();
 		for(It_posneg j=negative[i].begin(); j!=negative[i].end(); ++j){
@@ -302,7 +318,6 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 
 	// *** PTA ***
 	RedBlueDfa* aptaDFA = new RedBlueDfa(prefissi.size(), alphabet_,0);
-
 	bool primo_stato=true;
 	for(It p=prefissi.begin(); p!=prefissi.end(); ++p)
 	{
@@ -318,13 +333,13 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 				vector<string> symbol;
 				symbol.push_back(i);
 				if(prefissi.find(symbol) != prefissi.end())				// Controllo che sia definito uno stato per quando entra dopo lambda un elemento dell'alfabeto
-					aptaDFA->ttable_[(*p).second][i] = prefissi[ symbol ];
+					aptaDFA->set_ttable_entry((*p).second,i,prefissi[ symbol ]);
 			}
 
 			if(empty_string_positive)
-				aptaDFA->accepting_states_[(*p).second] = 1;							// Primo stato: accettante
+				aptaDFA->set_accepting_states_entry((*p).second, 1);							// Primo stato: accettante
 			else
-				aptaDFA->accepting_states_[(*p).second] = 0;
+				aptaDFA->set_accepting_states_entry((*p).second, 0);
 			aptaDFA->add_red_state((*p).second);						// Aggiungo lo stato rosso anche alla gestione tramite VECTOR
 
 			primo_stato=false;
@@ -336,16 +351,16 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 		// Stati Accettanti
 		for(int i=0; i<dim_positive; ++i){								// Pongo gli stati opportuni ad accettanti: quelli la cui stringa è anche tra le stringhe positive
 			if(positive[i].size() == 0){
-				aptaDFA->accepting_states_[0] = 1;								// TODO: Check and debug
+				aptaDFA->set_accepting_states_entry(0, 1);								// TODO: Check and debug
 				continue;
 			}
 
 			if(stato == positive[i]){
-				aptaDFA->accepting_states_[(*p).second] = 1;						// Con dim_alfabato arrivo alla prima colonna oltre le lettere dell'alfabeto
+				aptaDFA->set_accepting_states_entry((*p).second, 1);						// Con dim_alfabato arrivo alla prima colonna oltre le lettere dell'alfabeto
 				break;
 			}
 			else
-				aptaDFA->accepting_states_[(*p).second] = 0;
+				aptaDFA->set_accepting_states_entry((*p).second, 0);
 		}
 
 
@@ -354,7 +369,7 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 			vector<string> temp_vect(stato);
 			temp_vect.push_back(sym);
 			if(prefissi.find(temp_vect) != prefissi.end())		// nella riga dello stato considerato ((*p).second) la relativa transizione
-				aptaDFA->ttable_[(*p).second][sym] = prefissi[temp_vect];
+				aptaDFA->set_ttable_entry((*p).second,sym, prefissi[temp_vect]);
 		}
 
 	}
@@ -362,8 +377,8 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 	//Coloro gli stati blu (il primo livello dopo lambda in ESDM):
 	for(string sym : alphabet_)
 	{
-		int statoblu = aptaDFA->ttable_[0][sym];
-		if(aptaDFA->ttable_[0][sym] != ND)
+		int statoblu = aptaDFA->get_ttable(0,sym);
+		if(aptaDFA->get_ttable(0,sym) != ND)
 			aptaDFA->add_blue_state(statoblu);							// Lo aggiungo anche al Vector di stati blu
 	}
 
@@ -411,7 +426,7 @@ void BlueFringe::fold(RedBlueDfa* originale, int redstate, int blustate)
 	vector<map<string,int>> current_ttable = originale->get_ttable();
 	vector<int> accepting = originale->get_accepting_states();
 	// Se q2 è accettante, setto ad altrettanto q1
-	if(accepting[blustate]){
+	if(originale->is_accepting(blustate)){
 		originale->set_accepting_states_entry(redstate, DFA_STATE_ACCEPTING);
 	}
 
@@ -457,7 +472,7 @@ void BlueFringe::promote(RedBlueDfa* dfa1, int q)
 	// Promuovo a BLU tutti gli stati raggiungibili direttamente da q
 	for(string sym : dfa1->get_alphabet())
 	{
-		int transizione = dfa1->get_ttable()[q][sym];
+		int transizione = dfa1->get_ttable(q,sym);
 		if(transizione != ND)
 			dfa1->add_blue_state(transizione);
 	}
@@ -476,7 +491,7 @@ void BlueFringe::nuoviBlu(RedBlueDfa* dfa1)
 		for(int j=0; j<numred; ++j)
 		{
 			int red = dfa1->get_red_states()->at(j);
-			int transizione = dfa1->get_ttable()[red][sym];
+			int transizione = dfa1->get_ttable(red,sym);
 			if(transizione != ND){
 				//Pongo lo stato a blu, a meno che non sia rosso
 				if(!dfa1->is_inside_red_states(transizione)){
@@ -499,12 +514,12 @@ void BlueFringe::eliminaStati(RedBlueDfa* dfa1)
 		for(int i=0; i<dfa1->get_num_states(); ++i)
 		{
 			for(string sym : dfa1->get_alphabet())
-				if(dfa1->get_ttable()[i][sym] == k && accepting_states[i] != DFA_STATE_UNREACHABLE)
+				if(dfa1->get_ttable(i,sym) == k && accepting_states[i] != DFA_STATE_UNREACHABLE)
 					visitato = true;
 		}
 
 		if(!visitato){
-			dfa1->accepting_states_[k] = DFA_STATE_UNREACHABLE;		//Setto a Eliminato il tipo dello stato non visitato da alcun altro stato
+			dfa1->set_accepting_states_entry(k,DFA_STATE_UNREACHABLE);		//Setto a Eliminato il tipo dello stato non visitato da alcun altro stato
 
 			// Li elimino anche dal Vector dei Red o dei Blue, se presenti
 			dfa1->remove_red_state(k);

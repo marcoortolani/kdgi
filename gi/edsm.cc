@@ -52,7 +52,7 @@ Edsm::Edsm(const char * path):BlueFringe(path){};
 Edsm::~Edsm(){};
 
 
-int Edsm::merge_heuristic_score(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* wp = NULL, int* wn=NULL)
+int Edsm::merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* wp = NULL, int* wn=NULL)
 {
 	int* tp, *tn = NULL;
 	tp = new int[dfa1->get_num_states()];							//Inizializzo un contatore per ogni stato
@@ -129,10 +129,9 @@ int Edsm::merge_heuristic_score(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int 
 }
 
 
-Dfa* Edsm::run(string base_path)
+Dfa* Edsm::run(string base_path, double exec_time)
 {
 	// Samples from txtfile
-	int n_symbols=0;	//number of negative examples
 	int dim_positive=0; //number of positive examples
 	int dim_negative=0; //number of negative examples
 	
@@ -141,8 +140,8 @@ Dfa* Edsm::run(string base_path)
 	int	n_red=0, n_blue=0, actual_blue_state=0;
 
 	// example strings
-	vector<SYMBOL>* positive=NULL;
-	vector<SYMBOL>* negative=NULL;
+	vector<string>* positive=NULL;
+	vector<string>* negative=NULL;
 	char* symbols = NULL;
 	int* wp, *wn;
 	
@@ -161,6 +160,12 @@ Dfa* Edsm::run(string base_path)
 
 	// Costruisco PTA
 	//RedBlueDfa* dfa1 = build_pta(positive,dim_positive);
+
+	/////////////////////////////////
+	// START TIME
+
+	std::chrono::time_point<std::chrono::system_clock> start, end;
+	start = std::chrono::system_clock::now();
 	
 	// Build APTA
 	dfa1 = build_apta(positive, dim_positive, negative, dim_negative);
@@ -169,7 +174,6 @@ Dfa* Edsm::run(string base_path)
 	if(dfa1->get_num_states() < 1000)
 	{
 		dfa1->print_dfa_dot("APTA", (base_path+"APTA.dot").c_str() );
-		dfa1->print_dfa_dot_mapped_alphabet("APTAALF", (base_path+"APTA_ALF.dot").c_str());
 	}else{
 		clog<<"APTA too big! I can't print it"<<endl;
 	}
@@ -179,13 +183,13 @@ Dfa* Edsm::run(string base_path)
 
 	set_fringe_size(n_red,n_blue);
 
-	cout <<" START Edsm inference process..."<<endl;
+	cout <<" START EDSM inference process..."<<endl;
 
-	while_count=-1;
+	while_count_=-1;
 	// ESDM
 	while(n_blue>0)
 	{		
-		while_count++;
+		while_count_++;
 		
 		promoted=false;
 
@@ -230,7 +234,7 @@ Dfa* Edsm::run(string base_path)
 			// end for RED
 
 			// For Statistical purpose
-			num_heuristic_merge_valued +=  n_red;
+			num_heuristic_merge_valued_ +=  n_red;
 			
 			// check if there some merge, else start process for promote
 			promoted = true;
@@ -326,7 +330,7 @@ Dfa* Edsm::run(string base_path)
 			dfa1->print_dfa_dot(name, (base_path+name+".dot").c_str());
 			#endif
 
-			++num_actual_merge;
+			++num_actual_merge_;
 
 			// Free memory
 			typedef	vector<RedBlueDfa*>::const_iterator It;
@@ -355,20 +359,20 @@ Dfa* Edsm::run(string base_path)
 	
 
 	// Setto gli stati Accettanti
-	int colonna_tipo = dfa1->get_dim_alphabet();
-	for(int i=0; i<dim_positive; ++i){
-		int accettante = dfa1->get_arrive_state(positive[i]);
+//	int colonna_tipo = dfa1->get_dim_alphabet();
+//	for(int i=0; i<dim_positive; ++i){
+//		int accettante = dfa1->get_arrive_state(positive[i]);
 
 //			if(accettante != ND)
 //				dfa1->get_ttable()[accettante][colonna_tipo] = DFA_STATE_ACCEPTING;
-	}
+//	}
 
 	// Setto gli stati Rigettanti
 	for(int i=0; i<dim_negative; ++i){
 		int rigettante = dfa1->get_arrive_state(negative[i]);
 		if(rigettante != ND){
 			//cout << "Statp di arrivoN: "<<rigettante<<endl;
-			dfa1->get_ttable()[rigettante][colonna_tipo] = DFA_STATE_REJECTING;
+			dfa1->set_accepting_states_entry(rigettante, 0);
 		}
 	}
 
@@ -385,6 +389,12 @@ Dfa* Edsm::run(string base_path)
 	//////////////////////////////////////////////////////////////
 	// Minimize returna a new dfa, then delete the older
 	Dfa* finalDFAmin = finalDFA->minimize_TF();
+
+	end = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end-start;
+	if(exec_time!=-1){
+		exec_time=elapsed_seconds.count()*1000.0;
+	}
 
 	if(finalDFA) delete finalDFA;
 
@@ -396,279 +406,3 @@ Dfa* Edsm::run(string base_path)
 	return finalDFAmin;
 
 }
-
-
-
-
-double Edsm::run_elapsed_time(string base_path, Dfa** res)
-{
-	// Samples from txtfile
-	int n_symbols=0;	//number of negative examples
-	int dim_positive=0; //number of positive examples
-	int dim_negative=0; //number of negative examples
-
-	int max_count, *curr_count=NULL;
-
-	int	n_red=0, n_blue=0, actual_blue_state=0;
-
-	// example strings
-	vector<SYMBOL>* positive=NULL;
-	vector<SYMBOL>* negative=NULL;
-	char* symbols = NULL;
-	int* wp, *wn;
-
-	//bool *promotion=NULL;
-	bool promoted =false;
-
-	RedBlueDfa *dfa1 =NULL, /* *dfa_best = NULL,*/ **merged = NULL; // dfa...
-
-	// One dfa_best for every Blue state
-	vector<RedBlueDfa*> dfa_best;
-	vector<int> dfa_score;
-
-
-	//get positive and negative samples
-	read_samples(positive, &dim_positive, negative, &dim_negative, wp, wn);
-
-
-	/////////////////////////////////
-	// START TIME
-	std::chrono::time_point<std::chrono::system_clock> start, end;
-	start = std::chrono::system_clock::now();
-
-
-	// Build APTA
-	dfa1 = build_apta(positive, dim_positive, negative, dim_negative);
-
-
-	n_blue = dfa1->get_num_blue_states();
-	n_red = dfa1->get_num_red_states();
-
-	set_fringe_size(n_red,n_blue);
-
-	//cout <<" START Edsm inference process..."<<endl;
-
-	while_count=-1;
-	// ESDM
-	while(n_blue>0)
-	{
-		while_count++;
-
-		promoted=false;
-
-		// BLUE ciclo
-		for(int i=0; i<n_blue && (!promoted); ++i)
-		{
-			actual_blue_state = dfa1->get_blue_states()->at(i);
-			// Reset variable for the new run
-
-			// array for the heuristic values of the red group
-			if(curr_count != NULL)
-				delete[] curr_count;
-			curr_count= new int [n_red];
-
-			// dfa coming from possible merges
-			if(merged != NULL)
-				delete[] merged;
-			merged = new RedBlueDfa*[n_red];
-
-			// initialize values
-			for(int j=0; j<n_red; ++j){
-				curr_count[j] = MINF;
-				merged[j] = NULL;
-			}
-
-
-			// RED ciclo
-			#pragma omp parallel default(shared)
-			{
-			#pragma omp for
-			for(int j=0; j<n_red; ++j){
-				merged[j] = new RedBlueDfa(*dfa1);
-
-				merge(merged[j], dfa1->get_red_states()->at(j), actual_blue_state );
-
-				// TODO: Questa riga si può probabilmente eliminare, da fare debug estensivo
-				merged[j]->remove_blue_state(actual_blue_state);
-
-				curr_count[j] = merge_heuristic_score(merged[j], positive, dim_positive, negative, dim_negative);
-			}
-			}
-			// end for RED
-
-			// For Statistical purpose
-			num_heuristic_merge_valued +=  n_red;
-
-			// check if there some merge, else start process for promote
-			promoted = true;
-			max_count=MINF;
-			int j_max=ND;
-			for(int j=0; j<n_red; ++j){
-				if(curr_count[j]>max_count){
-					max_count = curr_count[j];
-					j_max = j;
-					promoted=false;
-				}
-			}
-
-			//cout << "Max_count:"<<max_count<<endl;
-
-
-			// PROMOTION
-			if(promoted){
-
-				promote(dfa1, actual_blue_state);
-
-				//cout << "PROMOZIONE"<<endl;
-
-				#ifdef ALL_DFA_EDSM
-				string name = "P"+Dfa::intTostring(while_count)+Dfa::intTostring(blue[i]);
-				dfa1->print_dfa_dot(name, (base_path+name+".dot").c_str());
-				#endif
-
-
-				//Free memory
-				typedef	vector<RedBlueDfa*>::const_iterator It;
-				for(It p1=dfa_best.begin(); p1!=dfa_best.end(); ++p1){
-					if(dfa1 == (*p1))
-						continue;
-					delete (*p1);
-				}
-
-				dfa_best.clear();
-				dfa_score.clear();
-			}
-			else	// - Merge accettato come candidato per il merge finale. Lo aggiungo alla lista dei migliori.
-			{
-				//merged[j_max]->remove_blue_state(actual_blue_state);
-
-				dfa_best.push_back(merged[j_max]);
-				dfa_score.push_back(max_count);
-			}
-
-
-			// Free the array with dfa merged for calculate score, leave only the dfa selected as best
-			if(merged != NULL){
-				for(int j=0; j<n_red; ++j){
-					if (j == j_max && (!promoted))			// Leave the best
-						continue;
-					if(merged[j] != NULL)
-						delete merged[j];
-				}
-				delete[] merged;
-				merged = NULL;
-			}
-		}// end for BLUE
-
-
-		// MERGE
-		if(!promoted){ // Do definitive merge, no promotion done. Select best merge between all candidates in "dfa_best"
-
-			// Select the best merge between all the blue states
-			int best_score = -1;
-			int index_best_dfa = 0;
-			for(int t=0; t<dfa_score.size(); ++t)
-				if(dfa_score.at(t) > best_score){
-					best_score = dfa_score.at(t);
-					index_best_dfa = t;
-				}
-
-			// Take the blue states before delete the old dfa
-			//int colonna_tipo = dfa1->get_dim_alphabet();
-			for(int t=0; t<dfa1->get_num_blue_states(); ++t)
-				dfa_best.at(index_best_dfa)->add_blue_state( dfa1->get_blue_states()->at(t) );
-			if(dfa1 != NULL) delete dfa1;		// Delete old dfa
-
-			// set dfa1 to the new merged dfa
-			dfa1 = dfa_best.at(index_best_dfa);
-			nuoviBlu(dfa1);
-			eliminaStati(dfa1);
-
-
-			// Print information
-			//cout << "MERGE:"<<max_count<<endl;
-			//cout <<" ----------------------------------- "<<endl;
-			#ifdef ALL_DFA_EDSM
-			string name = "M"+Dfa::intTostring(while_count);
-			dfa1->print_dfa_dot(name, (base_path+name+".dot").c_str());
-			#endif
-
-			++num_actual_merge;
-
-			// Free memory
-			typedef	vector<RedBlueDfa*>::const_iterator It;
-			for(It p1=dfa_best.begin(); p1!=dfa_best.end(); ++p1){
-				if(dfa1 == (*p1))
-					continue;
-
-				if((*p1) != NULL)
-					delete (*p1);
-			}
-
-			dfa_best.clear();
-			dfa_score.clear();
-		}
-
-		// update values for the dfa
-		n_blue = dfa1->get_num_blue_states();
-		n_red = dfa1->get_num_red_states();
-
-		set_fringe_size(n_red,n_blue);
-
-	}
-
-
-	if(curr_count != NULL) delete[] curr_count;
-
-
-	// Setto gli stati Accettanti
-	int colonna_tipo = dfa1->get_dim_alphabet();
-	for(int i=0; i<dim_positive; ++i){
-		int accettante = dfa1->get_arrive_state(positive[i]);
-
-//			if(accettante != ND)
-//				dfa1->get_ttable()[accettante][colonna_tipo] = DFA_STATE_ACCEPTING;
-	}
-
-	// Setto gli stati Rigettanti
-	for(int i=0; i<dim_negative; ++i){
-		int rigettante = dfa1->get_arrive_state(negative[i]);
-		if(rigettante != ND){
-			//cout << "Statp di arrivoN: "<<rigettante<<endl;
-			dfa1->get_ttable()[rigettante][colonna_tipo] = DFA_STATE_REJECTING;
-		}
-	}
-
-	// Setto gli stati Eliminati
-	eliminaStati(dfa1);
-	//dfa1->print_dfa_with_color("AUTOMA FINALE");
-
-
-	///////////////////////////////////////////////////////////////
-	// Delete the unreachable states and insert, if needed, the sink state
-	RedBlueDfa* finalDFA = dfa1->to_canonical_RedBlueDfa_from_red_states();
-
-
-	//////////////////////////////////////////////////////////////
-	// Minimize returna a new dfa, then delete the older
-	Dfa* finalDFAmin = finalDFA->minimize_TF();
-
-
-	// STOP TIME
-	end = std::chrono::system_clock::now();
-	std::chrono::duration<double> elapsed_seconds = end-start;
-
-
-	if(finalDFA) delete finalDFA;
-
-	if(positive) delete[] positive;
-	if(negative) delete[] negative;
-	if(symbols) delete[] symbols;
-
-
-	(*res) = finalDFAmin;
-
-	return  elapsed_seconds.count()*1000.0;
-
-}
-

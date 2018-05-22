@@ -47,7 +47,7 @@ BlueStar::BlueStar(const char * path, double alpha_value, double delta_value):Bl
 BlueStar::~BlueStar(){};
 
 
-void BlueStar::set_acceptor_and_rejector_states(RedBlueDfa* dfa1, vector<SYMBOL>* positive, const int dim_positive, vector<SYMBOL>* negative, const int dim_negative, int* &wp, int* &wn)
+void BlueStar::set_acceptor_and_rejector_states(RedBlueDfa* dfa1, vector<string>* positive, const int dim_positive, vector<string>* negative, const int dim_negative, int* &wp, int* &wn)
 {
 
 	// Counters
@@ -98,10 +98,10 @@ void BlueStar::set_acceptor_and_rejector_states(RedBlueDfa* dfa1, vector<SYMBOL>
 			//i << "stato: "<< num_of_positive_samples[i]<< "; "<< num_of_negative_samples[i] << endl;
 			if(num_of_positive_samples[i] >= num_of_negative_samples[i]){
 				//cout << "accettante" << endl;
-				dfa1->set_acceptor_state(i);
+				dfa1->set_accepting_state(i);
 			}
 			else{
-				dfa1->set_rejector_state(i);
+				dfa1->set_rejecting_state(i);
 	//			out << "rigettante" << endl;
 
 			}
@@ -110,9 +110,7 @@ void BlueStar::set_acceptor_and_rejector_states(RedBlueDfa* dfa1, vector<SYMBOL>
 }
 
 
-
-
-double BlueStar::error_rate(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn, const int tot_wp_w, const int tot_wn_w)
+double BlueStar::error_rate(RedBlueDfa* dfa1, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* &wp, int* &wn, const int tot_wp_w, const int tot_wn_w)
 {
 	int 	positive_wrong_recognized = 0;
 	int 	negative_wrong_recognized = 0;
@@ -121,14 +119,14 @@ double BlueStar::error_rate(RedBlueDfa* dfa1, vector<SYMBOL>* positive, int dim_
 
 	// POSITIVE strings check
 	for(int i=0; i<dim_positive; ++i)
-		if(!dfa1->membership_query_using_mapped_alphabet(positive[i]))
+		if(!dfa1->membership_query(positive[i]))
 			positive_wrong_recognized += wp[i];
 
 
 
 	// NEGATIVE strings check
 	for(int i=0; i<dim_negative; ++i)
-		if(dfa1->membership_query_using_mapped_alphabet(negative[i]))
+		if(dfa1->membership_query(negative[i]))
 			negative_wrong_recognized += wn[i];
 
 
@@ -232,13 +230,13 @@ double BlueStar::merge_heuristic_score(double error_rate_before, double error_ra
 ///////////////////////////////////////////
 ///// INFORMATION RETRIEVAL
 
-void BlueStar::compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn)
+void BlueStar::compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* &wp, int* &wn)
 {
 
 
 	for(int i=0; i<dim_positive; ++i)
 	{
-		if( dfa1->membership_query_using_mapped_alphabet( positive[i]) ){
+		if( dfa1->membership_query( positive[i]) ){
 			if(wp == NULL)
 				++stats.tp;
 			else
@@ -253,7 +251,7 @@ void BlueStar::compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats
 
 	for(int i=0; i<dim_negative; ++i)
 	{
-		if( !dfa1->membership_query_using_mapped_alphabet( negative[i]) ){
+		if( !dfa1->membership_query( negative[i]) ){
 			if(wn == NULL)
 				++stats.tn;
 			else
@@ -287,17 +285,7 @@ void BlueStar::compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats
 /////////////////////////////////////////
 
 
-
-
-
-
-
-
-
-
-
-
-Dfa* BlueStar::run(string base_path)
+Dfa* BlueStar::run(string base_path, double exec_time)
 {
 	// Samples from txtfile
 	int n_symbols	 	 = 0;			//number of negative examples
@@ -315,8 +303,8 @@ Dfa* BlueStar::run(string base_path)
 	double error_rate_before = 0;
 
 	// example strings
-	vector<SYMBOL>* positive=NULL;
-	vector<SYMBOL>* negative=NULL;
+	vector<string>* positive=NULL;
+	vector<string>* negative=NULL;
 	char* symbols = NULL;
 
 	bool promoted =false;
@@ -335,6 +323,7 @@ Dfa* BlueStar::run(string base_path)
 
 	//get positive and negative samples
 	read_samples(positive, &dim_positive, negative, &dim_negative, wp, wn);
+	/*
 	cout<<"READ_SAMPLES DEBUG: "<<endl<<"positive=[";
 	for(int i = 0; i<dim_positive; i++){
 		cout<<positive[i]<<",";
@@ -352,6 +341,13 @@ Dfa* BlueStar::run(string base_path)
 		cout<<wn[i]<<",";
 	}
 	cout<<"]"<<endl<<"END READ_SEMPLES DEBUG"<<endl;
+	*/
+
+	/////////////////////////////////
+	// START TIME
+
+	std::chrono::time_point<std::chrono::system_clock> start, end;
+	start = std::chrono::system_clock::now();
 
 	// Build APTA
 	dfa1 = build_apta(positive, dim_positive, negative, dim_negative);
@@ -361,7 +357,6 @@ Dfa* BlueStar::run(string base_path)
 	if(dfa1->get_num_states() < 1000)
 	{
 		dfa1->print_dfa_dot("APTA", (base_path+"APTA.dot").c_str() );
-		dfa1->print_dfa_dot_mapped_alphabet("APTAALF", (base_path+"APTA_ALF.dot").c_str());
 	}else{
 		clog<<"APTA too big! I can't print it"<<endl;
 	}
@@ -385,11 +380,11 @@ Dfa* BlueStar::run(string base_path)
 
 	cout <<" START BlueStar inference process..."<<endl;
 
-	while_count=-1;
+	while_count_=-1;
 	// BlueStar
 	while(n_blue>0)
 	{		
-		while_count++;
+		while_count_++;
 		
 		promoted=false;
 
@@ -517,7 +512,7 @@ Dfa* BlueStar::run(string base_path)
 
 
 			// For Statistical purpose
-			num_heuristic_merge_valued +=  n_red;
+			num_heuristic_merge_valued_ +=  n_red;
 			
 
 			// check if there some merge, else start process for promote
@@ -626,7 +621,7 @@ Dfa* BlueStar::run(string base_path)
 			eliminaStati(dfa1);
 
 
-			++num_actual_merge;
+			++num_actual_merge_;
 
 
 			// Free memory
@@ -731,11 +726,11 @@ Dfa* BlueStar::run(string base_path)
 
 	int count =0;
 	for(int i=0; i<dim_positive; ++i)
-		if(finalDFA->membership_query_using_mapped_alphabet(positive[i]))
+		if(finalDFA->membership_query(positive[i]))
 			count += wp[i];
 	int countN =0;
 	for(int i=0; i<dim_negative; ++i)
-		if(!finalDFA->membership_query_using_mapped_alphabet(negative[i]))
+		if(!finalDFA->membership_query(negative[i]))
 			countN += wn[i];
 
 	cout << "Correttamente identificate di "<< tot_wp_w << " un totale di: "<<count << endl;
@@ -757,7 +752,11 @@ Dfa* BlueStar::run(string base_path)
 	// Minimize returna a new dfa, then delete the older
 	Dfa* finalDFAmin = finalDFA->minimize_TF();
 
-
+	end = std::chrono::system_clock::now();
+	std::chrono::duration<double> elapsed_seconds = end-start;
+	if(exec_time!=-1){
+		exec_time=elapsed_seconds.count()*1000.0;
+	}
 
 	if(finalDFA) delete finalDFA;
 

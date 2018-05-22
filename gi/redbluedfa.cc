@@ -96,12 +96,12 @@ RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
 			for (string sym : get_alphabet()) {
 
 				// Aggiungo lo stato al nuovo automa
-				finalDFA->get_ttable()[count][sym] = get_ttable(i,sym);
+				finalDFA->set_ttable_entry(count,sym,get_ttable(i,sym));
 
 				updated_transition[i] = count;
 			}
 			++count;
-			finalDFA->accepting_states_[i]=accepting_states_[i];
+			finalDFA->set_accepting_states_entry(i,accepting_states_[i]);
 		}
 	}
 	updated_transition[ND] = ND;
@@ -119,11 +119,11 @@ RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
 	for (int i = 0; i < finalDFA->get_num_states(); ++i)
 		for (string sym : finalDFA->get_alphabet()) {
 
-			if (finalDFA->get_ttable()[i][sym] == ND)										// Rilevo che c'è una transizione mancante, quindi serve uno stato pozzo
+			if (finalDFA->get_ttable(i,sym) == ND)										// Rilevo che c'è una transizione mancante, quindi serve uno stato pozzo
 				stato_pozzo = true;
 
-			if(updated_transition.find(finalDFA->get_ttable()[i][sym]) != updated_transition.end())
-				finalDFA->set_ttable_entry(i, sym, updated_transition[ finalDFA->get_ttable()[i][sym] ]);
+			if(updated_transition.find(finalDFA->get_ttable(i,sym)) != updated_transition.end())
+				finalDFA->set_ttable_entry(i, sym, updated_transition[ finalDFA->get_ttable(i,sym) ]);
 			else {
 				cerr << "Errore nell'aggiornamento delle stringhe"<<endl;
 				exit(EXIT_FAILURE);
@@ -145,20 +145,20 @@ RedBlueDfa* RedBlueDfa::to_canonical_RedBlueDfa_from_red_states(){
 	if (stato_pozzo) {
 		RedBlueDfa* finalDFAPozzo = new RedBlueDfa(finalDFA->get_num_states() + 1, finalDFA->get_alphabet(), 0);
 
-		vector<map<string,int>> table = finalDFAPozzo->get_ttable();
+		//vector<map<string,int>> table = finalDFAPozzo->get_ttable();
 
 		for (int i = 0; i < finalDFA->get_num_states(); ++i){
 			for (string sym : finalDFA->get_alphabet()) {
-				if (finalDFA->get_ttable()[i][sym] == ND)
-					table[i][sym] = finalDFA->get_num_states();
+				if (finalDFA->get_ttable(i,sym) == ND)
+					finalDFAPozzo->set_ttable_entry(i,sym,finalDFA->get_num_states());
 				else
-					table[i][sym] = finalDFA->get_ttable()[i][sym];
+					finalDFAPozzo->set_ttable_entry(i,sym,finalDFA->get_ttable(i,sym));
 			}
-			accepting_states_[i] = finalDFA->accepting_states_[i];
+			finalDFAPozzo->set_accepting_states_entry(i,finalDFA->get_accepting_states()[i]);
 		}
 
 		for (string sym : finalDFA->get_alphabet())
-			table[finalDFA->get_num_states()][sym] = finalDFA->get_num_states();
+			finalDFAPozzo->set_ttable_entry(finalDFA->get_num_states(),sym,finalDFA->get_num_states());
 
 		delete finalDFA;
 		finalDFA = finalDFAPozzo;

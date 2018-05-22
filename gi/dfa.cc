@@ -208,8 +208,11 @@ Dfa Dfa::read_dfa_file(const string file_name)
 	// Open connection to file
 	read.open(file_name.c_str());
 
-	if(read.is_open())
+	if(read.is_open()){
+		#ifdef VERBOSE
 		cout << "File " << file_name << " is open."<< endl << endl;
+		#endif
+	}
 	else{
 		cerr << "Error opening: " << file_name << endl;
 		throw readingExc();
@@ -1014,7 +1017,9 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 
 		//cout<<current_transition_symbol<<endl;
 		if(current_transition_symbol == ""){
+			#ifdef VERBOSE
 			cerr  << "ERROR: Random transition have no corresponding alphabet simbol" << endl;
+			#endif
 			continue;
 		}
 
@@ -1031,9 +1036,10 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 			current_state = get_ttable(current_state,current_transition_symbol);
 
 			// Symbol corresponding to transition index
+			#ifdef VERBOSE
 			if(current_transition_symbol == "")
-					cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
-
+				cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
+			#endif
 
 			// Increment the final random string
 			incremental_sample.push_back(current_transition_symbol);
@@ -2034,16 +2040,6 @@ vector<vector<string>>	Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma) c
 
 	
 	vector<vector<string>> w_vec(w_method_test_set.begin(),w_method_test_set.end());
-
-	/*
-	for(auto &it1 : w_method_test_set) {
-		string acc="";
-		for (string s: it1)
-			acc=acc+s;
-		w_vec.push_back(acc);
-	}
-	*/
-	
 
 	return w_vec;
 }

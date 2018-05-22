@@ -286,7 +286,7 @@ double ncd(double comp_x, double comp_y, double comp_xy)
 void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<vector<string>> &test_set,ir_statistical_measures &stats)
 {
 	stats.tp = stats.tn = stats.fp = stats.fn = 0;
-	cout<<"Test set dimension is "<<test_set.size()<<endl;
+	//cout<<"Test set dimension is "<<test_set.size()<<endl;
 	//dfa1 is the test dfa
 	//target is the target dfa
 	for(auto &sample : test_set)

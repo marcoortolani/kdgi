@@ -58,7 +58,7 @@ Dfa::Dfa(const int n_state, const vector<string> alf, const int s_state){
 	for(int i=0; i<n_state; ++i){
 		map<string,int> tmp=map<string,int>();
 		for(string sym : alf)
-			tmp[sym]=0;
+			tmp[sym]=ND;
 		ttable_.push_back(tmp);
 		accepting_states_.push_back(0);
 	}

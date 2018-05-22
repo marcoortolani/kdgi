@@ -575,7 +575,7 @@ Dfa* Dfa::minimize_TF() const
 	for(int i=0; i<num_states_; ++i){
 		if(equivalent_state[i] == ND){
 			for(string sym : get_alphabet())
-				dfa_min->set_ttable_entry(coun,sym,get_ttable(i,sym));
+				dfa_min->set_ttable_entry(count,sym,get_ttable(i,sym));
 			count++;
 		}
 	}

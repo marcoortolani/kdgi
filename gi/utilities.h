@@ -126,7 +126,6 @@ void MurmurHash3_x64_128 ( const void * key, int len, uint32_t seed, void * out 
 };*/
 
 
-
 template <typename T>
 vector<T> append_vectors(const vector<T> *a,const vector<T> *b){
         vector<T> res = *a;
@@ -826,5 +825,79 @@ inline char* get_incidence_matrix(vector<map<string,int>> ttable, int num_states
 	return incidence_matrix;
 
 }
+
+class DfaSim {
+
+  private:
+
+    const Dfa* dfa_reference_;
+    const Dfa* dfa_subject_;
+
+    /****** W-METHOD STATS ******/
+    long double true_positives_;
+    long double true_negatives_;
+    long double false_positives_;
+    long double false_negatives_;
+    long double precision_;
+    long double recall_;
+    long double linguistical_f_measure_;
+    long double specificity_;
+    long double bcr_;
+
+    /****** NEIGHBOUR MATCHING STATS ******/
+    vector<vector<double>> nodes_sim_matrix_;
+    double structural_f_measure_;
+
+	long double exec_time_;
+  
+  public:
+
+	DfaSim();
+
+    DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_method_stats, vector<vector<double>> &neighbour_matching_stats);
+    
+  /**
+   * Print the similarity score between dfas, taking into account both linguistical
+   * and structural sides.
+   */
+  void print_sim()const;
+
+  /**
+   * Print the ttable of reference and subject dfas
+   */
+  void which_dfas()const;
+
+  /**
+  * Returns the two dfas compared
+  * @param subject here the function returns the dfa_subject_
+  * @return dfa_reference_
+  */
+  const Dfa* which_dfas(const Dfa* subject) const;
+
+  long double get_true_positives() const;
+
+  long double get_true_negatives() const;
+
+  long double get_false_positives() const;
+
+  long double get_false_negatives() const;
+
+  long double get_precision() const;
+
+  long double get_recall() const;
+
+  long double get_linguistical_f_measure() const;
+
+  long double get_specificity() const;
+
+  long double get_bcr() const;
+
+  vector<vector<double>> get_nodes_sim_matrix() const;
+
+  double get_structural_f_measure() const;
+
+  long double get_exec_time() const;
+
+};
 
 #endif /* UTILITIES_H_ */

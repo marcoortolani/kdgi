@@ -142,7 +142,7 @@ protected:
 public:
 
 	/**
-	 * Instance an object with all the members and methods for EDSM inference process.
+	 * Instance an object with all the members and methods for inference process.
 	 * @param path It's the path where find positive and negative samples
 	 */
 	BlueFringe(const char* path);								// Take the path where find samples

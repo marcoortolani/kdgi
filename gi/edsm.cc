@@ -77,9 +77,10 @@ int Edsm::merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int 
 	}
 
 	//cout << endl;
+	#ifdef VERBOSE
 	for(int i=0; i<dfa1->get_num_states(); ++i)
-		if(db)
-			cout << "tp["<<i<<"]: "<<tp[i]<<" ";
+		cout << "tp["<<i<<"]: "<<tp[i]<<" ";
+	#endif
 
 	// TODO Implementare COUNTER di OpenMP
 	// Controllo quante stringhe NEGATIVE vengono riconosciute
@@ -94,9 +95,10 @@ int Edsm::merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int 
 	}
 
 	//cout << endl;
+	#ifdef VERBOSE
 	for(int i=0; i<dfa1->get_num_states(); ++i)
-		if(db)
-			cout << "tn["<<i<<"]: "<<tn[i]<<" ";
+		cout << "tn["<<i<<"]: "<<tn[i]<<" ";
+	#endif
 
 	// Calcolo lo SCORE
 	int sc = 0;
@@ -106,8 +108,9 @@ int Edsm::merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int 
 		{
 			if(tn[i] > 0){
 				if(tp[i] > 0){
-					if(db)
-						cout <<endl<< "Stato che accetta Positiva&Negativa:"<<i<<endl;
+					#ifdef VERBOSE
+					cout <<endl<< "Stato che accetta Positiva&Negativa:"<<i<<endl;
+					#endif
 					sc = MINF;
 					break;								// E' inutile continuare a ciclare se metto sc = ND
 				}
@@ -164,8 +167,7 @@ Dfa* Edsm::run(string base_path, double exec_time)
 	/////////////////////////////////
 	// START TIME
 
-	std::chrono::time_point<std::chrono::system_clock> start, end;
-	start = std::chrono::system_clock::now();
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	
 	// Build APTA
 	dfa1 = build_apta(positive, dim_positive, negative, dim_negative);
@@ -183,7 +185,9 @@ Dfa* Edsm::run(string base_path, double exec_time)
 
 	set_fringe_size(n_red,n_blue);
 
+	#ifdef VERBOSE
 	cout <<" START EDSM inference process..."<<endl;
+	#endif
 
 	while_count_=-1;
 	// ESDM
@@ -390,10 +394,9 @@ Dfa* Edsm::run(string base_path, double exec_time)
 	// Minimize returna a new dfa, then delete the older
 	Dfa* finalDFAmin = finalDFA->minimize_TF();
 
-	end = std::chrono::system_clock::now();
-	std::chrono::duration<double> elapsed_seconds = end-start;
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	if(exec_time!=-1){
-		exec_time=elapsed_seconds.count()*1000.0;
+		exec_time=std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
 	}
 
 	if(finalDFA) delete finalDFA;

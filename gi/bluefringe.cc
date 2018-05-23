@@ -63,15 +63,18 @@ BlueFringe::~BlueFringe()
 
 void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vector<string>* &negative,  int *dim_negative,int* &wp, int* &wn)
 {
+	#ifdef VERBOSE
 	cout << "Reading strings from txt file: "<<endl;
+	#endif
 	int cp = 0;														// Numero di stringhe positive del linguaggio
 	int cn = 0;														//   -    -     -     negative  -      -
 	char ch;
 	int dim_alphabet;
 
 	string null_symbol;
-
+	#ifdef VERBOSE
 	cout << path_samples_ << endl;
+	#endif
 
 	fstream fin(path_samples_, fstream::in);
 	if(!fin){
@@ -100,8 +103,10 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 	for(int i=0; i<cn; ++i)
 		wn[i] = 0;
 
+	#ifdef VERBOSE
 	cout << intTostring(cp) + " positivi"<<endl;
 	cout << intTostring(cn) + " negativi"<<endl;
+	#endif
 
 	int flagcp = 0;
 	int flagcn = 0;
@@ -256,8 +261,9 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 		cout << "i: "<<i<<"  "<<negative[i]<<endl;
 	*/
 
-
+	#ifdef VERBOSE
 	cout << "Costruzione APTA..."<<endl;
+	#endif
 
 	// PREFISSI
 	// Calcolo i prefissi e li salvo insieme ad un indice indicatore dello stato
@@ -269,10 +275,10 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 	// add empty string
 	vector<string> emptyVec(0);
 	prefissi[emptyVec] = 0;
-	cout<<"dim positive="<<dim_positive<<" dim negative="<<dim_negative<<endl;
+	//cout<<"dim positive="<<dim_positive<<" dim negative="<<dim_negative<<endl;
 	for(int i=0; i<dim_positive; ++i){
 		if(positive[i].size() == 0){
-			cout<<"empty_string_positive"<<endl;
+			//cout<<"empty_string_positive"<<endl;
 			empty_string_positive = true;
 			continue;
 		}
@@ -289,7 +295,7 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 
 	for(int i=0; i<dim_negative; ++i){
 		if(negative[i].size() == 0){
-			cout<<"empty_string_negative"<<endl;
+			//cout<<"empty_string_negative"<<endl;
 			continue;
 		}
 
@@ -385,8 +391,9 @@ RedBlueDfa* BlueFringe::build_apta(const vector<string>* positive, const int dim
 	// Stampo APTA
 	/*aptaDFA->print_dfa_with_color("*** APTA DENTRO ***");
 	aptaDFA->print_dfa_dot("apta",PATH_DOT_APTA);*/
-
+	#ifdef VERBOSE
 	cout << "PTA costruito"<<endl;
+	#endif
 
 	return aptaDFA;
 }

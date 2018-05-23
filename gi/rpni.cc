@@ -94,16 +94,18 @@ Dfa* Rpni::run(string base_path, double exec_time)
 	//Get positive and negative samples
 	read_samples(positive, &dim_positive, negative, &dim_negative, wp, wn);
 
-	// cout << "**** STRINGHE ****"<<endl;
-	// for(int i=0; i< dim_positive; ++i)
-	// 	cout << "i: "<<i<<"  "<<positive[i]<<endl;
-	// for(int i=0; i< dim_negative; ++i)
-	// 		cout << "i: "<<i<<"  "<<negative[i]<<endl;
+	#ifdef VERBOSE
+	 cout << "**** STRINGHE ****"<<endl;
+	 for(int i=0; i< dim_positive; ++i)
+	 	cout << "i: "<<i<<"  "<<positive[i]<<endl;
+	 for(int i=0; i< dim_negative; ++i)
+	 		cout << "i: "<<i<<"  "<<negative[i]<<endl;
+	#endif
+
 	/////////////////////////////////
 	// START TIME
 
-	std::chrono::time_point<std::chrono::system_clock> start, end;
-	start = std::chrono::system_clock::now();
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	
 
 	// Costruisco PTA
@@ -124,7 +126,9 @@ Dfa* Rpni::run(string base_path, double exec_time)
 
 	set_fringe_size(n_red,n_blue);
 
+	#ifdef VERBOSE
 	cout <<" START RPNI inference process..."<<endl;
+	#endif
 
 	while_count_=-1;
 	// RPNI
@@ -258,10 +262,9 @@ Dfa* Rpni::run(string base_path, double exec_time)
 	// Minimize returns a new dfa, then delete the older
 	Dfa* finalDFAmin = finalDFA->minimize_TF();
 	
-	end = std::chrono::system_clock::now();
-	std::chrono::duration<double> elapsed_seconds = end-start;
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	if(exec_time!=-1){
-		exec_time=elapsed_seconds.count()*1000.0;
+		exec_time=std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
 	}
 
 	if(finalDFA) delete finalDFA;

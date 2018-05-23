@@ -10,6 +10,8 @@
 #include <pybind11/operators.h>
 
 #include "dfa.h"
+#include "rpni.h"
+#include "edsm.h"
 
 //Default arguments: https://pybind11.readthedocs.io/en/stable/basics.html#default-args
 
@@ -101,6 +103,22 @@ PYBIND11_MODULE(gi_gipy, m) {
       //===========================================================================================
       
       .def("dfa_similarity", &Dfa::dfa_similarity, "Returns and print the similarity score between dfas, taking into account both linguistical and structural sides.",py::arg("target_dfa"),py::arg("print") = 0, py::arg("sigma") = 1, py::arg("eps") = 0.0001, py::arg("color") = 0)
+    ;
+
+    py::class_<Rpni>(m,"Rpni")
+
+      .def(py::init<const char *>(),"Instance an object with all the members and methods for Rpni inference process.")
+
+      .def("run", &Rpni::run,"Start an RPNI inference process.",py::arg("path"),py::arg("exec_time") = -1)
+
+    ;
+
+    py::class_<Edsm>(m,"Edsm")
+
+      .def(py::init<const char *>(),"Instance an object with all the members and methods for Edsm inference process.")
+
+      .def("run", &Edsm::run,"Start an EDSM inference process.",py::arg("path"),py::arg("exec_time") = -1)
+
     ;
 
     

@@ -24,6 +24,8 @@
 
 using namespace std;
 
+class DfaSim;
+
 
 class Dfa {
 
@@ -457,17 +459,28 @@ public:
    * @param similarity_matrix 
    * @param num_states_target_dfa
    */
-   void print_structural_similarity(vector<vector<double>> similarity_matrix,int num_states_target_dfa) const;
+   void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
 
   /**
-   * Returns and print the similarity score between dfas, taking into account both linguistical
+   * Print the similarity score between dfas, taking into account both linguistical
    * and structural sides.
    * @param target_dfa
    * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
    * @param eps precision of the termination condition, a by default is eps=0.0001
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
    */
-  long double dfa_similarity(Dfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false) const;
+  void print_dfa_similarity(Dfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false) const;
+
+  /**
+   * Returns a DfaSim object which contains all the similarity score between dfas,
+   * taking into account both linguistical and structural sides.
+   * @param target_dfa
+   * @param print a boolean that if true permits to display the results.
+   * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
+   * @param eps precision of the termination condition, a by default is eps=0.0001
+   * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
+   */
+  DfaSim dfa_similarity(Dfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false) const;
 
 };
 

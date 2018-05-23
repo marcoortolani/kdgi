@@ -208,8 +208,11 @@ Dfa Dfa::read_dfa_file(const string file_name)
 	// Open connection to file
 	read.open(file_name.c_str());
 
-	if(read.is_open())
+	if(read.is_open()){
+		#ifdef VERBOSE
 		cout << "File " << file_name << " is open."<< endl << endl;
+		#endif
+	}
 	else{
 		cerr << "Error opening: " << file_name << endl;
 		throw readingExc();
@@ -1012,7 +1015,9 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 
 		//cout<<current_transition_symbol<<endl;
 		if(current_transition_symbol == ""){
+			#ifdef VERBOSE
 			cerr  << "ERROR: Random transition have no corresponding alphabet simbol" << endl;
+			#endif
 			continue;
 		}
 
@@ -1029,9 +1034,10 @@ map< vector<string>, int> Dfa::generate_pos_neg_samples_without_weights(int n_po
 			current_state = get_ttable(current_state,current_transition_symbol);
 
 			// Symbol corresponding to transition index
+			#ifdef VERBOSE
 			if(current_transition_symbol == "")
-					cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
-
+				cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
+			#endif
 
 			// Increment the final random string
 			incremental_sample.push_back(current_transition_symbol);
@@ -2033,16 +2039,6 @@ vector<vector<string>>	Dfa::get_w_method_test_set(Dfa* target_dfa, bool sigma) c
 	
 	vector<vector<string>> w_vec(w_method_test_set.begin(),w_method_test_set.end());
 
-	/*
-	for(auto &it1 : w_method_test_set) {
-		string acc="";
-		for (string s: it1)
-			acc=acc+s;
-		w_vec.push_back(acc);
-	}
-	*/
-	
-
 	return w_vec;
 }
 
@@ -2238,10 +2234,11 @@ vector<vector<double>> Dfa::neighbour_matching_structural_similarity(Dfa* subjec
 	return sim_v;
 }
 
-void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix, int num_states_subject_dfa) const{
+void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix) const{
 	cout<<"======================================"<<endl;
 	cout<<"***** NEIGHBOUR MATCHING RESULTS *****";
 	printf("\nSimilarity matrix:\n\n");
+	int num_states_subject_dfa = similarity_matrix[0].size();
     for(int i=0; i<this->get_num_states(); i++)
     {
         printf(" [ ");
@@ -2255,14 +2252,36 @@ void Dfa::print_structural_similarity(vector<vector<double>> similarity_matrix, 
 	cout<<"======================================"<<endl;
 }
 
-long double Dfa::dfa_similarity(Dfa* subject_dfa, bool sigma, double eps, bool color)const{
+void Dfa::print_dfa_similarity(Dfa* subject_dfa, bool sigma, double eps, bool color)const{
 	vector<vector<string>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
 	print_w_method(stats);
 	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
-	print_structural_similarity(sim_matrix,subject_dfa->get_num_states());
+	print_structural_similarity(sim_matrix);
 	long double similarity = (stats[6]+sim_matrix[num_states_][0])/2;
 	cout<<"***** GLOBAL SIMILARITY *****"<<endl;
 	cout<<"The global similarity score between the two dfas is: "<<similarity<<endl;
-	return similarity;
+}
+
+DfaSim Dfa::dfa_similarity(Dfa* subject_dfa, bool print, bool sigma, double eps, bool color)const{
+	long double exec_time=0;
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
+	vector<vector<string>> test_set = get_w_method_test_set(subject_dfa,sigma);
+	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
+	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
+
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+	exec_time = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
+
+	stats.push_back(exec_time);
+	
+	DfaSim sim = DfaSim(this,subject_dfa,stats,sim_matrix);
+
+	if(print){
+		sim.print_sim();
+	}
+
+	return sim;
+	
 }

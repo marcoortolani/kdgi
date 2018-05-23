@@ -733,6 +733,23 @@ void MurmurHash3_x64_128 ( const void * key, const int len,
   ((uint64_t*)out)[1] = h2;
 }
 
+DfaSim::DfaSim(){
+  dfa_reference_=nullptr;
+  dfa_subject_=nullptr;
+  true_positives_=0;
+  false_negatives_=0;
+  true_negatives_=0;
+  false_positives_=0;
+  precision_=0;
+  recall_=0;
+  linguistical_f_measure_=0;
+  specificity_=0;
+  bcr_=0;
+  exec_time_=0;
+  structural_f_measure_=0;
+  nodes_sim_matrix_=vector<vector<double>>();
+}
+
 DfaSim::DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_method_stats, vector<vector<double>> &neighbour_matching_stats)
 {
       dfa_reference_=reference;
@@ -745,7 +762,7 @@ DfaSim::DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_
       precision_=w_method_stats[4];
       recall_=w_method_stats[5];
       linguistical_f_measure_=w_method_stats[6];
-      specifity_=w_method_stats[7];
+      specificity_=w_method_stats[7];
       bcr_=w_method_stats[8];
       exec_time_=w_method_stats[9];
 
@@ -755,12 +772,6 @@ DfaSim::DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_
 
       nodes_sim_matrix_.pop_back();
 
-}
-	
-DfaSim::~DfaSim(){
-		nodes_sim_matrix_.clear();
-		delete dfa_reference_;
-		delete dfa_subject_;
 }
 
 void DfaSim::print_sim()const{
@@ -774,7 +785,7 @@ void DfaSim::print_sim()const{
 	cout<<"Precision = "<<precision_<<endl;
 	cout<<"Recall = "<<recall_<<endl;
 	cout<<"F-measure = "<<linguistical_f_measure_<<endl;
-	cout<<"Specifity = "<<specifity_<<endl;
+	cout<<"Specificity = "<<specificity_<<endl;
 	cout<<"Balanced Classification Rate = "<<bcr_<<endl;
 	cout<<"======================================"<<endl<<endl;
 	cout<<"***** NEIGHBOUR MATCHING RESULTS *****";
@@ -798,6 +809,59 @@ void DfaSim::print_sim()const{
 void DfaSim::which_dfas()const{
   dfa_reference_->print_dfa_ttable("Reference dfa");
   dfa_subject_->print_dfa_ttable("Subject dfa");
+}
+
+const Dfa* DfaSim::which_dfas(const Dfa* subject)const{
+  subject=dfa_subject_;
+  return dfa_reference_;
+}
+
+long double DfaSim::get_true_positives() const{
+  return true_positives_;
+}
+
+long double DfaSim::get_true_negatives() const{
+  return true_negatives_;
+}
+
+long double DfaSim::get_false_positives() const{
+  return false_positives_;
+}
+
+long double DfaSim::get_false_negatives() const{
+  return false_negatives_;
+}
+
+long double DfaSim::get_precision() const{
+  return precision_;
+}
+
+long double DfaSim::get_recall() const{
+  return recall_;
+}
+
+long double DfaSim::get_linguistical_f_measure() const{
+  return linguistical_f_measure_;
+}
+
+long double DfaSim::get_specificity() const{
+  return specificity_;
+}
+
+long double DfaSim::get_bcr() const{
+  return bcr_;
+}
+
+vector<vector<double>> DfaSim::get_nodes_sim_matrix() const{
+  return nodes_sim_matrix_;
+}
+
+double DfaSim::get_structural_f_measure() const{
+  return structural_f_measure_;
+}
+
+long double DfaSim::get_exec_time() const{
+  return exec_time_;
 }
 
 //-----------------------------------------------------------------------------

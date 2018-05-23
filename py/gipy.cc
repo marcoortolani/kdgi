@@ -18,6 +18,29 @@ namespace py = pybind11;
 PYBIND11_MODULE(gi_gipy, m) {
     m.doc() = "pybind11 plugin for the kdgi library";
 
+    py::class_<DfaSim>(m,"DfaSim")
+
+      .def(py::init())
+
+      .def("print_sim", &DfaSim::print_sim, "Print the similarity score between dfas, taking into account both linguistical and structural sides.")
+
+      .def("get_true_positives", &DfaSim::get_true_positives)
+      .def("get_true_negatives", &DfaSim::get_true_negatives)
+      .def("get_false_positives", &DfaSim::get_false_positives)
+      .def("get_false_negatives", &DfaSim::get_false_negatives)
+      .def("get_precision", &DfaSim::get_precision)
+      .def("get_recall", &DfaSim::get_recall)
+      .def("get_linguistical_f_measure", &DfaSim::get_linguistical_f_measure)
+      .def("get_specificity", &DfaSim::get_specificity)
+      .def("get_bcr", &DfaSim::get_bcr)
+      .def("get_nodes_sim_matrix", &DfaSim::get_nodes_sim_matrix)
+      .def("get_structural_f_measure", &DfaSim::get_structural_f_measure)
+      .def("get_exec_time", &DfaSim::get_exec_time)
+
+      .def("which_dfas", (void (DfaSim::*)()const)  &DfaSim::which_dfas,"Print the ttable of reference and subject dfas")
+      .def("which_dfas", (const Dfa* (DfaSim::*)(const Dfa*)const) &DfaSim::which_dfas,"Returns the two dfas compared")
+    ;
+
     py::class_<Dfa>(m, "Dfa")
 
       //*** Constructors ***
@@ -78,6 +101,8 @@ PYBIND11_MODULE(gi_gipy, m) {
       //===========================================================================================
       
       .def("dfa_similarity", &Dfa::dfa_similarity, "Returns and print the similarity score between dfas, taking into account both linguistical and structural sides.",py::arg("target_dfa"),py::arg("print") = 0, py::arg("sigma") = 1, py::arg("eps") = 0.0001, py::arg("color") = 0)
-      ;
+    ;
+
+    
 
 }

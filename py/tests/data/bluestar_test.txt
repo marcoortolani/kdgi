@@ -1,0 +1,25 @@
+3
+$ a b c
++ a
++ a a
++ a a a
++ a a a a
++ b
++ b b
++ b b a
++ b a 
++ b b b a
++ b b b
+- c
+- c c
+- c c c
+- c a
+- c b
+- c a a
+- c a b
+- c a c
+- c b a
+- c b b
+- c b c
+- c c a
+- c c b

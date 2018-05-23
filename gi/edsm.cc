@@ -166,7 +166,6 @@ Dfa* Edsm::run(string base_path, double exec_time)
 
 	/////////////////////////////////
 	// START TIME
-
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 	
 	// Build APTA

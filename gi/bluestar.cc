@@ -184,7 +184,9 @@ double BlueStar::merge_heuristic_score(double error_rate_before, double error_ra
 
 	// Compute Z_alpha under the H0 hypothesis
 	z_alpha = z_alpha_from_u_alpha_two_proportions_test(error_rate_before, error_rate_after, dim_strings, alpha, &dev_std_h0);
-	cout<<"z_alpha_from_u_alpha_two_proportions_test="<<z_alpha<<endl;	//HERE IS NAN!!!!!
+	#ifdef DEBUG
+	cout<<"z_alpha_from_u_alpha_two_proportions_test="<<z_alpha<<endl;
+	#endif
 
 	// z_alpha is MINF when the error is too low for normal distribution approximation
 	if(z_alpha == DMINF)
@@ -202,7 +204,9 @@ double BlueStar::merge_heuristic_score(double error_rate_before, double error_ra
 	}
 	else
 	{
+		#ifdef DEBUG
 		cout<<endl<<"Bluestar run DEBUG: z_alpha "<<z_alpha <<" delta "<<delta <<" dev_std_h0 "<<dev_std_h0<<" DMAX "<<DMAX <<endl;	//z_alpha NAN && dev_std_h0 NAN
+		#endif
 		zeta_beta = z_alpha - ( (double) delta / (double) dev_std_h0 );
 		//cout<<endl<<"Bluestar run DEBUG: "<<zeta_beta;		IT IS NAN
 
@@ -232,8 +236,6 @@ double BlueStar::merge_heuristic_score(double error_rate_before, double error_ra
 
 void BlueStar::compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* &wp, int* &wn)
 {
-
-
 	for(int i=0; i<dim_positive; ++i)
 	{
 		if( dfa1->membership_query( positive[i]) ){
@@ -288,7 +290,6 @@ void BlueStar::compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats
 Dfa* BlueStar::run(string base_path, double exec_time)
 {
 	// Samples from txtfile
-	int n_symbols	 	 = 0;			//number of negative examples
 	int dim_positive	 = 0; 		//number of positive examples
 	int dim_negative = 0; 		//number of negative examples
 	int* wp, *wn;
@@ -305,7 +306,6 @@ Dfa* BlueStar::run(string base_path, double exec_time)
 	// example strings
 	vector<string>* positive=NULL;
 	vector<string>* negative=NULL;
-	char* symbols = NULL;
 
 	bool promoted =false;
 	bool at_least_one_promotion = false;
@@ -323,31 +323,22 @@ Dfa* BlueStar::run(string base_path, double exec_time)
 
 	//get positive and negative samples
 	read_samples(positive, &dim_positive, negative, &dim_negative, wp, wn);
-	/*
-	cout<<"READ_SAMPLES DEBUG: "<<endl<<"positive=[";
-	for(int i = 0; i<dim_positive; i++){
-		cout<<positive[i]<<",";
+
+	#ifdef DEBUG
+	for(int i=0; i<dim_positive;++i){
+		cout<<"positive[i]="<<positive[i];
+		cout<<" wp[i]="<<wp[i]<<endl;
 	}
-	cout<<"]"<<endl<<"negative=[";
-	for(int i = 0; i<dim_negative; i++){
-		cout<<negative[i]<<",";
+	for(int i=0; i<dim_negative;++i){
+		cout<<"positive[i]="<<negative[i];
+		cout<<" wn[i]="<<wn[i]<<endl;
 	}
-	cout<<"]"<<endl<<"wp=[";
-	for(int i = 0; i<dim_positive; i++){
-		cout<<wp[i]<<",";
-	}
-	cout<<"]"<<endl<<"wn=[";
-	for(int i = 0; i<dim_negative; i++){
-		cout<<wn[i]<<",";
-	}
-	cout<<"]"<<endl<<"END READ_SEMPLES DEBUG"<<endl;
-	*/
+	#endif
 
 	/////////////////////////////////
 	// START TIME
 
-	std::chrono::time_point<std::chrono::system_clock> start, end;
-	start = std::chrono::system_clock::now();
+	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	// Build APTA
 	dfa1 = build_apta(positive, dim_positive, negative, dim_negative);
@@ -368,17 +359,18 @@ Dfa* BlueStar::run(string base_path, double exec_time)
 	set_fringe_size(n_red,n_blue);
 
 
-	/*Il problema è qui: tot_wp_w e tot_wn_w risultano essere==0 e a cascata si creano dei NAN */
-	
 	for(int i=0; i<dim_positive; ++i)
 		tot_wp_w += wp[i];
 	for(int i=0; i<dim_negative; ++i)
 		tot_wn_w += wn[i];
 	
-	
+	#ifdef DEBUG
 	cout << "Totale tot_wn_w: "<<tot_wp_w << " e "<< tot_wn_w << endl;
+	#endif
 
+	#ifdef VERBOSE
 	cout <<" START BlueStar inference process..."<<endl;
+	#endif
 
 	while_count_=-1;
 	// BlueStar
@@ -697,7 +689,6 @@ Dfa* BlueStar::run(string base_path, double exec_time)
 
 	}
 	
-
 	if(curr_count != NULL) delete[] curr_count;
 
 
@@ -715,14 +706,17 @@ Dfa* BlueStar::run(string base_path, double exec_time)
 
 	//////////////////////////////////
 	// INFORMATION RETRIEVAL STATS
+	#ifdef VERBOSE
 	cout << "FINALE" << endl;
+	#endif
 	ir_statistical_measures ir_stats_after;
 
 	compute_ir_stats(finalDFA, ir_stats_after, positive, dim_positive, negative, dim_negative, wp, wn);
 
+	#ifdef DEBUG
 	cout << "TP: "<< ir_stats_after.tp << " TN: "<< ir_stats_after.tn << " FP: "<< ir_stats_after.fp << " FN: "<< ir_stats_after.fn << " F-measure: " << ir_stats_after.f_measure << endl;
 	cout << "Precision:  "<< ir_stats_after.precision << "; Recall: "<< ir_stats_after.recall << endl;
-
+	#endif
 
 	int count =0;
 	for(int i=0; i<dim_positive; ++i)
@@ -733,8 +727,10 @@ Dfa* BlueStar::run(string base_path, double exec_time)
 		if(!finalDFA->membership_query(negative[i]))
 			countN += wn[i];
 
+	#ifdef DEBUG
 	cout << "Correttamente identificate di "<< tot_wp_w << " un totale di: "<<count << endl;
 	cout << "Correttamente identificate di "<< tot_wn_w << " un totale di: "<<countN << endl;
+	#endif
 	////////////////////////////////////////////////////
 
 
@@ -744,25 +740,21 @@ Dfa* BlueStar::run(string base_path, double exec_time)
 	// Final error rate
 	error_rate_final_dfa = error_rate(finalDFA, positive, dim_positive, negative, dim_negative,wp, wn, tot_wp_w, tot_wn_w);
 
-
 	//finalDFA->print_dfa_with_color("EDSM PRE-MINIMIZZAZIONE AUTOMA FINALE");
 
 
 	//////////////////////////////////////////////////////////////
 	// Minimize returna a new dfa, then delete the older
 	Dfa* finalDFAmin = finalDFA->minimize_TF();
-
-	end = std::chrono::system_clock::now();
-	std::chrono::duration<double> elapsed_seconds = end-start;
+	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	if(exec_time!=-1){
-		exec_time=elapsed_seconds.count()*1000.0;
+		exec_time=std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
 	}
 
 	if(finalDFA) delete finalDFA;
 
 	if(positive) delete[] positive;
 	if(negative) delete[] negative;
-	if(symbols) delete[] symbols;
 
 
 	return finalDFAmin;

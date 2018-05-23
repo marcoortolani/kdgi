@@ -238,13 +238,15 @@ void BlueFringe::read_samples(vector<string>* &positive, int* dim_positive, vect
 	for(int i=0; i<*dim_negative;++i)
 		cout<<"positive[i]="<<negative[i]<<endl;
 	*/
+
+	//inizializzo wp e wn a 1
 	if(!weights){
-		//inizializzo wp e wn a 1
 		for(int i=0;i<cp;++i)
 			wp[i]=1;
 		for(int j=0;j<cn;++j)
 			wn[j]=1;
 	}
+	
 }
 
 

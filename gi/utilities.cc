@@ -211,13 +211,15 @@ double z_alpha_from_u_alpha_two_proportions_test(double prop1, double prop2, int
 		//return DMINF;
 		////throw "Constraints approximation to Normal Gaussian distr not satisfied";
 	//}
-
+  #ifdef DEBUG
   cout<<"UTILITIES DEBUG: p_est="<<p_est<<" q_est="<<q_est<<" sample_size="<<sample_size<<endl;
+  #endif
 	// Variance and dev. std. under the H0 hypothesis
 	double variance_h0 = (double) (2*p_est*q_est) / (double) sample_size;
 	*dev_std_h0 = sqrt( variance_h0 );
+  #ifdef DEBUG
   cout<<"UTILITIES DEBUG: variance_h0="<<variance_h0<<" dev_std_h0="<<*dev_std_h0<<endl;  //both are NAN
-
+  #endif
 	// Z-alpha: u_alpha is the z_alpha value in the normal gaussian distribution, multiplicated for std_err became usefull for the specific distribution
 	z_alpha = u_alpha * (*dev_std_h0);
 
@@ -382,56 +384,56 @@ void print_ir_stats(ir_statistical_measures &stats)
 }
 
 
-//void compute_ir_stats(dfaEDSM* dfa1, ir_statistical_measures &stats, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn)
-//{
-//
-//
-//	for(int i=0; i<dim_positive; ++i)
-//	{
-//		if( dfa1->membership_query( positive[i]) ){
-//			if(wp == NULL)
-//				++stats.tp;
-//			else
-//				stats.tp += wp[i];
-//		}else{
-//			if(wp == NULL)
-//				++stats.fn;
-//			else
-//				stats.fn += wp[i];
-//		}
-//	}
-//
-//	for(int i=0; i<dim_negative; ++i)
-//	{
-//		if( !dfa1->membership_query( negative[i]) ){
-//			if(wn == NULL)
-//				++stats.tn;
-//			else
-//				stats.tn += wn[i];
-//		}else{
-//			if(wn == NULL)
-//				++stats.fp;
-//			else
-//				stats.fp += wn[i];
-//		}
-//	}
-//
-//	////////////////////////////
-//	// Calculates statical index
-//	if(stats.tp != 0 || stats.fp != 0){
-//		stats.precision		= (double) stats.tp / (double) (stats.tp + stats.fp);
-//		stats.recall 		= (double) stats.tp / (double) (stats.tp + stats.fn);
-//		if(stats.tp != 0)
-//			stats.f_measure = (double) (2.0 * stats.precision * stats.recall ) / (double) (stats.precision + stats.recall);
-//		else
-//			stats.f_measure	= 0.0;
-//	}
-//
-//	if(stats.tn != 0 || stats.fp != 0){
-//		stats.specificity 	= (double) stats.tn / (double) (stats.tn + stats.fp);
-//		stats.bcr 			= (double) (stats.recall + stats.specificity) / (double) 2.0;
-//	}
-//}
+void compute_ir_stats(const Dfa* dfa1, ir_statistical_measures &stats, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* &wp, int* &wn)
+{
+
+
+	for(int i=0; i<dim_positive; ++i)
+	{
+		if( dfa1->membership_query( positive[i]) ){
+			if(wp == NULL)
+				++stats.tp;
+			else
+				stats.tp += wp[i];
+		}else{
+			if(wp == NULL)
+				++stats.fn;
+			else
+				stats.fn += wp[i];
+		}
+	}
+
+	for(int i=0; i<dim_negative; ++i)
+	{
+		if( !dfa1->membership_query( negative[i]) ){
+			if(wn == NULL)
+				++stats.tn;
+			else
+				stats.tn += wn[i];
+		}else{
+			if(wn == NULL)
+				++stats.fp;
+			else
+				stats.fp += wn[i];
+		}
+	}
+
+	////////////////////////////
+	// Calculates statical index
+	if(stats.tp != 0 || stats.fp != 0){
+		stats.precision		= (double) stats.tp / (double) (stats.tp + stats.fp);
+		stats.recall 		= (double) stats.tp / (double) (stats.tp + stats.fn);
+		if(stats.tp != 0)
+			stats.f_measure = (double) (2.0 * stats.precision * stats.recall ) / (double) (stats.precision + stats.recall);
+		else
+			stats.f_measure	= 0.0;
+	}
+
+	if(stats.tn != 0 || stats.fp != 0){
+		stats.specificity 	= (double) stats.tn / (double) (stats.tn + stats.fp);
+		stats.bcr 			= (double) (stats.recall + stats.specificity) / (double) 2.0;
+	}
+}
 
 
 ///////////////////////////////////////

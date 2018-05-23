@@ -12,6 +12,7 @@
 #include "dfa.h"
 #include "rpni.h"
 #include "edsm.h"
+#include "bluestar.h"
 
 //Default arguments: https://pybind11.readthedocs.io/en/stable/basics.html#default-args
 
@@ -121,6 +122,12 @@ PYBIND11_MODULE(gi_gipy, m) {
 
     ;
 
+    py::class_<BlueStar>(m,"BlueStar")
+
+      .def(py::init<const char *,double,double>(),"Instance an object with all the members and methods for Edsm inference process.",py::arg("path"),py::arg("alpha_value") = 0.01, py::arg("delta_value") = 0.005)
     
+      .def("run", &BlueStar::run,"Start an EDSM inference process.",py::arg("path"),py::arg("exec_time") = -1)
+
+    ;    
 
 }

@@ -98,8 +98,10 @@ public:
 	/**
 	 * Instance an object with all the members and methods for bluestar inference process.
 	 * @param path It's the path where find positive and negative samples
+	 * @param alpha
+	 * @param delta
 	 */
-	BlueStar(const char* path, double alpha_value, double delta_value);							// Take the path where find samples
+	BlueStar(const char* path, double alpha_value=0.01, double delta_value=0.005);							// Take the path where find samples
 
 	/**
 	 * Destroy and bluestar object, freeing the memory.

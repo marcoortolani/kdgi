@@ -36,3 +36,7 @@ nella directory `py`
 
 Per informazioni circa l'utilizzo di `git merge`  per condividere codice tra branches leggere:
 git_merge.txt
+
+Per generare la documentazione del codice, nella directory di compilazione (es. `build`):
+
+`make docs`

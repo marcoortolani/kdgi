@@ -57,7 +57,7 @@ ConcreteDfa::ConcreteDfa(const int n_state, const vector<string> alf, const int 
 
 
 ConcreteDfa::ConcreteDfa(const int n_state, const vector<string> alf)
-:Dfa(n_state, alf, 0){}
+:ConcreteDfa(n_state, alf, 0){}
 
 ConcreteDfa::ConcreteDfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy, vector<int> accepting_states )
 :Dfa::Dfa(n_state, alf, 0){

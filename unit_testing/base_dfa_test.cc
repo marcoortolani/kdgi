@@ -43,8 +43,10 @@ protected:
 
 
 TEST_F(BaseDfaTest, getDimAlphabet){
+    cout<<"ciao"<<endl;
 	EXPECT_EQ(3,reference->get_dim_alphabet());
 }
+
 
 TEST_F(BaseDfaTest, getTransition){
     EXPECT_EQ(3,reference->get_ttable(1,"0"));

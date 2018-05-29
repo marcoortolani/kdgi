@@ -3,8 +3,8 @@
  */
 
 
-#ifndef CONCRETE_DFA_H_
-#define CONCRETE_DFA_H_
+#ifndef DFA_H_
+#define DFA_H_
 
 #include <vector>
 #include <string>
@@ -18,7 +18,7 @@ protected:
   //******** DATA MEMBERS: ********
   int	  num_states_;									/*!< Number of dfa states */
   int	  start_state_;									/*!< Index of start state */
-  vector<string> alphabet_;								/*!< Alphabet symbols */
+  vector<string> alphabet_;						/*!< Alphabet symbols */
 
   //******** CONSTRUCTORS: ********
   /**

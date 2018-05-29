@@ -7,7 +7,7 @@
 
 
 #include "utilities.h"
-//#include "concretedfa.h"
+#include "concretedfa.h"
 
 #include <sstream>
 #include <fstream>

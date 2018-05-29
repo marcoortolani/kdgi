@@ -162,7 +162,6 @@ public:
 	virtual 	Dfa* run(string path, double exec_time=0) = 0;						// Argument is the base path where create files
 
 
-
 	/**
 	 * It's a function with statistical finality.
 	 * Return the number of merges already performed to the actual stage of EDSM process.

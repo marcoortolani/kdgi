@@ -8,8 +8,6 @@
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
-//#include "../gilearning/gi_dfa.h"  //NOT INCLUDE NEVER, ELSE CIRCULAR REFERENCE. WE USE FORWARD DECLARATION
-//#include <dfaEDSM.h>
 #include <iostream>
 #include <string>
 #include <set>
@@ -58,7 +56,7 @@ typedef unsigned __int64 uint64_t;
 
 #endif // !defined(_MSC_VER)
 
-class Dfa; //FORWARD DECLARATION TO AVOID CIRCULAR DEPENDENCIES
+class ConcreteDfa; //FORWARD DECLARATION TO AVOID CIRCULAR DEPENDENCIES
 
 //****** In sostitution of fpu_control.h which is Linux specific
 /* masking of interrupts */
@@ -230,7 +228,7 @@ struct ir_statistical_measures
 };
 
 
-void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<vector<string>> &test_set,ir_statistical_measures &stats);
+void compute_ir_stats(const ConcreteDfa* dfa1 ,const ConcreteDfa* target,const vector<vector<string>> &test_set,ir_statistical_measures &stats);
 void print_ir_stats(ir_statistical_measures &stats);
 //void compute_ir_stats(dfaEDSM* dfa1, ir_statistical_measures &stats, vector<SYMBOL>* positive, int dim_positive, vector<SYMBOL>* negative, int dim_negative, int* &wp, int* &wn);
 
@@ -830,8 +828,8 @@ class DfaSim {
 
   private:
 
-    const Dfa* dfa_reference_;
-    const Dfa* dfa_subject_;
+    const ConcreteDfa* dfa_reference_;
+    const ConcreteDfa* dfa_subject_;
 
     /****** W-METHOD STATS ******/
     long double true_positives_;
@@ -854,7 +852,7 @@ class DfaSim {
 
 	DfaSim();
 
-    DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_method_stats, vector<vector<double>> &neighbour_matching_stats);
+    DfaSim(const ConcreteDfa* reference, const ConcreteDfa* subject, vector<long double> &w_method_stats, vector<vector<double>> &neighbour_matching_stats);
     
   /**
    * Print the similarity score between dfas, taking into account both linguistical
@@ -872,7 +870,7 @@ class DfaSim {
   * @param subject here the function returns the dfa_subject_
   * @return dfa_reference_
   */
-  const Dfa* which_dfas(const Dfa* subject) const;
+  const ConcreteDfa* which_dfas(const ConcreteDfa* subject) const;
 
   long double get_true_positives() const;
 

@@ -93,8 +93,8 @@ TEST_F(BaseDfaTest, getAcceptingStates){
 
 
 TEST_F(BaseDfaTest, readDfaFile){
-    Dfa* test=nullptr; 
-    test=new Dfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
+    ConcreteDfa* test=nullptr; 
+    test=new ConcreteDfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
     vector<map<string,int>> ttable_test=test->get_ttable();
     vector<map<string,int>> ttable_ref=reference->get_ttable();
     bool equal=true;
@@ -168,7 +168,7 @@ TEST_F(BaseDfaTest, unionDfa){
     TestDfa* test = new TestDfa(3,alph,2);
     const vector<int> sequence2 = {0, 1, 2, 0, 0, 1, 2, 1, 0, 1, 2, 0};
     test->set_ttable_from_sequence(sequence2);
-    Dfa* uni=reference->unionDFA(test);
+    ConcreteDfa* uni=reference->unionDFA(test);
     TestDfa* uni_ref = new TestDfa(8,alph,0);
     const vector<int> sequence3 = {1, 2, 4, 0, 3, 4, 1, 0, 4, 3, 2, 0, 4, 4, 4, 1, 4, 4, 4, 0, 5, 6, 7, 0, 5, 6, 7, 1, 5, 6, 7, 0};
     uni_ref->set_ttable_from_sequence(sequence3);
@@ -198,8 +198,8 @@ TEST_F(BaseDfaTest, unionDfa){
 
 TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     bool flag=true;
-    Dfa* test=nullptr; 
-    test=new Dfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
+    ConcreteDfa* test=nullptr; 
+    test=new ConcreteDfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
     flag=reference->equivalence_query(test);
     EXPECT_EQ(1,flag);
 }

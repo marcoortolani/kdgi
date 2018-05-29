@@ -20,9 +20,10 @@ Per compilare:
 `mkdir build cd build cmake -G "Unix Makefiles" ..`
 `make`
 
-oppure (per il testing):
-`cmake -G "Unix Makefiles" -Dtest=on ..`
-`make && make test`
+oppure (per il testing e per il porting pybind):
+`cmake -G "Unix Makefiles" -Dtest=on -Dpython=on ..`
+`make`
+`make test`
 
 Se si vuole vedere quale specifico test è riuscito/fallito occorre eseguire, all'interno della cartella build:
 `./runUnitTests`
@@ -35,3 +36,7 @@ nella directory `py`
 
 Per informazioni circa l'utilizzo di `git merge`  per condividere codice tra branches leggere:
 git_merge.txt
+
+Per generare la documentazione del codice, nella directory di compilazione (es. `build`):
+
+`make docs`

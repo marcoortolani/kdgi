@@ -21,6 +21,25 @@ add_executable(gilearner main.cc)
 target_link_libraries(gilearner gi_lib)
 
 ################################
+# Doxygen documentation
+################################
+# Require dot
+find_package(Doxygen
+             REQUIRED dot)
+
+# # Require dot, treat the other components as optional
+# find_package(Doxygen
+#             REQUIRED dot
+#             OPTIONAL_COMPONENTS mscgen dia)
+
+set(DOXYGEN_EXCLUDE_PATTERNS */gtest/* */py/*)
+doxygen_add_docs(docs
+  ${PROJECT_SOURCE_DIR}
+  COMMENT "Generate man pages")
+   # [filesOrDirs...]
+   # [WORKING_DIRECTORY dir]
+   # [COMMENT comment])
+################################
 # Python
 ################################
 if (python)

@@ -1,11 +1,7 @@
 //******** Thin-wrapper to do unit-testing of protected methods ********
-<<<<<<< HEAD
 #ifndef TEST_DFA_H_
 #define TEST_DFA_H_
-#include "dfa.h"
-=======
 #include "concretedfa.h"
->>>>>>> origin/master
 
 class TestDfa : public ConcreteDfa{
   friend class BaseDfaTest;

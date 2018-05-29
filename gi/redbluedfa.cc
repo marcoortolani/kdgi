@@ -12,14 +12,14 @@
 
 
 RedBlueDfa::RedBlueDfa()
-:Dfa(){
+:ConcreteDfa(){
 	blue_states=NULL;
 	red_states=NULL;
 }
 
 
 RedBlueDfa::RedBlueDfa(const int n_state, const vector<string> alf, const int s_state)		// Constructor 1
-:Dfa(n_state, alf, s_state){
+:ConcreteDfa(n_state, alf, s_state){
 
 	blue_states = new vector<int>();
 	red_states = new vector<int>();
@@ -31,8 +31,8 @@ RedBlueDfa::RedBlueDfa(const int n_state, const vector<string> alf)							// Def
 :RedBlueDfa(n_state, alf, 0){}
 
 
-RedBlueDfa::RedBlueDfa(const Dfa &d1)
-:Dfa(d1){
+RedBlueDfa::RedBlueDfa(const ConcreteDfa &d1)
+:ConcreteDfa(d1){
 
 	blue_states = new vector<int>();
 	red_states = new vector<int>();
@@ -40,7 +40,7 @@ RedBlueDfa::RedBlueDfa(const Dfa &d1)
 
 
 RedBlueDfa::RedBlueDfa(const RedBlueDfa &d1)
-:Dfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.get_ttable(), d1.get_accepting_states()){
+:ConcreteDfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.get_ttable(), d1.get_accepting_states()){
 
 	blue_states = new vector<int>;
 	red_states = new vector<int>;

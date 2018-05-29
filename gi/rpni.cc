@@ -62,7 +62,7 @@ int Rpni::merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int 
 }
 
 
-Dfa* Rpni::run(string base_path, double exec_time)
+ConcreteDfa* Rpni::run(string base_path, double exec_time)
 {
 	// Samples from txtfile
 //	int n_symbols=0;				//
@@ -260,7 +260,7 @@ Dfa* Rpni::run(string base_path, double exec_time)
 	RedBlueDfa* finalDFA = dfa1->to_canonical_RedBlueDfa_from_red_states();
 	//////////////////////////////////////////////////////////////
 	// Minimize returns a new dfa, then delete the older
-	Dfa* finalDFAmin = finalDFA->minimize_TF();
+	ConcreteDfa* finalDFAmin = finalDFA->minimize_TF();
 	
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	if(exec_time!=-1){

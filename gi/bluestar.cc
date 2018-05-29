@@ -287,7 +287,7 @@ void BlueStar::compute_ir_stats(RedBlueDfa* dfa1, ir_statistical_measures &stats
 /////////////////////////////////////////
 
 
-Dfa* BlueStar::run(string base_path, double exec_time)
+ConcreteDfa* BlueStar::run(string base_path, double exec_time)
 {
 	// Samples from txtfile
 	int dim_positive	 = 0; 		//number of positive examples
@@ -745,7 +745,7 @@ Dfa* BlueStar::run(string base_path, double exec_time)
 
 	//////////////////////////////////////////////////////////////
 	// Minimize returna a new dfa, then delete the older
-	Dfa* finalDFAmin = finalDFA->minimize_TF();
+	ConcreteDfa* finalDFAmin = finalDFA->minimize_TF();
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	if(exec_time!=-1){
 		exec_time=std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();

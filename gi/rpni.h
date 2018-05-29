@@ -59,7 +59,7 @@ public:
 	 * @param exec_time time elapsed in milliseconds, by default is -1, DO NOT pass it as argument if not interested
 	 * @return Inferred DFA
 	 */
-	Dfa* run(string path, double exec_time = -1);						// Argument is the base path where create files
+	ConcreteDfa* run(string path, double exec_time = -1);						// Argument is the base path where create files
 
 };
 

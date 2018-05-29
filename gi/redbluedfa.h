@@ -5,7 +5,7 @@
 
 #ifndef REDBLUEDFA_H_
 #define REDBLUEDFA_H_
-#include "dfa.h"
+#include "concretedfa.h"
 
 
 /*! \class redbluedfa
@@ -14,7 +14,7 @@
     Class for DFA representation inside the EDSM algorithm. It add two vector, used to store which state are blue and
     which state are red. With them, it add also all the members for for their management.
 */
-class RedBlueDfa: public Dfa {
+class RedBlueDfa: public ConcreteDfa {
 
 private:
 
@@ -32,7 +32,7 @@ public:
 	 * Make an instance of RedBlueDfa from an object dfa.
 	 * @param d1 Object dfa used for make the RedBlueDfa object.
 	 */
-	RedBlueDfa(const Dfa &d1);
+	RedBlueDfa(const ConcreteDfa &d1);
 
 	/**
 	 * Constructor for make a copy of a RedBlueDfa "d1"
@@ -64,7 +64,7 @@ public:
 	 * Make an instance of dfa from the current RedBlueDfa object.
 	 * @return A pointer to the new dfa.
 	 */
-	Dfa* to_dfa();
+	ConcreteDfa* to_dfa();
 
 	/**
 	 * Differently from "to_dfa()" function; it return a RedBlueDfa, without unreachable states,  adding if necessary a sink state.
@@ -77,9 +77,6 @@ public:
 	 * Returns number of reachable states
 	 */
 	int get_actual_num_states();
-
-
-//EDSM
 
 	/**
 	 * Get a pointer to the vector of blue states.

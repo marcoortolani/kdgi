@@ -50,11 +50,6 @@ protected:
   void 	set_alphabet(const vector<string> alf);
 
 public:
-  friend class BlueFringe;
-  friend class AngluinDfa;
-  friend class Rpni;
-  friend class Edsm;
-  friend class BlueStar;
   //******** CONSTRUCTORS: ********
 
   /**

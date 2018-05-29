@@ -9,14 +9,10 @@
 //For operators overload: https://pybind11.readthedocs.io/en/stable/advanced/classes.html#operator-overloading
 #include <pybind11/operators.h>
 
-<<<<<<< HEAD
-#include "dfa.h"
+#include "concretedfa.h"
 #include "rpni.h"
 #include "edsm.h"
 #include "bluestar.h"
-=======
-#include "concretedfa.h"
->>>>>>> origin/master
 
 //Default arguments: https://pybind11.readthedocs.io/en/stable/basics.html#default-args
 
@@ -111,7 +107,6 @@ PYBIND11_MODULE(gi_gipy, m) {
       .def("dfa_similarity", &ConcreteDfa::dfa_similarity, "Returns and print the similarity score between dfas, taking into account both linguistical and structural sides.",py::arg("target_dfa"),py::arg("print") = 0, py::arg("sigma") = 1, py::arg("eps") = 0.0001, py::arg("color") = 0)
     ;
 
-<<<<<<< HEAD
     py::class_<Rpni>(m,"Rpni")
 
       .def(py::init<const char *>(),"Instance an object with all the members and methods for Rpni inference process.")
@@ -136,6 +131,4 @@ PYBIND11_MODULE(gi_gipy, m) {
 
     ;    
 
-=======
->>>>>>> origin/master
 }

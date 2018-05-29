@@ -159,7 +159,7 @@ public:
 	 * @param exec_time time elapsed, by default is 0, DO NOT pass it as argument if not interested
 	 * @return Inferred DFA
 	 */
-	virtual 	Dfa* run(string path, double exec_time=0) = 0;						// Argument is the base path where create files
+	virtual 	ConcreteDfa* run(string path, double exec_time=0) = 0;						// Argument is the base path where create files
 
 
 	/**

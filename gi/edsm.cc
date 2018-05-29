@@ -132,7 +132,7 @@ int Edsm::merge_heuristic_score(RedBlueDfa* dfa1, vector<string>* positive, int 
 }
 
 
-Dfa* Edsm::run(string base_path, double exec_time)
+ConcreteDfa* Edsm::run(string base_path, double exec_time)
 {
 	// Samples from txtfile
 	int dim_positive=0; //number of positive examples
@@ -262,7 +262,7 @@ Dfa* Edsm::run(string base_path, double exec_time)
 				//cout << "PROMOZIONE"<<endl;
 
 				#ifdef ALL_DFA_EDSM
-				string name = "P"+Dfa::intTostring(while_count)+Dfa::intTostring(blue[i]);
+				string name = "P"+ConcreteDfa::intTostring(while_count)+ConcreteDfa::intTostring(blue[i]);
 				dfa1->print_dfa_dot(name, (base_path+name+".dot").c_str());
 				#endif
 
@@ -329,7 +329,7 @@ Dfa* Edsm::run(string base_path, double exec_time)
 			//cout << "MERGE:"<<max_count<<endl;
 			//cout <<" ----------------------------------- "<<endl;
 			#ifdef ALL_DFA_EDSM
-			string name = "M"+Dfa::intTostring(while_count);
+			string name = "M"+ConcreteDfa::intTostring(while_count);
 			dfa1->print_dfa_dot(name, (base_path+name+".dot").c_str());
 			#endif
 
@@ -391,7 +391,7 @@ Dfa* Edsm::run(string base_path, double exec_time)
 
 	//////////////////////////////////////////////////////////////
 	// Minimize returna a new dfa, then delete the older
-	Dfa* finalDFAmin = finalDFA->minimize_TF();
+	ConcreteDfa* finalDFAmin = finalDFA->minimize_TF();
 
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	if(exec_time!=-1){

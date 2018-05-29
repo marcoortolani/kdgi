@@ -1,15 +1,13 @@
 /*
- * utility.cpp
+ * utility.cc
  *
  *  Created on: 29 set 2015
  *      Author: piero
  */
 
 
-//#include <dfa.h>
-//#include <dfaEDSM.h>
 #include "utilities.h"
-#include "dfa.h"
+#include "concretedfa.h"
 
 #include <sstream>
 #include <fstream>
@@ -283,7 +281,7 @@ double ncd(double comp_x, double comp_y, double comp_xy)
 /// INFORMATION RETRIEVAL
 
 
-void compute_ir_stats(const Dfa* dfa1 ,const Dfa* target,const vector<vector<string>> &test_set,ir_statistical_measures &stats)
+void compute_ir_stats(const ConcreteDfa* dfa1 ,const ConcreteDfa* target,const vector<vector<string>> &test_set,ir_statistical_measures &stats)
 {
 	stats.tp = stats.tn = stats.fp = stats.fn = 0;
 	//cout<<"Test set dimension is "<<test_set.size()<<endl;
@@ -750,7 +748,7 @@ DfaSim::DfaSim(){
   nodes_sim_matrix_=vector<vector<double>>();
 }
 
-DfaSim::DfaSim(const Dfa* reference, const Dfa* subject, vector<long double> &w_method_stats, vector<vector<double>> &neighbour_matching_stats)
+DfaSim::DfaSim(const ConcreteDfa* reference, const ConcreteDfa* subject, vector<long double> &w_method_stats, vector<vector<double>> &neighbour_matching_stats)
 {
       dfa_reference_=reference;
       dfa_subject_=subject;
@@ -811,7 +809,7 @@ void DfaSim::which_dfas()const{
   dfa_subject_->print_dfa_ttable("Subject dfa");
 }
 
-const Dfa* DfaSim::which_dfas(const Dfa* subject)const{
+const ConcreteDfa* DfaSim::which_dfas(const ConcreteDfa* subject)const{
   subject=dfa_subject_;
   return dfa_reference_;
 }

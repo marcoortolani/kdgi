@@ -1,7 +1,7 @@
 //******** Thin-wrapper to do unit-testing of protected methods ********
-#include "dfa.h"
+#include "concretedfa.h"
 
-class TestDfa : public Dfa{
+class TestDfa : public ConcreteDfa{
   friend class BaseDfaTest;
   friend class LinguisticSimilarityTest;
   friend class StructuralSimilarityTest;
@@ -18,5 +18,5 @@ class TestDfa : public Dfa{
   FRIEND_TEST(LinguisticSimilarityTest, tableFilling);
 
 public:
-  using Dfa::Dfa;
+  using ConcreteDfa::ConcreteDfa;
 };

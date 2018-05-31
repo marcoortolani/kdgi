@@ -2,18 +2,18 @@
 #define SILLY_ORACLE_H
 
 #include "oracle.h"
-#include "dfa.h"
+#include "concretedfa.h"
 
 class SillyOracle : public Oracle{
 private:
-	Dfa* silly_dfa;
+	ConcreteDfa* silly_dfa;//Must be "concrete" for now, will be "general"
 
 public:
-	SillyOracle(Dfa* d1);
+	SillyOracle(ConcreteDfa* d1);
 
 	virtual bool is_member(vector <string> str);
 
-	virtual bool is_equiv(Dfa* dfa_hp , vector <string>* witness_results);
+	virtual bool is_equiv(ConcreteDfa* dfa_hp , vector <string>* witness_results);
 };
 
 #endif

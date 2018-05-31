@@ -3,7 +3,7 @@
 
 using namespace std;
 
-SillyOracle::SillyOracle(Dfa* d1){
+SillyOracle::SillyOracle(ConcreteDfa* d1){
 	silly_dfa = d1;
 };
 
@@ -21,7 +21,7 @@ bool SillyOracle::is_member(vector <string> str){
     return true;*/
 }
 
-bool SillyOracle::is_equiv(Dfa* dfa_hp , vector <string>* witness_results){
+bool SillyOracle::is_equiv(ConcreteDfa* dfa_hp , vector <string>* witness_results){
     
     return silly_dfa->equivalence_query(dfa_hp , witness_results);
     /*cout << "is equiv?" << endl;

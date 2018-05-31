@@ -14,6 +14,9 @@
 #include <algorithm>
 #include <limits>
 #include <random>
+#include <sys/time.h>
+#include <chrono>
+#include <ctime>
 
 #include <boost/algorithm/string.hpp>
 #include "concretedfa.h"

@@ -1,8 +1,8 @@
 #ifndef ANGLUINLEARNER_H_
 #define ANGLUINLEARNER_H_
 
-#include "learner.h"
 #include "angluindfa.h"
+#include "learner.h"
 
 class AngluinLearner: public Learner {
 private:
@@ -22,7 +22,7 @@ private:
 	 * @param phrases_to_verify 	the list of phrases which we need to ask for membership.
 	 * @param mem_query_res 		the results of the queries will be stored here.
 	 */
-	void make_mem_queries(vector<vector<string>> phrases_to_verify, vector<bool>* mem_query_res);
+	void make_mem_queries(map<list<string>, bool>* mem_query_res);
 
 public:
 	/**

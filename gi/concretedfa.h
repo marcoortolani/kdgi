@@ -164,6 +164,7 @@ protected:
 
 public:
   friend class BlueFringe;
+  friend class OldAngluinDfa;
   friend class AngluinDfa;
   friend class SillyOracle;
   //******** CONSTRUCTORS: ********

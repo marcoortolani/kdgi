@@ -1,7 +1,7 @@
 #include "angluindfa.h"
+
 #include "concretedfa.h"
 #include <iostream>
-#include <math.h>
 
 void AngluinDfa::clear_new_tables(){
 	cout << "clear new tables" << endl;
@@ -49,133 +49,91 @@ int AngluinDfa::equal_states(vector<int> state1, vector<int> state2) const{
 	return -1;
 }
 
-bool AngluinDfa::equal_vectors(vector <string> a, vector <string> b) const{
+bool AngluinDfa::equal_lists(list <string> a, list <string> b) const{
 
-	a = concat_vectors(a, vector<string>(0));
-	b = concat_vectors(b, vector<string>(0));
+	a.remove("");
+	b.remove("");
 
 	if(a.size() != b.size()){
 		return false;
 	}
 
-	for(unsigned int i=0; i<a.size(); i++){
-		if(a[i] != b[i]){
+
+	auto it_a = a.begin();
+	auto it_b = b.begin();
+
+	while(it_a != a.end()){
+		if(*it_a != *it_b){
 			return false;
 		}
+		++it_a;
+		++it_b;
 	}
 
 	return true;
 }
 
-vector <string> AngluinDfa::concat_vectors(vector <string> a, vector <string> b) const{
+int AngluinDfa::get_index(list <list<string>> S_Sa_E, list <string> s) const {
 
-	if(a.size() == 0 && b.size() == 0){
-		return a;
-	}
-
-	if(a.size() == 0 && b.size() != 0){
-		a = b;
-	}
-	else{
-		if(b.size() != 0){
-			a.insert(a.end(), b.begin(), b.end());
-		}
-	}
-
-	for(int i=a.size()-1; i>=0; i--){
-		if(a[i] == ""){
-			a.erase(a.begin() + i);
-		}
-	}
-
-	return a;
-}
-
-int AngluinDfa::get_index(vector <vector<string>> S_Sa_E, vector <string> s) const {
-
-    int size = S_Sa_E.size();
-
-    for(int i=0; i<size; i++){
-        if(equal_vectors(S_Sa_E[i],s)){
-            return i;
-        }
+    auto it = S_Sa_E.begin();
+    int index = 0;
+    while(it != S_Sa_E.end()){
+    	if(equal_lists(*it, s)){
+    		return index;
+    	}
+    	++it;
+    	++index;
     }
-
     return -1;
 }
 
-int AngluinDfa::contain_phrase(vector<string> str){
+int AngluinDfa::contain_phrase(list<string> str){
 
-	for(unsigned int i=0; i < S.size(); i++){
+	auto it_look_up = look_up_s.begin();
+	auto it = S.begin();
+
+	while(it != S.end()){
 		for(unsigned int j=0; j < E.size(); j++){
-
-			vector <string> str_concat = concat_vectors(S[i], E[j]);
-			if(equal_vectors(str,str_concat)){
-				return look_up_s[i][j];
+			list <string> str_concat = *it;
+			str_concat.insert(str_concat.end(), E[j].begin(), E[j].end());
+			str_concat.remove("");
+			if(equal_lists(str,str_concat)){
+				return (*it_look_up)[j];
 			}
 		}
+		++it;
+		++it_look_up;
 	}
 
-	for(unsigned int i=0; i < Sa.size(); i++){
+	it_look_up = look_up_sa.begin();
+	it = Sa.begin();
+
+	while(it != Sa.end()){
 			for(unsigned int j=0; j < E.size(); j++){
 
-				vector <string> str_concat = concat_vectors(Sa[i], E[j]);
-				if(equal_vectors(str,str_concat)){
-					return look_up_sa[i][j];
+				list <string> str_concat = (*it);
+				str_concat.insert(str_concat.end(), E[j].begin(), E[j].end());
+				str_concat.remove("");
+				if(equal_lists(str,str_concat)){
+					return (*it_look_up)[j];
 				}
 			}
+			++it;
+			++it_look_up;
 		}
 
 	return -1;
 }
 
-void AngluinDfa::sort_rows(string table, vector <int> sort){
-
-	vector <vector<string>>* S_Sa;
-	vector <vector<int>>* look_up_s_sa;
-
-	if(table == "S"){
-		S_Sa = &S;
-		look_up_s_sa = &look_up_s;
-	}
-	else{
-		S_Sa = &Sa;
-		look_up_s_sa = &look_up_sa;
-	}
-
-	int dim = look_up_s_sa->size();
-	int dim_sort = sort.size();
-
-	if(dim_sort == 0 || dim_sort == dim){
-		return;
-	}
-
-	vector <vector<string>> sorted_S_Sa;
-	vector <vector<int>> sorted_look_up_s_sa = vector<vector<int>>(dim_sort, vector<int>());
-	for(int i=dim_sort-1; i>=0; i--){
-		vector <int> row = (*look_up_s_sa)[sort[i]];
-		look_up_s_sa->erase(look_up_s_sa->begin()+sort[i]);
-
-		sorted_S_Sa.insert(sorted_S_Sa.begin(), (*S_Sa)[sort[i]]);
-		S_Sa->erase(S_Sa->begin()+sort[i]);
-
-		sorted_look_up_s_sa[i] = row;
-	}
-
-	for(int i=0; i<dim_sort; i++){
-		look_up_s_sa->push_back(sorted_look_up_s_sa[i]);
-		S_Sa->push_back(sorted_S_Sa[i]);
-	}
-}
-
-void AngluinDfa::insert_row(string table, vector<string> sa, vector<int> queries){
+void AngluinDfa::insert_row(string table, list<string> sa, vector<int> queries){
 
 	if(queries.size() != E.size()){
-		cout << "Error in AngluinDfa: queries and E size dimension must agree" << endl;
+		cerr << "Error in NewAngluinDfa: queries and E size dimension must agree" << endl;
+		throw 0;
 	}
 
-	vector <vector<string>>* S_Sa;
-	vector <vector<int>>* look_up_s_sa;
+	list <list<string>>* S_Sa;
+	list <vector<int>>* look_up_s_sa;
 
 	if(table == "S"){
 		S_Sa = &S;
@@ -186,13 +144,12 @@ void AngluinDfa::insert_row(string table, vector<string> sa, vector<int> queries
 		look_up_s_sa = &look_up_sa;
 	}
 
-	int index = get_index(*S_Sa, sa);
 
-	if(index != -1){
-		return;
-	}
 
-	vector <int> state = vector <int>();
+	auto index = find(S_Sa->begin(), S_Sa->end(), sa);
+	if(index != S_Sa->end()){return;}
+
+	vector <int> state;
 
 	for(unsigned int i=0; i<queries.size(); i++){
 		if(queries[i]){
@@ -204,11 +161,24 @@ void AngluinDfa::insert_row(string table, vector<string> sa, vector<int> queries
 	}
 
 	bool added_row = false;
-	for(unsigned int i=0; i<S_Sa->size() && !added_row; i++){
-		if(correct_order(state, (*look_up_s_sa)[i])){
-			look_up_s_sa->insert(look_up_s_sa->begin()+i, state);
-			S_Sa->insert(S_Sa->begin()+i, sa);
+
+	auto it = S_Sa->begin();
+	auto it_look_up = look_up_s_sa->begin();
+
+	while(it != S_Sa->end() && !added_row){
+		if(correct_order(state, *it_look_up)){
+			S_Sa->emplace(it, sa);
+			look_up_s_sa->emplace(it_look_up, state);
 			added_row = true;
+		}
+
+		if(it != S_Sa->end() && it_look_up != look_up_s_sa->end()){
+			++it;
+			++it_look_up;
+		}
+		else{
+			cerr << "Error in insert_row" << endl;
+			throw 0;
 		}
 	}
 
@@ -218,165 +188,206 @@ void AngluinDfa::insert_row(string table, vector<string> sa, vector<int> queries
 	}
 }
 
-void AngluinDfa::delete_row(vector<string> sa){
+void AngluinDfa::delete_row(list<string> sa){
 	int index = get_index(Sa, sa);
 	if(index != -1){
-		Sa.erase(Sa.begin()+index);
-		look_up_sa.erase(look_up_sa.begin()+index);
+		auto it_look_up = look_up_sa.begin();
+		advance(it_look_up, index);
+		Sa.remove(sa);
+		look_up_sa.erase(it_look_up);
 	}
 	index = get_index(newSa, sa);
 	if(index != -1){
-		newSa.erase(newSa.begin()+index);
-		new_look_up_sa.erase(new_look_up_sa.begin()+index);
+		auto it_look_up = new_look_up_sa.begin();
+		advance(it_look_up, index);
+		newSa.remove(sa);
+		new_look_up_sa.erase(it_look_up);
 	}
 	return;
 }
 
-bool AngluinDfa::get_inconsistent_phrases(vector <vector<string>>& strings_to_verify){
+bool AngluinDfa::get_inconsistent_phrases(/*list <list<string>>&*/ map <list<string>, bool>* strings_to_verify){
 
     int size = look_up_s.size();
     if(size < 2){
         return true;
     }
 
-    for(int i=0; i<size-1; i++){
-        if(look_up_s[i] == look_up_s[i+1]){
+    //used for performance reasons: random access is needed.
+    vector <vector<int>> vec_look_up_s;
+    vec_look_up_s.insert(vec_look_up_s.end(), look_up_s.begin(), look_up_s.end());
+    vector <vector<int>> vec_look_up_sa;
+	vec_look_up_sa.insert(vec_look_up_sa.end(), look_up_sa.begin(), look_up_sa.end());
+	//less operations, more memory.
+
+    auto it = S.begin();
+    auto it1 = it;
+    ++it1;
+    auto it_look_up = look_up_s.begin();
+    auto it_look_up1 = it_look_up;
+    ++it_look_up1;
+    while(it1 != S.end()){
+        if(*it_look_up == *it_look_up1){
             int alpha_size = alphabet_.size();
             for(int j=0; j<alpha_size; j++){
 
                 int index1, index2;
                 vector <int> state1, state2;
-                vector <string> str1 = concat_vectors(S[i], vector<string>(1, alphabet_[j]));
-                vector <string> str2 = concat_vectors(S[i+1], vector<string>(1, alphabet_[j]));
+
+                list <string> str1 = *it;
+                str1.push_back(alphabet_[j]);
+                str1.remove("");
+                list <string> str2 = *it1;
+				str2.push_back(alphabet_[j]);
+				str2.remove("");
 
                 index1 = get_index(S, str1);
                 if(index1 != -1){
-                    state1 = look_up_s[index1];
+                    state1 = vec_look_up_s[index1];
                 }
                 else{
                     index1 = get_index(Sa, str1);
-                    state1 = look_up_sa[index1];
+                    state1 = vec_look_up_sa[index1];
                 }
 
                 index2 = get_index(S, str2);
                 if(index2 != -1){
-                    state2 = look_up_s[index2];
+                	state2 = vec_look_up_s[index2];
                 }
                 else{
                     index2 = get_index(Sa, str2);
-                    state2 = look_up_sa[index2];
+                    state2 = vec_look_up_sa[index2];
                 }
 
                 if(index1 == -1 || index2 == -1){
-                    cout << "Error in function get_inconsistent_string" << endl;
-                    cout << "string1 :";
-                    for(unsigned int j=0; j<str1.size(); j++){
-                    	cout << str1[j];
+                    cerr << "Error in function get_inconsistent_string" << endl;
+                    cerr << "string1 :";
+                    for(auto j = str1.begin(); j != str1.end(); ++j){
+                    	cerr << *j;
                     }
-                    cout << endl;
-            		cout << "string2 :";
-            		for(unsigned int j=0; j<str2.size(); j++){
-						cout << str2[j];
+                    cerr << endl;
+            		cerr << "string2 :";
+            		for(auto j = str2.begin(); j != str2.end(); ++j){
+						cerr << *j;
 					}
-            		cout << endl;
+            		cerr << endl;
+            		throw 0;
                 }
 
                 int indexE = equal_states(state1,state2);
                 if(indexE != -1){
 
-                    vector <string> new_suffix = concat_vectors(vector<string>(1, alphabet_[j]), vector<string>(E[indexE]));
+                    list <string> new_suffix(1, alphabet_[j]);
+                    new_suffix.insert(new_suffix.end(), E[indexE].begin(), E[indexE].end());
+                    new_suffix.remove("");
 
                     clear_new_tables();
-                    newE = vector<vector<string>>(1, new_suffix);
+                    newE = vector<list<string>>(1, new_suffix);
 
-                    for(unsigned int i1=0; i1<S.size(); i1++){
-                    	vector <string> str = concat_vectors(S[i1], new_suffix);
+                    for(auto i1 = S.begin(); i1 != S.end(); ++i1){
+                    	list <string> str(*i1);
+                    	str.insert(str.end(), new_suffix.begin(), new_suffix.end());
+                    	str.remove("");
                     	int contain = contain_phrase(str);
                     	new_look_up_s.push_back(vector<int>(1,contain));
                     	if(contain == -1){
-                    		strings_to_verify.push_back(str);
+                    		(*strings_to_verify)[str];
                     	}
                     }
 
-                    for(unsigned int i1=0; i1<Sa.size(); i1++){
-						vector <string> str = concat_vectors(Sa[i1], new_suffix);
+                    for(auto i1 = Sa.begin(); i1 != Sa.end(); ++i1){
+						list <string> str(*i1);
+						str.insert(str.end(), new_suffix.begin(), new_suffix.end());
+						str.remove("");
+
 						int contain = contain_phrase(str);
 						new_look_up_sa.push_back(vector<int>(1,contain));
 						if(contain == -1){
-							strings_to_verify.push_back(str);
+							(*strings_to_verify)[str];
 						}
 					}
-                    for(unsigned int i1=0; i1<strings_to_verify.size(); i1++){
-                    	cout << strings_to_verify[i1] << endl;
-                    }
-                    print_new_tables();
                     return false;
                 }
             }
+        }
+
+        if(it != S.end() && it1 != S.end() && it_look_up != look_up_s.end() && it_look_up1 != look_up_s.end()){
+        	++it;
+			++it1;
+			++it_look_up;
+			++it_look_up1;
+        }
+        else{
+        	cerr << "Error in get_inconsistent_phrases" << endl;
+        	throw 0;
         }
     }
     return true;
 }
 
-bool AngluinDfa::get_open_phrases(vector<vector<string>>& strings_to_verify){
-
-    int size_s = look_up_s.size();
-    int size_sa = look_up_sa.size();
-
-    for(int i=0; i<size_sa; i++){
-
-        bool state_not_found = true;
-        for(int j=0; j<size_s && state_not_found; j++){
-            if(equal_states(look_up_sa[i], look_up_s[j]) == -1){
+bool AngluinDfa::get_open_phrases(map <list<string>, bool>* strings_to_verify){
+	auto it = Sa.begin();
+	for(auto i : look_up_sa){
+			bool state_not_found = true;
+        for(auto j : look_up_s){
+            if(equal_states(i, j) == -1){
                 state_not_found = false;
             }
         }
 
         if(state_not_found){
-
         	clear_new_tables();
-        	strings_to_verify = vector <vector<string>>();
-        	newS.push_back(Sa[i]);
-        	new_look_up_s = vector <vector<int>>(1, vector<int>(E.size(), 0));
+        	newS.push_back(*it);
+        	new_look_up_s = list <vector<int>>(1, vector<int>(E.size(), 0));
 
         	for(unsigned int j=0; j<E.size(); j++){
-        		vector <string> str = concat_vectors(newS[0], E[j]);
+        		list <string> str(*(newS.begin()));
+        		str.insert(str.end(), E[j].begin(), E[j].end());
+        		str.remove("");
         		int contained = contain_phrase(str);
-        		new_look_up_s[0][j] = contained;
+        		(*new_look_up_s.begin())[j] = contained;
         		if(contained == -1){
-        			strings_to_verify.push_back(str);
+        			(*strings_to_verify)[str];
         		}
         	}
 
-        	new_look_up_sa = vector <vector<int>>();
         	for(unsigned int j=0; j<alphabet_.size(); j++){
-				vector<string> str = Sa[i];
+				list<string> str = *it;
 				str.push_back(alphabet_[j]);
-				newSa.push_back(str);
-				new_look_up_sa.push_back(vector<int>(E.size(), 0));
+
+				vector<int> row(E.size(), 0);
 				for(unsigned int k=0; k<E.size(); k++){
-					str = concat_vectors(newSa[j], E[k]);
-					int contained = contain_phrase(str);
-					new_look_up_sa[j][k] = contained;
+					list<string> stre = str;
+					stre.insert(stre.end(), E[k].begin(), E[k].end());
+					stre.remove("");
+					int contained = contain_phrase(stre);
+					row[k] = contained;
 					if(contained == -1){
-						strings_to_verify.push_back(str);
+						(*strings_to_verify)[stre];
 					}
 				}
+				newSa.push_back(str);
+				new_look_up_sa.push_back(row);
 			}
             return false;
+        }
+
+        if(it != Sa.end()){
+        	++it;
+        }
+        else{
+        	cerr << "Error in get_open_phrases" << endl;
+			throw 0;
         }
     }
     return true;
 }
 
-void AngluinDfa::get_phrases_from_counterexample(vector<vector<string>>& strings_to_verify, vector<string> str){
-
+void AngluinDfa::get_phrases_from_counterexample(map <list<string>, bool>* strings_to_verify, vector<string> str){
 	clear_new_tables();
-	strings_to_verify = vector <vector<string>>();
-	vector <vector<string>> strings_to_verify_sa = vector <vector<string>>();
 
 	for(unsigned int i=0; i < str.size(); i++){
-		vector<string> substr;
+		list<string> substr;
 		substr.assign(str.begin(), str.begin()+i+1);
 
 		if(get_index(S, substr)== -1){
@@ -385,153 +396,279 @@ void AngluinDfa::get_phrases_from_counterexample(vector<vector<string>>& strings
 			new_look_up_s.push_back(vector<int>(E.size(), 0));
 
 			for(unsigned int j=0; j<E.size(); j++){
-				vector <string> str1 = concat_vectors(substr, E[j]);
+				list <string> str1 = substr;
+				str1.insert(str1.end(), E[j].begin(), E[j].end());
+				str1.remove("");
 				int contain = contain_phrase(str1);
-				new_look_up_s[new_look_up_s.size()-1][j] = contain;
+				new_look_up_s.back()[j] = contain;
 				if(contain == -1){
-					cout << "new_look_up_s "<< i << " " << E[j]<< ":" << str1 << endl;
-					strings_to_verify.push_back(str1);
+					(*strings_to_verify)[str1];
 				}
 			}
 
 			for(unsigned int j=0; j<alphabet_.size(); j++){
-				vector<string> stra = concat_vectors(substr, vector<string>(1, alphabet_[j]));
+				list<string> stra = substr;
+				stra.push_back(alphabet_[j]);
 				newSa.push_back(stra);
 				new_look_up_sa.push_back(vector<int>(E.size(), 0));
 				for(unsigned int k=0; k<E.size(); k++){
-					vector <string> str1 = concat_vectors(stra, E[k]);
+					list<string> str1 = stra;
+					str1.insert(str1.end(), E[k].begin(), E[k].end());
+					str1.remove("");
 					int contain = contain_phrase(str1);
-					new_look_up_sa[new_look_up_sa.size()-1][k] = contain;
+					new_look_up_sa.back()[k] = contain;
 					if(contain == -1){
-						cout << "new_look_up_sa "<< i << " " << alphabet_[j] << " " << E[k]<< ":" << str1 << endl;
-						strings_to_verify_sa.push_back(str1);
+						(*strings_to_verify)[str1];
 					}
 				}
 			}
 		}
 	}
-
-	strings_to_verify.insert(strings_to_verify.end(), strings_to_verify_sa.begin(), strings_to_verify_sa.end());
-	cout << "strings_to_verify size: " << strings_to_verify.size();
-	for(unsigned int j=0; j<strings_to_verify.size(); j++){
-		cout << strings_to_verify[j] << endl;
-	}
-	print_new_tables();
 }
 
-void AngluinDfa::extend_column(vector <vector<string>>& strings_to_verify, vector<bool>* mem_query_res){
+void AngluinDfa::extend_column(map <list<string>, bool>* mem_query_res){
+	list<vector<int>> sorted_int;
+	list<list<string>> sorted_string;
+	auto it = S.begin();
+	auto it_look_up = look_up_s.begin();
+	auto it_new_look_up = new_look_up_s.begin();
 
-	unsigned int n = 0;
-	vector <int> sort_S = vector<int>(0);
-
-	for(unsigned int i=0; i<new_look_up_s.size(); i++){
-
-		if(new_look_up_s[i][0] != -1){
-			look_up_s[i].push_back(new_look_up_s[i][0]);
+	while(it_new_look_up != new_look_up_s.end()){
+		if((*it_new_look_up)[0] != -1){
+			(*it_look_up).push_back((*it_new_look_up)[0]);
 		}
 		else{
-
-			if(n < mem_query_res->size()){
-				look_up_s[i].push_back((*mem_query_res)[n]);
-				n++;
+			list<string> str = *it;
+			str.insert(str.end(), newE[0].begin(), newE[0].end());
+			str.remove("");
+			map<list<string>, bool> :: iterator pair = mem_query_res->find(str);
+			if(pair != mem_query_res->end()){
+				(*it_look_up).push_back(pair->second);
 			}
 			else{
-				cout << "Error in extend_column" << endl;
+				cerr << "Error in extend_column" << endl;
+				throw 0;
 			}
 		}
 
-		if(look_up_s[i][look_up_s[i].size()-1] == 1){
-			sort_S.push_back(i);
-		}
-	}
+		if((*it_look_up).back() == 1){
+			sorted_int.push_back(*it_look_up);
+			sorted_string.push_back(*it);
 
-	vector <int> sort_Sa = vector<int>(0);
+			auto t = it;
+			auto t_look_up = it_look_up;
 
-	for(unsigned int i=0; i<new_look_up_sa.size(); i++){
+			if(it != S.end() && it_look_up != look_up_s.end()){
+				++it;
+				++it_look_up;
+			}
+			else{
+				cerr << "Error in extend_column" << endl;
+				throw 0;
+			}
 
-		if(new_look_up_sa[i][0] != -1){
-			look_up_sa[i].push_back(new_look_up_sa[i][0]);
+			S.erase(t);
+			look_up_s.erase(t_look_up);
 		}
 		else{
-
-			if(n < mem_query_res->size()){
-				look_up_sa[i].push_back((*mem_query_res)[n]);
-				n++;
+			if(it != S.end() && it_look_up != look_up_s.end()){
+				++it;
+				++it_look_up;
 			}
 			else{
-				cout << "Error in extend_column" << endl;
+				cerr << "Error in extend_column" << endl;
+				throw 0;
 			}
 		}
 
-		if(look_up_sa[i][look_up_sa[i].size()-1] == 1){
-			sort_Sa.push_back(i);
-		}
+		++it_new_look_up;
 	}
 
-	sort_rows("S", sort_S);
-	sort_rows("Sa", sort_Sa);
+	S.insert(S.end(), sorted_string.begin(), sorted_string.end());
+	look_up_s.insert(look_up_s.end(), sorted_int.begin(), sorted_int.end());
+
+	sorted_string.clear();
+	sorted_int.clear();
+
+	it = Sa.begin();
+	it_look_up = look_up_sa.begin();
+	it_new_look_up = new_look_up_sa.begin();
+
+	while(it_new_look_up != new_look_up_sa.end()){
+
+			if((*it_new_look_up)[0] != -1){
+				(*it_look_up).push_back((*it_new_look_up)[0]);
+			}
+			else{
+				list<string> str = *it;
+				str.insert(str.end(), newE[0].begin(), newE[0].end());
+				str.remove("");
+				map<list<string>, bool> :: iterator pair = mem_query_res->find(str);
+				if(pair != mem_query_res->end()){
+					(*it_look_up).push_back(pair->second);
+				}
+				else{
+					cerr << "Error in extend_column" << endl;
+					throw 0;
+				}
+			}
+
+			if((*it_look_up).back() == 1){
+				sorted_int.push_back(*it_look_up);
+				sorted_string.push_back(*it);
+
+				auto t = it;
+				auto t_look_up = it_look_up;
+
+				if(it != S.end() && it_look_up != look_up_s.end()){
+					++it;
+					++it_look_up;
+				}
+				else{
+					cerr << "Error in extend_column" << endl;
+					throw 0;
+				}
+
+				Sa.erase(t);
+				look_up_sa.erase(t_look_up);
+			}
+			else{
+				if(it != Sa.end() && it_look_up != look_up_sa.end()){
+					++it;
+					++it_look_up;
+				}
+				else{
+					cerr << "Error in extend_column" << endl;
+					throw 0;
+				}
+			}
+
+			++it_new_look_up;
+		}
+
+	Sa.insert(Sa.end(), sorted_string.begin(), sorted_string.end());
+	look_up_sa.insert(look_up_sa.end(), sorted_int.begin(), sorted_int.end());
 
 	E.push_back(newE[0]);
 
 	clear_new_tables();
 }
 
-void AngluinDfa::extend_rows(vector <vector<string>>& strings_to_verify, vector <bool>* mem_query_res){
+void AngluinDfa::extend_rows(map <list<string>, bool>* mem_query_res){
 
 	int s_rows = newS.size();
 	int sa_rows = newSa.size();
 
     if(false){
-    	cout << "Error in AnlguinDfa::extend_row: E and mem_query_res dimension must agree" << endl;
-    	cout << "total_rows :" << endl;
-    	cout << "s_rows :" << s_rows << endl;
-    	cout << "sa_rows :" << sa_rows << endl;
+    	cerr << "Error in AnlguinDfa::extend_row: E and mem_query_res dimension must agree" << endl;
+    	cerr << "total_rows :" << endl;
+    	cerr << "s_rows :" << s_rows << endl;
+    	cerr << "sa_rows :" << sa_rows << endl;
+    	throw 0;
     }
 
-    unsigned int n = 0;
-
-    for(unsigned int i=0; i<new_look_up_s.size(); i++){
-    	for(unsigned int j=0; j<new_look_up_s[i].size(); j++){
-    		if(new_look_up_s[i][j] == -1){
-    			if(n < mem_query_res->size()){
-    				new_look_up_s[i][j] = (*mem_query_res)[n];
-    				n++;
+    auto it = newS.begin();
+    for(auto it_look_up = new_look_up_s.begin(); it_look_up != new_look_up_s.end(); ++it_look_up){
+    	auto itE = E.begin();
+    	for(auto j = it_look_up->begin(); j != it_look_up->end(); ++j){
+    		if(*j == -1){
+    			list<string> str = *it;
+    			str.insert(str.end(), itE->begin(), itE->end());
+    			str.remove("");
+    			auto pair = mem_query_res->find(str);
+    			if(pair != mem_query_res->end()){
+    				*j = pair->second;
     			}
     			else{
-    				cout << "Error in extend_row" << endl;
+    				cerr << "Error in extend_row" << endl;
+    				throw 0;
     			}
     		}
+    		if(itE != E.end()){
+    			++itE;
+    		}
+    		else{
+    			cerr << "Error in extend_rows 0" << endl;
+    		}
+    	}
+    	if(it != newS.end()){
+    		++it;
+    	}
+    	else{
+    		cerr << "Error in extend_rows 1" << endl;
+    		throw 0;
     	}
     }
 
-    for(unsigned int i=0; i<new_look_up_sa.size(); i++){
-		for(unsigned int j=0; j<new_look_up_sa[i].size(); j++){
-			if(new_look_up_sa[i][j] == -1){
-				if(n < mem_query_res->size()){
-					new_look_up_sa[i][j] = (*mem_query_res)[n];
-					n++;
+    it = newSa.begin();
+    for(auto i = new_look_up_sa.begin(); i != new_look_up_sa.end(); ++i){
+    	auto itE = E.begin();
+		for(auto j = i->begin(); j != i->end(); ++j){
+			if(*j == -1){
+				list<string> str = *it;
+				str.insert(str.end(), itE->begin(), itE->end());
+				str.remove("");
+				auto pair = mem_query_res->find(str);
+
+				if(pair != mem_query_res->end()){
+					*j = pair->second;
 				}
 				else{
-					cout << "Error in extend_row, n:" << n << endl;
+					cerr << "Error in extend_row 2" << endl;
+					throw 0;
 				}
 			}
+			if(itE != E.end()){
+				++itE;
+			}
+			else{
+				cerr << "Error in extend_rows 0" << endl;
+			}
+		}
+		if(it != newS.end()){
+			++it;
+		}
+		else{
+			cerr << "Error in extend_rows 1" << endl;
+			throw 0;
 		}
 	}
 
-    for(unsigned int i=0; i<newSa.size(); i++){
-		insert_row("Sa", newSa[i], new_look_up_sa[i]);
+    it = newSa.begin();
+    auto it_look_up = new_look_up_sa.begin();
+    while(it != newSa.end()){
+		insert_row("Sa", *it, *it_look_up);
+
+		++it;
+		if(it_look_up != new_look_up_sa.end()){
+			++it_look_up;
+		}
+		else{
+			cerr << "Error in extend rows 3" << endl;
+			throw 0;
+		}
 	}
 
-    for(unsigned int i=0; i<newS.size(); i++){
-    	delete_row(newS[i]);
-		insert_row("S", newS[i], new_look_up_s[i]);
+    it = newS.begin();
+    it_look_up = new_look_up_s.begin();
+    while(it != newS.end()){
+    	delete_row(*it);
+		insert_row("S", *it, *it_look_up);
+
+		++it;
+		if(it_look_up != new_look_up_sa.end()){
+			++it_look_up;
+		}
+		else{
+			cerr << "Error in extend rows 4" << endl;
+			throw 0;
+		}
     }
 
     clear_new_tables();
 }
 
 ConcreteDfa* AngluinDfa::gen_concrete_dfa() const{
-
     if(look_up_s.size() == 0){
         return new ConcreteDfa(0, alphabet_);
     }
@@ -540,40 +677,60 @@ ConcreteDfa* AngluinDfa::gen_concrete_dfa() const{
     vector <int> indices;
     int start_state;
 
-    for(unsigned int i=0; i<look_up_s.size(); i++){
-        if(states.empty() || equal_states(look_up_s[i], states[states.size()-1]) != -1){
-            states.push_back(look_up_s[i]);
+    int i = 0;
+    auto it = S.begin();
+    auto it_look_up = look_up_s.begin();
+    while(it != S.end()){
+        if(states.empty() || equal_states(*it_look_up, states[states.size()-1]) != -1){
+            states.push_back(*it_look_up);
             indices.push_back(i);
         }
 
-        if(S[i].size() == 1 && S[i][0] == ""){
+        if(it->size() == 1 && it->front() == ""){
             start_state = states.size()-1;
             cout << "start_state: " << start_state << endl;
+        }
+
+        if(it != S.end() && it_look_up != look_up_s.end()){
+        	++it;
+        	++it_look_up;
+        	++i;
         }
     }
 
     ConcreteDfa* dfa_res = new ConcreteDfa(states.size(), alphabet_, start_state);
 
+    //used for performance reasons: random access is needed.
+    vector <list<string>> vecS;
+    vecS.insert(vecS.end(), S.begin(), S.end());
+    vector <vector<int>> vec_look_up_s;
+    vec_look_up_s.insert(vec_look_up_s.end(), look_up_s.begin(), look_up_s.end());
+    vector <vector<int>> vec_look_up_sa;
+    vec_look_up_sa.insert(vec_look_up_sa.end(), look_up_sa.begin(), look_up_sa.end());
+    //less operations more memory.
+
     for(unsigned int i=0; i<states.size(); i++){
 
     	for(unsigned int j=0; j<alphabet_.size(); j++){
 
-            vector<string> str = concat_vectors(S[indices[i]], vector<string>(1,alphabet_[j]));
-
+    		list <string> str = vecS[indices[i]];
+            str.remove("");
+            str.push_back(alphabet_[j]);
             int index = get_index(S, str);
             vector <int> next_val;
 
             if(index != -1){
-                next_val = look_up_s[index];
+            	next_val = vec_look_up_s[index];
             }
             else{
                 index = get_index(Sa, str);
 
                 if(index != -1){
-                    next_val = look_up_sa[index];
+                	next_val = vec_look_up_sa[index];
                 }
                 else{
-                    cout << "L' elemento str: " << str << " non è stato trovato." << endl;
+                    cerr << "Error in gen_concrete_dfa" << endl;
+                    throw 0;
                 }
             }
 
@@ -603,10 +760,10 @@ void AngluinDfa::print(){
 	cout << "S:" << S.size() << endl;
 	cout << "----------" << endl;
 
-	for(unsigned int i=0; i<E.size(); i++){
+	for(auto i = E.begin(); i != E.end(); ++i){
 		cout << "\t\"";
-		for(unsigned int j=0; j<E[i].size(); j++){
-			cout << E[i][j];
+		for(auto j = i->begin(); j != i->end(); ++j){
+			cout << *j;
 		}
 		cout << "\"";
 	}
@@ -614,14 +771,19 @@ void AngluinDfa::print(){
 
 	for(unsigned int i=0; i<S.size(); i++){
 
+		auto it = S.begin();
+		advance(it, i);
+
 		cout << "\"";
-		for(unsigned j=0; j<S[i].size(); j++){
-			cout << (S[i][j]);
+		for(auto j = it->begin(); j != it->end(); ++j){
+			cout << *j;
 		}
 		cout  << "\"";
 
-		vector <int> state = look_up_s[i];
-		for(unsigned int k=0; k<E.size(); k++){
+		auto it_look_up = look_up_s.begin();
+		advance(it_look_up, i);
+		vector <int> state = *it_look_up;
+		for(unsigned int k=0; k<state.size(); k++){
 			cout << "\t " << state[k];
 		}
 		cout << endl;
@@ -631,11 +793,10 @@ void AngluinDfa::print(){
 	cout << "Sa:" << Sa.size() << endl;
 	cout << "----------" << endl;
 
-	for(unsigned int i=0; i<E.size(); i++){
-		cout << "\t";
-		cout << "\"";
-		for(unsigned int j=0; j<E[i].size(); j++){
-			cout << E[i][j];
+	for(auto i = E.begin(); i != E.end(); ++i){
+		cout << "\t\"";
+		for(auto j = i->begin(); j != i->end(); ++j){
+			cout << *j;
 		}
 		cout << "\"";
 	}
@@ -643,14 +804,19 @@ void AngluinDfa::print(){
 
 	for(unsigned int i=0; i<Sa.size(); i++){
 
+		auto it = Sa.begin();
+		advance(it, i);
+
 		cout << "\"";
-		for(unsigned j=0; j<Sa[i].size(); j++){
-			cout << (Sa[i][j]);
+		for(auto j = it->begin(); j != it->end(); ++j){
+			cout << *j;
 		}
 		cout  << "\"";
 
-		vector <int> state = look_up_sa[i];
-		for(unsigned int k=0; k<E.size(); k++){
+		auto it_look_up = look_up_sa.begin();
+		advance(it_look_up, i);
+		vector <int> state = *it_look_up;
+		for(unsigned int k=0; k<state.size(); k++){
 			cout << "\t " << state[k];
 		}
 		cout << endl;
@@ -658,31 +824,44 @@ void AngluinDfa::print(){
 }
 
 void AngluinDfa::print_new_tables(){
+	cout << "newS" << endl;
+	for(auto i = newS.begin(); i != newS.end(); ++i){
+		for(auto j = i->begin(); j != i->end(); ++j){
+			cout << *j;
+		}
+		cout << endl;
+	}
+	cout << endl;
+	cout << "newSa" << endl;
+	for(auto i = newSa.begin(); i != newSa.end(); ++i){
+		for(auto j = i->begin(); j != i->end(); ++j){
+			cout << *j;
+		}
+		cout << endl;
 
-	cout << "newS";
-	for(unsigned int i=0; i<newS.size(); i++){
-		cout << newS[i];
 	}
 	cout << endl;
-	cout << "newSa";
-	for(unsigned int i=0; i<newSa.size(); i++){
-		cout << newSa[i];
-	}
-	cout << endl;
-	cout << "newE";
-	for(unsigned int i=0; i<newE.size(); i++){
-		cout << newE[i];
+	cout << "newE" << endl;
+	for(auto i = newE.begin(); i != newE.end(); ++i){
+		for(auto j = i->begin(); j != i->end(); ++j){
+			cout << *j;
+		}
+		cout << endl;
 	}
 	cout << endl;
 
 	cout << "new_look_up_s" << endl;
-	for(unsigned int i=0; i<new_look_up_s.size(); i++){
-		cout << new_look_up_s[i] << endl;
+	for(auto i = new_look_up_s.begin(); i != new_look_up_s.end(); ++i){
+		for(auto j = i->begin(); j != i->end(); ++j){
+			cout << *j << " ";
+		}
 	}
 	cout << endl;
 	cout << "new_look_up_sa" << endl;
-	for(unsigned int i=0; i<new_look_up_sa.size(); i++){
-		cout << new_look_up_sa[i] << endl;
+	for(auto i = new_look_up_sa.begin(); i != new_look_up_sa.end(); ++i){
+		for(auto j = i->begin(); j != i->end(); ++j){
+			cout << *j << " ";
+		}
 	}
 	cout << endl;
 }
@@ -694,31 +873,32 @@ bool AngluinDfa::membership_query(vector<string> phrase) const {
 	return result;
 }
 
-AngluinDfa::AngluinDfa(vector <string> ab, vector <bool> mem_query_res) : Dfa(){
+AngluinDfa::AngluinDfa(vector <string> ab, map <list<string>, bool>* first_queries) : Dfa(){
 
-	if(mem_query_res.size() != ab.size()+1){
-		cout << "Error in AngluinDfa Constructor" << endl;
-		cout << "mem_query_res size must be equal to ab size + 1" << endl;
-		return;
+	if(first_queries->size() != ab.size()+1){
+		cerr << "Error in NewAngluinDfa Constructor" << endl;
+		cerr << "mem_query_res size must be equal to ab size + 1" << endl;
+		throw 0;
 	}
 
 	set_alphabet(ab);
-	string epsilon = "";
+	list<string> epsilon = list<string>(1,"");
 	S.clear();
-	S.push_back(vector<string>(1,epsilon));
+	S.push_back(epsilon);
 
 	Sa.clear();
 	for(unsigned int i=0; i<ab.size(); i++){
-		Sa.push_back(vector<string>(1,ab[i]));
+		Sa.push_back(list<string>(1,ab[i]));
 	}
 
 	E.clear();
-	E.push_back(vector<string>(1,epsilon));
+	E.push_back(epsilon);
 
-	bool accepting_epsilon = mem_query_res.back();
-	accepting_epsilon ? look_up_s = vector <vector<int>>(1, vector<int>(1,1)) : look_up_s = vector <vector<int>>(1, vector<int>(1,0));
+	bool accepting_epsilon = first_queries->find(epsilon)->second;
+	accepting_epsilon ? look_up_s = list <vector<int>>(1, vector<int>(1,1)) : look_up_s = list <vector<int>>(1, vector<int>(1,0));
 
 	for(unsigned int i=0; i<ab.size(); i++){
-		mem_query_res[i] ? look_up_sa.push_back(vector<int>(1,1)) : look_up_sa.push_back(vector<int>(1,0));
+		bool accepting_ith_element = first_queries->find(list<string>(1, ab[i]))->second;
+		accepting_ith_element ? look_up_sa.push_back(vector<int>(1,1)) : look_up_sa.push_back(vector<int>(1,0));
 	}
 }

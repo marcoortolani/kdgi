@@ -51,7 +51,7 @@ protected:
 
 public:
   friend class BlueFringe;
-  friend class AngluinDfa;
+  friend class OldAngluinDfa;
   friend class SillyOracle;
   //******** CONSTRUCTORS: ********
 

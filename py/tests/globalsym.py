@@ -6,7 +6,8 @@ dfa_file2 = '../data/tomita15.txt'
 dfa1 = Dfa.read_dfa_file(dfa_file1)
 dfa2 = Dfa.read_dfa_file(dfa_file2)
 
-sim=dfa1.dfa_similarity(dfa2)
+# delete second parameter to print nothing
+sim=dfa1.dfa_similarity(dfa2, 1)
 
 dfa4=Dfa()
 #here we retrieve the two dfas compared

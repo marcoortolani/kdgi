@@ -314,8 +314,9 @@ private:
     void LoadGraph(char *matrix, int n, vector<int> *l)
     {
 		labels.clear();
-		for(int i=0; i<n; i++)
+		for(int i=0; i<n; i++){
 			labels.push_back((*l)[i]);
+		}
 		for(int i=0; i<n; i++)
 		{
 			nodes.push_back(new vector<int>);
@@ -448,58 +449,58 @@ private:
 		for(int i=0; i<graph_a_n; i++)
 			for(int j=0; j<graph_b_n; j++)
 			{
-			if(graph_a->Label(i)!=graph_b->Label(j))
-				continue;
-			vector<int>::iterator kaddr,laddr;
-			int klen, llen;
-			double in_similarity=0;
-			double out_similarity=0;
-			graph_a->EnumBeginningEdges(i,&kaddr,&klen);
-			graph_b->EnumBeginningEdges(j,&laddr,&llen);
+				if(graph_a->Label(i)!=graph_b->Label(j))
+					continue;
+				vector<int>::iterator kaddr,laddr;
+				int klen, llen;
+				double in_similarity=0;
+				double out_similarity=0;
+				graph_a->EnumBeginningEdges(i,&kaddr,&klen);
+				graph_b->EnumBeginningEdges(j,&laddr,&llen);
+					if(klen>0 && llen>0)
+				{
+					costs=(long *)malloc(klen*llen*sizeof(long));
+					solution=new long[klen];
+					for(int k=0; k<klen; k++)
+						for(int l=0; l<llen; l++)
+							costs[k*llen+l]=(1-tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[l])])/eps;
+					
+					hungarian(&costs, klen, llen, solution, 0);
+					for(int k=0; k<klen; k++)
+					if(solution[k]>=0)
+						out_similarity+=tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])];
+					delete solution;
+					free(costs);
+				}
+				if(max(klen,llen)!=0)
+				out_similarity/=(max(klen,llen));
+				else
+				out_similarity=1;
+
+				graph_a->EnumTerminatingEdges(i,&kaddr,&klen);
+				graph_b->EnumTerminatingEdges(j,&laddr,&llen);
 				if(klen>0 && llen>0)
-			{
-				costs=(long *)malloc(klen*llen*sizeof(long));
-				solution=new long[klen];
-				for(int k=0; k<klen; k++)
-					for(int l=0; l<llen; l++)
-						costs[k*llen+l]=(1-tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[l])])/eps;
-				
-				hungarian(&costs, klen, llen, solution, 0);
-				for(int k=0; k<klen; k++)
-				if(solution[k]>=0)
-					out_similarity+=tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])];
-				delete solution;
-				free(costs);
-			}
-			if(max(klen,llen)!=0)
-			out_similarity/=(max(klen,llen));
-			else
-			out_similarity=1;
+				{
+					costs=(long *)malloc(klen*llen*sizeof(long));
+					solution=new long[klen];
+					for(int k=0; k<klen; k++)
+						for(int l=0; l<llen; l++)
+							costs[k*llen+l]=(1-tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[l])])/eps;
+					hungarian(&costs, klen, llen, solution, 0);			
+					for(int k=0; k<klen; k++)
+					if(solution[k]>=0)
+						in_similarity+=tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])];
+					delete solution;
+					free(costs);
+				}
+				if(max(klen,llen)!=0)
+				in_similarity/=(max(klen,llen));
+				else
+				in_similarity=1;
 
-			graph_a->EnumTerminatingEdges(i,&kaddr,&klen);
-			graph_b->EnumTerminatingEdges(j,&laddr,&llen);
-			if(klen>0 && llen>0)
-			{
-				costs=(long *)malloc(klen*llen*sizeof(long));
-				solution=new long[klen];
-				for(int k=0; k<klen; k++)
-					for(int l=0; l<llen; l++)
-						costs[k*llen+l]=(1-tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[l])])/eps;
-				hungarian(&costs, klen, llen, solution, 0);			
-				for(int k=0; k<klen; k++)
-				if(solution[k]>=0)
-					in_similarity+=tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])];
-				delete solution;
-				free(costs);
-			}
-			if(max(klen,llen)!=0)
-			in_similarity/=(max(klen,llen));
-			else
-			in_similarity=1;
-
-			node_similarity[i][j]=(in_similarity+out_similarity)/2;
-			if(fabs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
-				precision_achieved=0;
+				node_similarity[i][j]=(in_similarity+out_similarity)/2;
+				if(fabs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
+					precision_achieved=0;
 			}
 		return precision_achieved;
     }

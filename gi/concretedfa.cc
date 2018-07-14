@@ -302,7 +302,10 @@ const vector<int> ConcreteDfa::get_accepting_states() const{
 }
 
 bool ConcreteDfa::is_accepting(int curr_state) const{
-	return accepting_states_[curr_state];
+	if(accepting_states_[curr_state]==DFA_STATE_ACCEPTING)
+		return true;
+	else
+	return false;
 }
 
 vector<map<string,int>> ConcreteDfa::get_ttable() const {
@@ -2095,6 +2098,7 @@ vector<vector<double>> ConcreteDfa::neighbour_matching_structural_similarity(Con
 	subject_incidence_matrix=get_incidence_matrix(subject_ttable,subject_dfa->get_num_states(),subject_dfa->get_alphabet());
 	vector<int> *reference_labels= new vector<int>[this->get_num_states()]; 
 	vector<int> *subject_labels= new vector<int>[subject_dfa->get_num_states()];	//useful for coloured graphs
+
 	//we consider every state to have label 1 if color is FALSE
 	if(!color){
 		for(int i=0; i<this->get_num_states();++i)
@@ -2103,18 +2107,20 @@ vector<vector<double>> ConcreteDfa::neighbour_matching_structural_similarity(Con
 			(*subject_labels).push_back(1);
 	}
 	else{	//If color is TRUE we give label 1 to accepting states and label 0 to rejecting states
+		
 		for(int i=0; i<this->get_num_states();++i)
 			if(this->is_accepting(i))
 				(*reference_labels).push_back(1);
 			else	
 				(*reference_labels).push_back(0);
+
 		for(int j=0; j<subject_dfa->get_num_states();++j)
 			if(subject_dfa->is_accepting(j))
 				(*subject_labels).push_back(1);
 			else
-				(*reference_labels).push_back(0);
+				(*subject_labels).push_back(0);
+		
 	}
-
 	//Reference_dfa to grapha
 	try{
 		ga=new Graph(reference_incidence_matrix, this->get_num_states(), reference_labels);
@@ -2124,6 +2130,7 @@ vector<vector<double>> ConcreteDfa::neighbour_matching_structural_similarity(Con
 	}
 	//Subject_dfa to graphb
 	try{
+		cout<<endl;
 		gb=new Graph(subject_incidence_matrix, subject_dfa->get_num_states(), subject_labels);
 	}
 	catch(...){
@@ -2198,7 +2205,7 @@ void ConcreteDfa::print_structural_similarity(vector<vector<double>> similarity_
         printf("]\n");
     }
 	cout<<"--------------------------------------"<<endl;
-	cout <<"Structural similarity between the ConcreteDfas: " <<similarity_matrix[this->get_num_states()][0] << endl;
+	cout <<"Structural similarity between the Dfas: " <<similarity_matrix[this->get_num_states()][0] << endl;
 	cout<<"======================================"<<endl;
 }
 

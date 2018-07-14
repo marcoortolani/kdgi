@@ -1,0 +1,59 @@
+Innanzitutto confrontando il tomita 15 con sè stesso ritorna 1, bene perfetto.
+
+Fissando il reference dfa come il Tomita15 originale, cioè con soltanto lo stato 3 come stato accettante, faccio variare lo/gli stati accettanti del Tomita15 subject modificato e riporto accanto il valore di similarità strutturale.
+
+***************** ||| ***********
+Stati accettanti  ||| Similarità 
+Tomita15 modified ||| strutturale
+
+0						0.000144239
+1						0.290008
+2						0.290008
+3 (same as tomita15)	1
+4 						0.257799
+none					0.378851
+0,1						0.000101101
+0,2						0.000101101
+0,3						0.000405275
+0,4						3.56063e-05
+1,2						0.145027
+1,3						0.340992
+1,4						0.17786
+2,3						0.340992
+2,4						0.17786
+3,4						0.270101
+0,1,2					4.13084e-05
+0,1,3					0.000163523
+0,1,4					1.15549e-05
+1,2,3					0.150086
+1,2,4					0.100003
+2,3,4					0.170869
+0,1,2,3					6.16027e-05
+0,1,2,4					1.85185e-06
+1,2,3,4					0.100004
+0,1,3,4					6.20058e-06
+0,2,3,4					6.20058e-06
+0,1,2,3,4				0
+
+
+Che le coppie (1,4);(2,4) riportino lo stesso punteggio di similarità forse è un buon segnale perchè i nodi 1 e 2 sono strutturalmente identici(stessi nodi sorgente che portano ad essi, stessi nodi terminazione a cui arrivano i loro archi, stessa combinazione di archi: uno che torna in sè stesso, uno che va nello stato 3, uno che va nello stato 4).
+
+Quello che succede con questa implementazione è che viene fatto un controllo nella funzione Iterate() e nel grosso ciclo su tutte le coppie dei nodi dei grafi trova una coppia con "colore" diverso, quello che fa è semplicemente andare avanti nel for, infatti:
+
+for(int i=0; i<graph_a_n; i++)
+	for(int j=0; j<graph_b_n; j++)
+	{
+		if(graph_a->Label(i)!=graph_b->Label(j))
+			continue;
+		...
+		...
+	}
+
+Non so se è quello che vogliamo, se invece dobbiamo ripensare in maniera diversa il discorso di stati accettanti o meno magari prevedendo un certo coefficiente di penalità per il confronto tra acc/rej anzichè il taglio netto, o se direttamente non dobbiamo tenere in considerazione la differenza.
+
+Per il nostro scenario:
+mettiamo che io per andare a lavoro mi dirigo a casa sua, e lei per andare al lavoro si dirige a casa mia e ci mettiamo d'accordo per fare esattamente lo stesso percorso in maniera speculare tra andata e ritorno.
+Possiamo dire che facciamo la stessa strada?
+O il differenziarsi dei tragitti tra andata e ritorno deve farci considerare diversi i nostri percorsi? E se è così, poichè sono esattamente speculari allora si somigliano al 50%?
+
+

@@ -1,10 +1,6 @@
 #include "angluindfa.h"
 
-#include "concretedfa.h"
-#include <iostream>
-
 void AngluinDfa::clear_new_tables(){
-	cout << "clear new tables" << endl;
 	if(newS.size() > 0)
 		newS.clear();
 	if(newSa.size() > 0)
@@ -15,12 +11,12 @@ void AngluinDfa::clear_new_tables(){
 		new_look_up_s.clear();
 	if(new_look_up_sa.size() > 0)
 		new_look_up_sa.clear();
-	cout << "done." << endl;
 }
 
 bool AngluinDfa::correct_order(vector <int> state1, vector <int> state2){
 	if(state1.size() != state2.size()){
-		cout << "Error in correct_order" << endl;
+		cerr << "Error in correct_order" << endl;
+		throw 0;
 	}
 
 	for( int i=state1.size()-1; i>=0; i--){
@@ -37,7 +33,8 @@ bool AngluinDfa::correct_order(vector <int> state1, vector <int> state2){
 int AngluinDfa::equal_states(vector<int> state1, vector<int> state2) const{
 
 	if(state1.size() != state2.size()){
-		cout << "Error in equal_states" << endl;
+		cerr << "Error in equal_states" << endl;
+		throw 0;
 	}
 
 	for(unsigned int i=0; i< state1.size(); i++){
@@ -669,6 +666,7 @@ void AngluinDfa::extend_rows(map <list<string>, bool>* mem_query_res){
 }
 
 ConcreteDfa* AngluinDfa::gen_concrete_dfa() const{
+
     if(look_up_s.size() == 0){
         return new ConcreteDfa(0, alphabet_);
     }
@@ -688,7 +686,7 @@ ConcreteDfa* AngluinDfa::gen_concrete_dfa() const{
 
         if(it->size() == 1 && it->front() == ""){
             start_state = states.size()-1;
-            cout << "start_state: " << start_state << endl;
+            //cout << "start_state: " << start_state << endl;
         }
 
         if(it != S.end() && it_look_up != look_up_s.end()){
@@ -901,4 +899,192 @@ AngluinDfa::AngluinDfa(vector <string> ab, map <list<string>, bool>* first_queri
 		bool accepting_ith_element = first_queries->find(list<string>(1, ab[i]))->second;
 		accepting_ith_element ? look_up_sa.push_back(vector<int>(1,1)) : look_up_sa.push_back(vector<int>(1,0));
 	}
+}
+
+
+
+
+/* New code here */
+vector<set<list<symbol_>>> AngluinDfa::group_symbols() const{
+	vector<set<list<symbol_>>> groups(1, set<list<symbol_>>());
+
+	auto it = S.begin();
+	auto it_look_up = look_up_s.begin();
+	auto it_sa = Sa.begin();
+	auto it_look_up_sa = look_up_sa.begin();
+
+	vector<int> current_state = *it_look_up;
+
+	while(it != S.end() && it_look_up != look_up_s.end()){
+		if(current_state != *it_look_up){
+			current_state = *it_look_up;
+			groups.emplace_back(set<list<symbol_>>());
+		}
+		groups.back().emplace(*it);
+
+		while(it_look_up_sa != look_up_sa.end() && current_state == *it_look_up_sa && it_sa != Sa.end()){
+			groups.back().emplace(*it_sa);
+
+			++it_sa;
+			++it_look_up_sa;
+		}
+
+		++it;
+		++it_look_up;
+	}
+
+	if(it != S.end() || it_look_up != look_up_s.end() || it_sa != Sa.end() || it_look_up_sa != look_up_sa.end()){
+		cerr << "Error in AngluinDfa::group_symbols" << endl;
+		throw 0;
+	}
+
+	return groups;
+}
+
+void AngluinDfa::update_state_table(){
+	vector<vector<symbol_>> depth_sorted_phrases;
+
+	vector<set<list<symbol_>>> states = group_symbols();
+	states = sort_states(states, depth_sorted_phrases);
+
+	vector<symbol_> sorted_alphabet = sort_alphabet();
+	//state_to_state_table_ = vector<vector<vector<symbol_>>>(states.size(), vector<vector<symbol_>>(states.size()));
+
+	//Did this for random access
+	vector<vector<int>> look_up_s_vec;
+	vector<vector<int>> look_up_sa_vec;
+	look_up_s_vec.insert(look_up_s_vec.end(), look_up_s.begin(), look_up_s.end());
+	look_up_sa_vec.insert(look_up_sa_vec.end(), look_up_sa.begin(), look_up_sa.end());
+
+
+	state_table_.clear();
+	int i = 0;
+	for(auto s : states){
+
+		//Is the state accepting?
+		bool accepting;
+		int index = get_index(S, *s.begin());
+		if(index != -1){
+			accepting = static_cast<bool>(look_up_s_vec[index][0]);
+		}
+		else{
+			index = get_index(Sa, *s.begin());
+			if(index != -1){
+				accepting = static_cast<bool>(look_up_sa_vec[index][0]);
+			}
+			else{
+				cerr << "Error in AngluinDfa::update_state_table" << endl;
+				throw 0;
+			}
+		}
+
+		state_table_.push_back(DfaState(accepting, depth_sorted_phrases[i]));
+		++i;
+	}
+
+	i = 0;
+	for(auto s : states){
+		for(symbol_ sym : sorted_alphabet){
+			DFA_STATE_ j = get_index_from_transiction(s, sym, states);
+			//state_to_state_table_[i][j].push_back(sym);
+			state_table_[i].set_transiction(sym, &state_table_[j]);
+		}
+		++i;
+	}
+}
+
+DFA_STATE_ AngluinDfa::get_index_from_transiction(set<list<symbol_>> current_state, symbol_ sym, vector<set<list<symbol_>>> all_states){
+	DFA_STATE_ i = 0;
+
+	for(auto next_state : all_states){
+		for(auto word : current_state){
+			word.push_back(sym);
+			word.remove("");
+			if(next_state.find(word) != next_state.end()){
+				return i;
+			}
+		}
+		++i;
+	}
+
+	cerr << "Error in AngluinDfa::get_state_from_transiction" << endl;
+	throw 0;
+}
+
+void AngluinDfa::print_state_table(){
+	update_state_table();
+	cout << endl;
+	for(auto state : *this){
+		state.print();
+	}
+}
+
+
+vector<set<list<symbol_>>> AngluinDfa::sort_states(vector<set<list<symbol_>>> states, vector<vector<symbol_>>& sorted_phrases){
+	vector<symbol_> sorted_alphabet = sort_alphabet();
+
+	set<set<list<symbol_>>> visited_states;
+	vector<set<list<symbol_>>> states_to_explore;
+	vector<set<list<symbol_>>> sorted_states;
+
+	int start_index = get_start_index(states);
+	states_to_explore.push_back(states[start_index]);
+	visited_states.insert(states[start_index]);
+
+	//Used to compute the depth-sorted phrases we find exploring the states
+	vector<vector<symbol_>> phrases_to_explore;
+	sorted_phrases.clear();
+
+	phrases_to_explore.push_back(vector<symbol_>(0));
+	sorted_phrases.push_back(vector<symbol_>(1,""));
+
+	//while we have not yet explored all the states
+	while(!states_to_explore.empty()){
+		//get the last state reached but not explored.
+		set<list<symbol_>> current_state = states_to_explore.back();
+		states_to_explore.pop_back();
+
+		//It is now explored.
+		sorted_states.push_back(current_state);
+
+		//Do the same for the phrases.
+		vector<symbol_> current_phrase = phrases_to_explore.back();
+		phrases_to_explore.pop_back();
+		if(!current_phrase.empty()){
+			sorted_phrases.push_back(current_phrase);
+		}
+
+		//For all the symbols (i.e. transiction) we add the unreached and uneplored states
+		//to the set of reached but unexplored states.
+		for(auto sym = sorted_alphabet.rbegin(); sym != sorted_alphabet.rend(); ++sym){
+			set<list<symbol_>> next_state = states[get_index_from_transiction(current_state, *sym, states)];
+
+			if( visited_states.find(next_state) == visited_states.end() ){
+				states_to_explore.push_back(next_state);
+				visited_states.insert(next_state);
+
+				//Do the same for the phrases.
+				vector<symbol_> next_phrase = current_phrase;
+				next_phrase.push_back(*sym);
+				phrases_to_explore.push_back(next_phrase);
+			}
+		}
+	}
+
+	return sorted_states;
+}
+
+
+int AngluinDfa::get_start_index(vector<set<list<symbol_>>> states){
+	int i = 0;
+	for(auto s : states){
+		if(s.find(list<symbol_>(1, "")) != s.end()){
+			return i;
+		}
+		++i;
+	}
+
+	cerr << "Error in AngluinDfa::get_start_index" << endl;
+	throw 0;
+	return i;
 }

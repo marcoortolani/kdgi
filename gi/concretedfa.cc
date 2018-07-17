@@ -4,10 +4,10 @@
 
 
 #include <vector>
-#include <string>
+#include <set>
 #include <iostream>
 #include <fstream>
-#include <sstream>	 	//Adopted for isstringstream
+#include <sstream>	 	//Adopted for issymbol_stream
 #include <map>
 #include <list>
 #include <cmath>
@@ -39,19 +39,19 @@ using namespace std;
 #define LIMIT_OF_TESTSET_W_METHOD 1000000000
 #define MAX_DIMENSION_WMETHOD_TEST_SET 500000
 
-// Generation of random strings
+// Generation of random symbol_s
 #define ITERATION_LIMIT_FOR_EVERY_GENERAL_PROBLEM 6000000
 
 
 ConcreteDfa::ConcreteDfa():Dfa::Dfa() {
-	ttable_ 	= vector<map<string,int>>();
+	ttable_ 	= vector<map<symbol_,int>>();
 	accepting_states_ = vector<int>();
 }
 
-ConcreteDfa::ConcreteDfa(const int n_state, const vector<string> alf, const int s_state):Dfa::Dfa(n_state,alf,s_state){
+ConcreteDfa::ConcreteDfa(const int n_state, const vector<symbol_> alf, const int s_state):Dfa::Dfa(n_state,alf,s_state){
 	for(int i=0; i<n_state; ++i){
-		map<string,int> tmp=map<string,int>();
-		for(string sym : alf)
+		map<symbol_,int> tmp=map<symbol_,int>();
+		for(symbol_ sym : alf)
 			tmp[sym]=ND;
 		ttable_.push_back(tmp);
 		accepting_states_.push_back(0);
@@ -59,10 +59,10 @@ ConcreteDfa::ConcreteDfa(const int n_state, const vector<string> alf, const int 
 }
 
 
-ConcreteDfa::ConcreteDfa(const int n_state, const vector<string> alf)
+ConcreteDfa::ConcreteDfa(const int n_state, const vector<symbol_> alf)
 :ConcreteDfa(n_state, alf, 0){}
 
-ConcreteDfa::ConcreteDfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy, vector<int> accepting_states )
+ConcreteDfa::ConcreteDfa(const int n_state, const vector<symbol_> alf, const int s_state, vector<map<symbol_,int>> tt_copy, vector<int> accepting_states )
 :Dfa::Dfa(n_state, alf, 0){
 	ttable_.clear();
 	ttable_.reserve(tt_copy.size());
@@ -102,8 +102,8 @@ ConcreteDfa &ConcreteDfa::operator=(const ConcreteDfa &d1)
 }
 
 bool ConcreteDfa::operator==(const ConcreteDfa &d1) const{
-	vector<map<string,int>> ttable_test=get_ttable();
-    vector<map<string,int>> ttable_ref=d1.get_ttable();
+	vector<map<symbol_,int>> ttable_test=get_ttable();
+    vector<map<symbol_,int>> ttable_ref=d1.get_ttable();
     bool flag=true;
     int i;
 	if(!(equal(d1.alphabet_.begin(), d1.alphabet_.end(), alphabet_.begin()))||start_state_!=d1.start_state_)
@@ -114,7 +114,7 @@ bool ConcreteDfa::operator==(const ConcreteDfa &d1) const{
 				flag=false;
 				break;
 			}
-			for(string sym : d1.alphabet_)
+			for(symbol_ sym : d1.alphabet_)
 				if(ttable_test[i][sym]!=ttable_ref[i][sym]){
 					flag=false;
 					break;
@@ -139,19 +139,19 @@ ConcreteDfa::~ConcreteDfa(){
 }
 
 
-void ConcreteDfa::set_ttable(const vector<map<string,int>> ext_ttable){
+void ConcreteDfa::set_ttable(const vector<map<symbol_,int>> ext_ttable){
 	ttable_.clear();
 	ttable_.reserve(ext_ttable.size());
 	copy(ext_ttable.begin(),ext_ttable.end(),back_inserter(ttable_));
 }
 
 
-ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
+ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 {
 	char nameDFA[BUFFER_SIZE];
 	char line[BUFFER_SIZE];
 
-	vector<string> alphabet_file;
+	vector<symbol_> alphabet_file;
 
 	int counter = 0;
 	int num_total_line = 0;
@@ -161,10 +161,10 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 	int current_line = 0;
 	int start_state_ = 0;
 
-	string n;
+	symbol_ n;
 
 	ifstream read;
-	string template_line;
+	symbol_ template_line;
 
 	ConcreteDfa res;
 
@@ -238,7 +238,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 	num_total_line = (dim_alphabet+1)*(res.num_states_);
 
 	// template of the all lines of the file
-	template_line = (string)nameDFA+"[%d][%[^]]] = %d;";
+	template_line = (symbol_)nameDFA+"[%d][%[^]]] = %d;";
 	/////////////////////////////////////////////////////
 
 	// allocate memory for ttable_
@@ -247,8 +247,8 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 	// "+2" is for algorithm like EDSM with states Type and Colour
 	res.accepting_states_.reserve(res.num_states_);
 	for(int i=0; i<res.num_states_; ++i){
-		map<string,int> tmp=map<string,int>();
-		for(string sym : alphabet_file)
+		map<symbol_,int> tmp=map<symbol_,int>();
+		for(symbol_ sym : alphabet_file)
 			tmp[sym]=ND;
 		res.accepting_states_.push_back(0);	
 		res.ttable_.push_back(tmp);
@@ -259,10 +259,10 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 	{
 		read.getline(line,BUFFER_SIZE);
 
-		string cline = line;
+		symbol_ cline = line;
 
 		// Handler for last line
-		string trimmedline = trim(cline);
+		symbol_ trimmedline = trim(cline);
 		if(trimmedline == "")										// Happen only in the last line
 			continue;
 
@@ -281,7 +281,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 			cerr << "ERROR in current line"<<current_line<<endl;
 
         //TODO: YOU could control that transition_symbol is in the alphabet_
-		string transition_symbol = calfabeto;
+		symbol_ transition_symbol = calfabeto;
 
 		//cout<<"cstato="<<cstato<<" transition_symbol="<<transition_symbol<<" ctransizione="<<ctransizione<<endl;
 		res.ttable_[cstato][transition_symbol] = ctransizione;
@@ -308,23 +308,23 @@ bool ConcreteDfa::is_accepting(int curr_state) const{
 	return accepting_states_[curr_state];
 }
 
-vector<map<string,int>> ConcreteDfa::get_ttable() const {
+vector<map<symbol_,int>> ConcreteDfa::get_ttable() const {
 	return ttable_;
 }
 
-int ConcreteDfa::get_ttable(int i, string j) const {
-	vector<string> alph=get_alphabet();
+int ConcreteDfa::get_ttable(int i, symbol_ j) const {
+	vector<symbol_> alph=get_alphabet();
 	if(i<num_states_ && std::find(alph.begin(), alph.end(), j) != alph.end())
 		return ttable_[i].at(j);
 	else{
-		cout<<"errore i="<<i<<"string j="<<j<<endl;
+		cout<<"errore i="<<i<<"symbol_ j="<<j<<endl;
 		cerr<<"dfa::get_ttable: out of bound"<<endl;
 		throw indexOutOfBoundTtable();
 	}
 }
 
-void ConcreteDfa::set_ttable_entry(int i, string j, int v){
-	vector<string> alph=get_alphabet();
+void ConcreteDfa::set_ttable_entry(int i, symbol_ j, int v){
+	vector<symbol_> alph=get_alphabet();
 	if(i<num_states_ && std::find(alph.begin(), alph.end(), j) != alph.end())
 		ttable_[i][j]=v;
 	else{
@@ -348,7 +348,7 @@ void ConcreteDfa::set_rejecting_state(int state_to_mark){
 
 void ConcreteDfa::set_ttable_from_sequence(const vector<int> &sequence)
 {
-	vector<string> alph = get_alphabet();
+	vector<symbol_> alph = get_alphabet();
 	int n_col = alph.size()+1;
 	if((sequence.size() % n_col) != 0 || (sequence.size() / n_col) != num_states_)
 	{
@@ -358,7 +358,7 @@ void ConcreteDfa::set_ttable_from_sequence(const vector<int> &sequence)
 
 	for(int i=0; i<num_states_; ++i){
 		int cnt=0;
-		for(string sym : alph){
+		for(symbol_ sym : alph){
 			ttable_[i][sym] = sequence[(i*n_col)+cnt];
 			++cnt;
 		}
@@ -377,11 +377,11 @@ ConcreteDfa* ConcreteDfa::unionDFA(ConcreteDfa* dfa_hp)
 	// Configuration of Union DFA
 	// Smaller indexes are given to target dfa, while others to hypothesis
 	for(int j=0; j<num_states_; ++j)									// Target automaton
-		for(string sym : alphabet_)
+		for(symbol_ sym : alphabet_)
 			union_dfa->set_ttable_entry(j,sym,get_ttable(j,sym));
 
 	for(int j=0; j<dfa_hp->num_states_; ++j)						// Hypothesis automaton
-		for(string sym_hp : alphabet_)					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
+		for(symbol_ sym_hp : alphabet_)					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
 			union_dfa->set_ttable_entry(num_states_+j,sym_hp, (dfa_hp->get_ttable(j,sym_hp) + num_states_));
 
 	for(int i=0; i<num_states_;++i)
@@ -394,9 +394,9 @@ ConcreteDfa* ConcreteDfa::unionDFA(ConcreteDfa* dfa_hp)
 	return union_dfa;
 }
 
-string ConcreteDfa::random_ttable()
+symbol_ ConcreteDfa::random_ttable()
 {
-	string random_sequence;
+	symbol_ random_sequence;
 	int extracted_number;
 	random_device rd;
     mt19937 gen(rd());
@@ -406,7 +406,7 @@ string ConcreteDfa::random_ttable()
 	//cout<<"The extracted random ttable_ is :"<<endl;
 	for(int row=0; row<get_num_states(); ++row)
 	{
-		for(string sym : get_alphabet())
+		for(symbol_ sym : get_alphabet())
 		{
 			extracted_number = dis(gen);
 
@@ -459,7 +459,7 @@ ConcreteDfa* ConcreteDfa::minimize_TF() const
 			for(int j=i+1; j<num_states_; ++j){
 				if(!distinct[i][j]){
 
-					for(string sym : get_alphabet())
+					for(symbol_ sym : get_alphabet())
 					{
 						int arrive_state_1 = get_ttable(i,sym);
 						int arrive_state_2 = get_ttable(j,sym);
@@ -529,7 +529,7 @@ ConcreteDfa* ConcreteDfa::minimize_TF() const
 	int count = 0;
 	for(int i=0; i<num_states_; ++i){
 		if(equivalent_state[i] == ND){
-			for(string sym : get_alphabet())
+			for(symbol_ sym : get_alphabet())
 				dfa_min->set_ttable_entry(count,sym,get_ttable(i,sym));
 			count++;
 		}
@@ -542,7 +542,7 @@ ConcreteDfa* ConcreteDfa::minimize_TF() const
 		if(equivalent_state[i] != ND)
 		{
 			for(int k=0; k<final_states_counter; ++k)
-				for(string sym : get_alphabet())
+				for(symbol_ sym : get_alphabet())
 					// Transition toward "i" state is substitutes with one towards equivalent state "equivalent_state[i]"
 					if(dfa_min->get_ttable(k,sym) == i)
 						dfa_min->set_ttable_entry(k,sym,equivalent_state[i]);
@@ -563,7 +563,7 @@ ConcreteDfa* ConcreteDfa::minimize_TF() const
 		{
 			int nuova_label = i-equivalences_found_so_far;
 			for(int k=0; k<final_states_counter; ++k)
-				for(string sym : get_alphabet())
+				for(symbol_ sym : get_alphabet())
 					if(dfa_min->get_ttable(k,sym) == i)
 						dfa_min->set_ttable_entry(k,sym,nuova_label);
 		}
@@ -584,7 +584,7 @@ ConcreteDfa* ConcreteDfa::minimize_TF() const
 	return dfa_min;
 }
 
-void ConcreteDfa::print_dfa_ttable(string title) const
+void ConcreteDfa::print_dfa_ttable(symbol_ title) const
 {
 	// It uses Mapped alphabet_
 
@@ -592,7 +592,7 @@ void ConcreteDfa::print_dfa_ttable(string title) const
 	// Print an header
 	cout << endl<< "--------------------------" << endl;
 	cout << title << endl;
-	string header = "  ";
+	symbol_ header = "  ";
 	for(int i=0; i<get_dim_alphabet(); ++i)
 		header = header + " | "+ alphabet_[i];
 	header = header + " - A";
@@ -603,7 +603,7 @@ void ConcreteDfa::print_dfa_ttable(string title) const
 	for(int i=0; i<num_states_; ++i){
 		cout << "S"<<i<<"  ";
 
-		for(string sym : get_alphabet())
+		for(symbol_ sym : get_alphabet())
 		{
 			// Transition values: a value or "ND"
 			if(get_ttable(i,sym) == ND)
@@ -627,24 +627,24 @@ void ConcreteDfa::print_dfa_ttable(string title) const
 	cout << "--------------------------" << endl;
 }
 
-void ConcreteDfa::print_dfa_dot(string title, const char *file_path)
+void ConcreteDfa::print_dfa_dot(symbol_ title, const char *file_path)
 {
 	ofstream myfile;
 	myfile.open(file_path);
 
 
-	// Initialization of strings with DOT code
-	string header = "digraph "+title+" {\n";
-	string start_state_ = "__start0 [label=\"\" shape=\"none\"];\n\n";
+	// Initialization of symbol_s with DOT code
+	symbol_ header = "digraph "+title+" {\n";
+	symbol_ start_state_ = "__start0 [label=\"\" shape=\"none\"];\n\n";
 
 	start_state_ = start_state_ + "rankdir=LR;\nsize=\"8,5\";\n\n";
 
 
 	//States
-	string states = "";
-	string shape = "";
-	string style="";
-	string color="";
+	symbol_ states = "";
+	symbol_ shape = "";
+	symbol_ style="";
+	symbol_ color="";
 	for(int i=0; i<num_states_; ++i)
 	{
 		if(is_accepting(i)){
@@ -662,9 +662,9 @@ void ConcreteDfa::print_dfa_dot(string title, const char *file_path)
 
 
 	// Transitions
-	string transitions = "";
+	symbol_ transitions = "";
 	for(int i=0; i<num_states_; ++i){
-		for(string sym : get_alphabet()){
+		for(symbol_ sym : get_alphabet()){
 			int arrive_state = get_ttable(i,sym);
 			if(arrive_state == ND)
 				continue;
@@ -674,8 +674,8 @@ void ConcreteDfa::print_dfa_dot(string title, const char *file_path)
 	}
 
 
-	string end = "__start0 -> 0;";
-	string footer ="\n}";
+	symbol_ end = "__start0 -> 0;";
+	symbol_ footer ="\n}";
 
 
 	// Finally, it prints overall DOT code
@@ -684,12 +684,12 @@ void ConcreteDfa::print_dfa_dot(string title, const char *file_path)
 	myfile.close();
 }
 
-void ConcreteDfa::print_dfa_in_text_file(const string file_path)
+void ConcreteDfa::print_dfa_in_text_file(const symbol_ file_path)
 {
 
 	// Check if some transitions is "Undefined"
 	for(int i=0; i<num_states_; ++i)
-		for(string sym : get_alphabet())
+		for(symbol_ sym : get_alphabet())
 			if(get_ttable(i,sym) == ND){
 				cout << "ERROR: DFA is not completely defined, there ND transition" << endl;
 				throw incompleteDfa();
@@ -715,14 +715,14 @@ void ConcreteDfa::print_dfa_in_text_file(const string file_path)
 	myfile << "dfa" << "\n";
 
 	// Write alphabet_ symbols
-	for(string sym : get_alphabet())
+	for(symbol_ sym : get_alphabet())
 		myfile << sym << " ";
 	myfile << "\n";
 
 
 	// Write transition table
 	for(int i=0; i<num_states_; ++i){
-		for(string sym : get_alphabet())
+		for(symbol_ sym : get_alphabet())
 		{
 			myfile << "dfa[" <<std::to_string(i)<<"][";
 			
@@ -741,12 +741,12 @@ void ConcreteDfa::print_dfa_in_text_file(const string file_path)
 	myfile.close();
 }
 
-int ConcreteDfa::get_arrive_state(vector<string> &phrase) const
+int ConcreteDfa::get_arrive_state(vector<symbol_> &phrase) const
 {
 	int state = get_start_state();
 	int next_state=ND;
 
-	for(string sym : phrase){
+	for(symbol_ sym : phrase){
 		next_state = get_ttable(state,sym);
 		if(next_state == ND){
 			state = ND;
@@ -754,11 +754,11 @@ int ConcreteDfa::get_arrive_state(vector<string> &phrase) const
 		}
 		state = next_state;
 	}
-	// It returns "ND" if the provided string is not compatible, otherwise it returns reached state
+	// It returns "ND" if the provided symbol_ is not compatible, otherwise it returns reached state
 	return state;
 }
 
-bool ConcreteDfa::membership_query(vector<string> phrase)const{
+bool ConcreteDfa::membership_query(vector<symbol_> phrase)const{
 
 	// Check if arrive_state is ND (for DFA without sink state)
 	int arrive_state = get_arrive_state(phrase);
@@ -772,7 +772,7 @@ bool ConcreteDfa::membership_query(vector<string> phrase)const{
 }
 
 
-bool ConcreteDfa::compare_dfa( ConcreteDfa *dfa_to_compare , string method , ir_statistical_measures &stats1 , ir_statistical_measures &stats2 )
+bool ConcreteDfa::compare_dfa( ConcreteDfa *dfa_to_compare , symbol_ method , ir_statistical_measures &stats1 , ir_statistical_measures &stats2 )
 {
 	boost::algorithm::to_lower(method);
 	if(method != "w-method" && method != "random-walk")
@@ -781,8 +781,8 @@ bool ConcreteDfa::compare_dfa( ConcreteDfa *dfa_to_compare , string method , ir_
 	   throw invalidParameters();
 	}
 
-	vector<vector<string>> test_set;
-	vector<vector<string>> test_set2;
+	vector<vector<symbol_>> test_set;
+	vector<vector<symbol_>> test_set2;
 	int n_states_dfa_to_compare = dfa_to_compare->get_num_states();
 	int n_states_this_dfa = this->get_num_states();
 	int num_pos_samples = 750;
@@ -817,13 +817,13 @@ bool ConcreteDfa::compare_dfa( ConcreteDfa *dfa_to_compare , string method , ir_
 
 
 				useRandomWalk = true; //for a correct return value in all cases
-				//vector<string> sentence_temp;
+				//vector<symbol_> sentence_temp;
 
-				//convert the structure returned from random walk in a set<vector<string>>
+				//convert the structure returned from random walk in a set<vector<symbol_>>
 				for(auto &samples_set : this->generate_pos_neg_samples_without_weights(num_pos_samples,num_neg_samples) )
 				{
 					//sentence_temp = {};
-					//for(auto & sample : samples_set.first) //samples_set.first is a vector<string>
+					//for(auto & sample : samples_set.first) //samples_set.first is a vector<symbol_>
 						//test_set.push_back(sample);
 					test_set.push_back(samples_set.first);
 					//test_set.push_back(sentence_temp);
@@ -832,7 +832,7 @@ bool ConcreteDfa::compare_dfa( ConcreteDfa *dfa_to_compare , string method , ir_
 				for(auto &samples_set : dfa_to_compare->generate_pos_neg_samples_without_weights(num_pos_samples,num_neg_samples) )
 				{
 					//sentence_temp = {};
-					//for(auto & sample : samples_set.first) //samples_set.first is a vector<string>
+					//for(auto & sample : samples_set.first) //samples_set.first is a vector<symbol_>
 						//test_set2.push_back(sample);
 					test_set2.push_back(samples_set.first);
 					//test_set2.push_back(sentence_temp);
@@ -852,7 +852,7 @@ bool ConcreteDfa::compare_dfa( ConcreteDfa *dfa_to_compare , string method , ir_
 }
 
 
-map<int,vector<string>>  ConcreteDfa::get_access_strings() const
+map<int,vector<symbol_>>  ConcreteDfa::get_access_strings() const
 {
 
 	//// Support structers
@@ -862,8 +862,8 @@ map<int,vector<string>>  ConcreteDfa::get_access_strings() const
 	// Queue of nodes to be checked
 	list<int>										queue;
 
-	// Structure to record access strings
-	map<int,vector<string>> 	access_strings;
+	// Structure to record access symbol_s
+	map<int,vector<symbol_>> 	access_symbol_s;
 
 
 	//// Init
@@ -880,58 +880,58 @@ map<int,vector<string>>  ConcreteDfa::get_access_strings() const
 		current_node = queue.front();
 		queue.pop_front();
 
-		//cout << "Father node: "<< intTostring(current_node) << endl;
+		//cout << "Father node: "<< intTosymbol_(current_node) << endl;
 
 
 		// Cycle on linked node to current node
-		for(string sym : get_alphabet())
+		for(symbol_ sym : get_alphabet())
 		{
 			int child_node = get_ttable(current_node,sym);
-			//cout << "Child node: "<< intTostring(child_node) << endl;
+			//cout << "Child node: "<< intTosymbol_(child_node) << endl;
 
 
 			// If it is a not visited nodes
 			if( std::find(visited_nodes.begin(), visited_nodes.end(), child_node) == visited_nodes.end() )
 			{
-				// Current access string
-				vector<string> current_access_string;
+				// Current access symbol_
+				vector<symbol_> current_access_symbol_;
 
-				if( access_strings.find(current_node) != access_strings.end()  )
-					current_access_string = access_strings[current_node];
-				current_access_string.push_back(sym);
+				if( access_symbol_s.find(current_node) != access_symbol_s.end()  )
+					current_access_symbol_ = access_symbol_s[current_node];
+				current_access_symbol_.push_back(sym);
 
 
 				// If the entry does not exist in the table, inserts it,
 				// otherwise compare lenght, if it is shorter inserts it
-				if (access_strings[child_node].empty())
-					access_strings[child_node] = current_access_string;
-				else if(access_strings[child_node].size() > current_access_string.size() )
-					access_strings[child_node] = current_access_string;
+				if (access_symbol_s[child_node].empty())
+					access_symbol_s[child_node] = current_access_symbol_;
+				else if(access_symbol_s[child_node].size() > current_access_symbol_.size() )
+					access_symbol_s[child_node] = current_access_symbol_;
 
 
 
 				// Insert analyzed child node into queue and visited node set
 				visited_nodes.push_back(child_node);
 				queue.push_back(child_node);
-					//cout << "Nodo "<< intTostring(child_node) << " inserito nella coda"<<endl;
+					//cout << "Nodo "<< intTosymbol_(child_node) << " inserito nella coda"<<endl;
 			}
 		}
 
 	}
 
-	return access_strings;
+	return access_symbol_s;
 }
 
 // Generazione random di samples
 // Based on the algorithm described in "STAMINA: a competition to encourage the development
 // and assessment of software model inference techniques", by N. Walkinshaw,
 // B. Lambeau, C. Damas, K. Bogdanov, P. Dupont. DOI 10.1007/s10664-012-9210-3
-map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(int n_pos_samples,int n_neg_samples) const
+map< vector<symbol_>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(int n_pos_samples,int n_neg_samples) const
 {
-	// Final random string: string and type (positive or negative)
-	map< vector<string>, int> samples;
+	// Final random symbol_: symbol_ and type (positive or negative)
+	map< vector<symbol_>, int> samples;
 
-	vector<string> alph=get_alphabet();
+	vector<symbol_> alph=get_alphabet();
 
 	srand (time(NULL));
 
@@ -939,7 +939,7 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 
 	int freq_to_stop = 1+2*(this->get_dim_alphabet());	  // The inverse is probability to stop
 
-	string current_transition_symbol = "";
+	symbol_ current_transition_symbol = "";
 
 
 	bool found_one_minimum_accepted_str = false;
@@ -958,8 +958,8 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 		//debug++;
 
 		// Init
-		vector<string> incremental_sample;
-		vector<string> positive_sample;
+		vector<symbol_> incremental_sample;
+		vector<symbol_> positive_sample;
 
 
 		// New random transition - Input for first transition
@@ -992,7 +992,7 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 				cerr  << "ERROR: Random transition have no corresponding alphabet_ simbol" << endl;
 			#endif
 
-			// Increment the final random string
+			// Increment the final random symbol_
 			incremental_sample.push_back(current_transition_symbol);
 
 			// Visit DFA with input symbol: if accepting state than stop!
@@ -1002,7 +1002,7 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 			}
 
 
-			// Stop condition - // If it stops some good strings should have been generated
+			// Stop condition - // If it stops some good symbol_s should have been generated
 			if( ((rand() % freq_to_stop) == 1 && found_one_minimum_accepted_str) || num_iteration > 5000)
 				go_next = false;
 
@@ -1034,7 +1034,7 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 		// Record positive sample built
 		samples[positive_sample] = 1;
 
-		//cout << "Positive string generated: " << positive_sample << endl;
+		//cout << "Positive symbol_ generated: " << positive_sample << endl;
 
 
 		
@@ -1050,8 +1050,8 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 	{
 		//cout << "Tot: "<<samples.size() <<", Positive: "<<n_pos_samples <<", Negative: "<<n_neg_samples<<endl;
 
-		vector<string> incremental_sample;
-		vector<string> positive_sample;
+		vector<symbol_> incremental_sample;
+		vector<symbol_> positive_sample;
 
 		int mod_type = rand() % 3;			// 0: substituting, 1:inserting, 2:deleting
 
@@ -1076,7 +1076,7 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 
 			// Do changes
 			changes_done = 0;
-			while(changes_done < n_of_editing)									// Make "n_changes" for the single string up to "n_of_editing"
+			while(changes_done < n_of_editing)									// Make "n_changes" for the single symbol_ up to "n_of_editing"
 			{
 
 				// Random selection of edits to be applied
@@ -1094,7 +1094,7 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 					int new_integer_char = rand() % get_dim_alphabet();
 
 					// Map symbol to integer
-					string new_symbol = alph[new_integer_char];
+					symbol_ new_symbol = alph[new_integer_char];
 
 					// Substitution with the new symbol
 					incremental_sample[index_of_substituted_symbol] = new_symbol;
@@ -1106,8 +1106,8 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 					// New symbol to be inserted
 					int new_integer_char = rand() % get_dim_alphabet();
 
-					// Map symbol from integer to referred alphabet_ symbol (from int to string)
-					string new_symbol = alph[new_integer_char];
+					// Map symbol from integer to referred alphabet_ symbol (from int to symbol_)
+					symbol_ new_symbol = alph[new_integer_char];
 
 					incremental_sample.insert(incremental_sample.begin()+index_of_substituted_symbol, new_symbol);
 				}
@@ -1115,7 +1115,7 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 				else if(mod_type == 2){
 					//cout << endl << "Removal"<<endl;
 
-					// Check if string lenght is less or equal 1
+					// Check if symbol_ lenght is less or equal 1
 					if(incremental_sample.size() <= 1)
 						continue;
 
@@ -1128,7 +1128,7 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 
 			if(membership_query(incremental_sample) == 0){
 				samples[incremental_sample] = 0;
-				//cout << "Rightly rejected string:"<<incremental_sample<<";"<<endl;
+				//cout << "Rightly rejected symbol_:"<<incremental_sample<<";"<<endl;
 			}
 
             ++num_neg_attempts;
@@ -1144,10 +1144,10 @@ map< vector<string>, int> ConcreteDfa::generate_pos_neg_samples_without_weights(
 	return samples;
 }
 
-map< vector<string>, int> ConcreteDfa::generate_weights_for_pos_neg_samples(map< vector<string>, int> samples, int upper_bound_for_weights)
+map< vector<symbol_>, int> ConcreteDfa::generate_weights_for_pos_neg_samples(map< vector<symbol_>, int> samples, int upper_bound_for_weights)
 {
-	// Weights of samples: <string, weight>
-	map<vector<string>, int> weights;
+	// Weights of samples: <symbol_, weight>
+	map<vector<symbol_>, int> weights;
 
 
 	// Random weight generation
@@ -1161,7 +1161,7 @@ map< vector<string>, int> ConcreteDfa::generate_weights_for_pos_neg_samples(map<
 	return weights;
 }
 
-void ConcreteDfa::print_set_of_pos_neg_samples(map< vector<string>, int> samples, map< vector<string>, int> weights)
+void ConcreteDfa::print_set_of_pos_neg_samples(map< vector<symbol_>, int> samples, map< vector<symbol_>, int> weights)
 {
 	// Check if the number of samples and weights is equal
 	if(samples.size() != weights.size())
@@ -1196,7 +1196,7 @@ void ConcreteDfa::print_set_of_pos_neg_samples(map< vector<string>, int> samples
 	}
 }
 
-bool ConcreteDfa::write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path)
+bool ConcreteDfa::write_existent_set_of_pos_neg_samples_in_file(map< vector<symbol_>, int> samples, map< vector<symbol_>, int> weights, const char * file_path)
 {
 	// File variable
 	ofstream myfile;
@@ -1210,7 +1210,7 @@ bool ConcreteDfa::write_existent_set_of_pos_neg_samples_in_file(map< vector<stri
 
 
 	// Write alphabet_ symbols
-	myfile << "$ ";						// Empty string symbol
+	myfile << "$ ";						// Empty symbol_ symbol
 	for(int i=0; i<get_dim_alphabet(); ++i)
 		myfile << alphabet_[i] <<" ";
 	myfile << "\n";
@@ -1247,7 +1247,7 @@ bool ConcreteDfa::write_existent_set_of_pos_neg_samples_in_file(map< vector<stri
 	return true;
 }
 
-bool ConcreteDfa::write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path)
+bool ConcreteDfa::write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<symbol_>, int> samples, const char * file_path)
 {
 	// File variable
 	ofstream myfile;
@@ -1261,7 +1261,7 @@ bool ConcreteDfa::write_existent_set_of_pos_neg_samples_in_file_without_weights(
 
 
 	// Write alphabet_ symbols
-	myfile << "$ ";						// Empty string symbol
+	myfile << "$ ";						// Empty symbol_ symbol
 	for(int i=0; i<get_dim_alphabet(); ++i)
 		myfile << alphabet_[i] <<" ";
 	myfile << "\n";
@@ -1300,12 +1300,12 @@ bool ConcreteDfa::write_existent_set_of_pos_neg_samples_in_file_without_weights(
 bool ConcreteDfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path)
 {
 
-	// Final random string: string and type (positive or negative)
-	map< vector<string>, int>  samples = generate_pos_neg_samples_without_weights(n_pos_samples, n_neg_samples);
+	// Final random symbol_: symbol_ and type (positive or negative)
+	map< vector<symbol_>, int>  samples = generate_pos_neg_samples_without_weights(n_pos_samples, n_neg_samples);
 
 
 	// Generation of random weights for the samples
-	map< vector<string>, int>  weights = generate_weights_for_pos_neg_samples(samples, upper_bound_for_weights);
+	map< vector<symbol_>, int>  weights = generate_weights_for_pos_neg_samples(samples, upper_bound_for_weights);
 
 
 	// Write in file the generated set of samples
@@ -1315,7 +1315,7 @@ bool ConcreteDfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samp
 	return exit_status;
 }
 
-bool ConcreteDfa::equivalence_query(ConcreteDfa* dfa_hp,vector<string> *witness_results) {
+bool ConcreteDfa::equivalence_query(ConcreteDfa* dfa_hp,vector<symbol_> *witness_results) {
 
     bool areEquivalent;
 
@@ -1334,8 +1334,7 @@ bool ConcreteDfa::equivalence_query(ConcreteDfa* dfa_hp,vector<string> *witness_
 
 
 	// Table-filling algorithm on union dfa
-	vector<string> distincts_table = dfa_union->table_filling();
-
+	vector<symbol_> distincts_table = dfa_union->table_filling();
 
 	// Extract list of equivalent states from table of distinct states,
 	// every vector contain a list of equivalent states for the state that correspond to the vector.
@@ -1371,8 +1370,8 @@ bool ConcreteDfa::equivalence_query(ConcreteDfa* dfa_hp,vector<string> *witness_
 	return areEquivalent;
 }
 
-// It returns a table saved in a linear array, with a list of equivalent/different states; if it is needed it returns also a counterexample string
-vector<string> ConcreteDfa::table_filling() const{
+// It returns a table saved in a linear array, with a list of equivalent/different states; if it is needed it returns also a counterexample symbol_
+vector<symbol_> ConcreteDfa::table_filling() const{
 	// The Table considered is only the upper triangular matrix, that can be saved in a linear array of size n(n-1)/2
 	// Conversion of index form matrix to array are:
 	//
@@ -1394,7 +1393,7 @@ vector<string> ConcreteDfa::table_filling() const{
 
 
 	// Table of distinct pair states.
-	vector<string> table_of_distinct_states;
+	vector<symbol_> table_of_distinct_states;
 	for(int i=0; i<tf_l;++i)	table_of_distinct_states.push_back("");
 
 	// Acceptor and rejector states are surely different, so they are marked.
@@ -1425,7 +1424,7 @@ vector<string> ConcreteDfa::table_filling() const{
 
 				if(table_of_distinct_states[k] == to_string(DFA_TF_STATE_N)){
 
-					for(string sym : get_alphabet())
+					for(symbol_ sym : get_alphabet())
 					{
 						arrive_state_1 = get_ttable(i,sym);
 						arrive_state_2 = get_ttable(j,sym);
@@ -1490,7 +1489,7 @@ vector<string> ConcreteDfa::table_filling() const{
 	return table_of_distinct_states;
 }
 
-vector<vector<int>> ConcreteDfa::equivalent_states_list_from_table(vector<string> distincts)
+vector<vector<int>> ConcreteDfa::equivalent_states_list_from_table(vector<symbol_> distincts)
 {
 	#ifdef DEBUG_DFA
 	cout << endl << "--------------------------" << endl;
@@ -1524,15 +1523,15 @@ vector<vector<int>> ConcreteDfa::equivalent_states_list_from_table(vector<string
 	return equivalent_states;
 }
 
-vector<string> ConcreteDfa::witness_from_table(vector<string> distinct, int start_state__dfa_hp)
+vector<symbol_> ConcreteDfa::witness_from_table(vector<symbol_> distinct, int start_state__dfa_hp)
 {
-	// If automata are not equivalent, it generates a witness string
-	vector<string> wit = {};
+	// If automata are not equivalent, it generates a witness symbol_
+	vector<symbol_> wit = {};
 
 	int i_pair = get_start_state();
 	int j_pair = start_state__dfa_hp;
 
-	string input;
+	symbol_ input;
 
 	#ifdef DEBUG_DFA
 	cout << "--- Make a counterexmple --- " << endl;
@@ -1547,7 +1546,7 @@ vector<string> ConcreteDfa::witness_from_table(vector<string> distinct, int star
 
 		// Check if provided automata are equivalent
 		if(distinct[k] == to_string(DFA_TF_STATE_N)){
-			cerr << "ERR: a witness string was requested while automata are equivalent!";
+			cerr << "ERR: a witness symbol_ was requested while automata are equivalent!";
 			throw witnessFromEquivalentDFA();
 		}
 
@@ -1580,16 +1579,16 @@ vector<string> ConcreteDfa::witness_from_table(vector<string> distinct, int star
 	return wit;
 }
 
-size_t ConcreteDfa::get_set_depth(vector<vector<string> > set) const{
+size_t ConcreteDfa::get_set_depth(vector<vector<symbol_> > set) const{
 	size_t max=0;
-	for(vector<string> phrase : set)
+	for(vector<symbol_> phrase : set)
 		if(phrase.size()>max)
 			max=phrase.size();
   	
   return max;
 }
 
-vector<vector<string >> ConcreteDfa::get_cover_set() const
+vector<vector<symbol_ >> ConcreteDfa::get_cover_set() const
 {
 
 	//// Utility structures
@@ -1599,11 +1598,11 @@ vector<vector<string >> ConcreteDfa::get_cover_set() const
 	// Queue of nodes to be checked
 	list<int>										queue;
 
-	// Structure to record access strings
-	map<int, vector<string>> 	access_strings;
+	// Structure to record access symbol_s
+	map<int, vector<symbol_>> 	access_symbol_s;
 
 	// Cover set
-	vector<vector<string>> 		cover_set(1, vector<string>());  	// "1" is for epsilon transition
+	vector<vector<symbol_>> 		cover_set(1, vector<symbol_>());  	// "1" is for epsilon transition
 
 
 	//// Init
@@ -1621,47 +1620,47 @@ vector<vector<string >> ConcreteDfa::get_cover_set() const
 		queue.pop_front();
 
 
-		//cout << "Father node: "<< intTostring(current_node) << endl;
+		//cout << "Father node: "<< intTosymbol_(current_node) << endl;
 
 
 		// Cycle on linked node to current node
-		for(string sym : get_alphabet())
+		for(symbol_ sym : get_alphabet())
 		{
 			int child_node = get_ttable(current_node,sym);
-						//cout << "Child node: "<< intTostring(child_node) << endl;
+						//cout << "Child node: "<< intTosymbol_(child_node) << endl;
 
 
-			// Add string for transition towards child nodes
-			vector<string> child_access_string = access_strings[current_node];
-			//cout<<access_strings[current_node];
-			child_access_string.push_back(sym);
+			// Add symbol_ for transition towards child nodes
+			vector<symbol_> child_access_symbol_ = access_symbol_s[current_node];
+			//cout<<access_symbol_s[current_node];
+			child_access_symbol_.push_back(sym);
 
 
 			// If it is a not visited node
 			if( std::find(visited_nodes.begin(), visited_nodes.end(), child_node) == visited_nodes.end() )
 			{
-				// Current access string
-				vector<string> current_access_string;
+				// Current access symbol_
+				vector<symbol_> current_access_symbol_;
 
-				if( access_strings.find(current_node) != access_strings.end()  )
-					current_access_string = access_strings[current_node];
-				current_access_string.push_back(sym);
-						//cout << "String for father: "<<access_strings[current_node] << endl;
-						//cout << "Current string: "<< current_access_string << endl;
+				if( access_symbol_s.find(current_node) != access_symbol_s.end()  )
+					current_access_symbol_ = access_symbol_s[current_node];
+				current_access_symbol_.push_back(sym);
+						//cout << "String for father: "<<access_symbol_s[current_node] << endl;
+						//cout << "Current symbol_: "<< current_access_symbol_ << endl;
 
 
 				// If no entry was in the table, one is added. Otherwise, it compares lenghts, the shorter will be recorded
-				if (access_strings[child_node].empty())
-					access_strings[child_node] = current_access_string;
-				else if(access_strings[child_node].size() > current_access_string.size() )
-					access_strings[child_node] = current_access_string;
+				if (access_symbol_s[child_node].empty())
+					access_symbol_s[child_node] = current_access_symbol_;
+				else if(access_symbol_s[child_node].size() > current_access_symbol_.size() )
+					access_symbol_s[child_node] = current_access_symbol_;
 
 
 				// Insert analyzed child node into queue and visited node set
 				visited_nodes.push_back(child_node);
 				queue.push_back(child_node);
-				cover_set.push_back(child_access_string);
-						//cout << "Node "<< intTostring(child_node) << " added to queue" << endl;
+				cover_set.push_back(child_access_symbol_);
+						//cout << "Node "<< intTosymbol_(child_node) << " added to queue" << endl;
 			}
 		}
 
@@ -1670,13 +1669,13 @@ vector<vector<string >> ConcreteDfa::get_cover_set() const
 	return cover_set;
 }
 
-vector<vector<string> > ConcreteDfa::get_characterization_set() const{
+vector<vector<symbol_> > ConcreteDfa::get_characterization_set() const{
 	// Characterization set of examples for current DFA
-	vector<vector<string> > characterization_set(0, vector<string>());
+	vector<vector<symbol_> > characterization_set(0, vector<symbol_>());
 
 
 	// Table-filling algorithm over union dfa
-	vector<string> distincts_table = this->table_filling();
+	vector<symbol_> distincts_table = this->table_filling();
 
 
 	// Extract list of equivalent states from table of distinct states,
@@ -1698,7 +1697,7 @@ vector<vector<string> > ConcreteDfa::get_characterization_set() const{
 	map<int, vector<int>> state_pairs;
 
 
-	// For each pair of states, a string must be defined exploiting the symbols within the table of Table-filling
+	// For each pair of states, a symbol_ must be defined exploiting the symbols within the table of Table-filling
 	// These symbols makes a difference between the analyzed states.
 	for(int i=0; i<num_states_; ++i)
 	{
@@ -1711,10 +1710,10 @@ vector<vector<string> > ConcreteDfa::get_characterization_set() const{
 				continue;
 			}
 			// Generated witness for the pairs of states
-			vector<string> wit;
+			vector<symbol_> wit;
 
 			// Read symbol during the execution
-			string read_symbols;
+			symbol_ read_symbols;
 
 			int i_pair = i;
 			int j_pair = j;
@@ -1767,44 +1766,44 @@ vector<vector<string> > ConcreteDfa::get_characterization_set() const{
 			}//end while(1)
 
 
-			// Add generated strings to characterization set
+			// Add generated symbol_s to characterization set
 			if(wit.size() != 0)
 			{
-				// Prefix of characterizing strings is the access strings for analyzed states
-				vector<string> first_characterizing_strings;
-				vector<string> second_characterizing_strings;
+				// Prefix of characterizing symbol_s is the access symbol_s for analyzed states
+				vector<symbol_> first_characterizing_symbol_s;
+				vector<symbol_> second_characterizing_symbol_s;
 
 
-				// Build characterzing strings concatening access strings with witness for analyzed states
-				first_characterizing_strings.insert( first_characterizing_strings.end(), wit.begin(), wit.end() );
-				second_characterizing_strings.insert( second_characterizing_strings.end(), wit.begin(), wit.end() );
+				// Build characterzing symbol_s concatening access symbol_s with witness for analyzed states
+				first_characterizing_symbol_s.insert( first_characterizing_symbol_s.end(), wit.begin(), wit.end() );
+				second_characterizing_symbol_s.insert( second_characterizing_symbol_s.end(), wit.begin(), wit.end() );
 
 
 				// Check if current sample is in the set yet
-				if( std::find(characterization_set.begin(), characterization_set.end(), first_characterizing_strings) == characterization_set.end() ){
-					characterization_set.push_back(first_characterizing_strings);
-					//cout<<"sto aggiungendo al characterization_set la prima stringa: "<<first_characterizing_strings<<endl;
+				if( std::find(characterization_set.begin(), characterization_set.end(), first_characterizing_symbol_s) == characterization_set.end() ){
+					characterization_set.push_back(first_characterizing_symbol_s);
+					//cout<<"sto aggiungendo al characterization_set la prima symbol_a: "<<first_characterizing_symbol_s<<endl;
 				}
-				if( std::find(characterization_set.begin(), characterization_set.end(), second_characterizing_strings) == characterization_set.end() ){
-					characterization_set.push_back(second_characterizing_strings);
-					//cout<<"sto aggiungendo al characterization_set la seconda stringa: "<<second_characterizing_strings<<endl;
+				if( std::find(characterization_set.begin(), characterization_set.end(), second_characterizing_symbol_s) == characterization_set.end() ){
+					characterization_set.push_back(second_characterizing_symbol_s);
+					//cout<<"sto aggiungendo al characterization_set la seconda symbol_a: "<<second_characterizing_symbol_s<<endl;
 				}
 			}
 
 		}
 	}
 
-		//if (num_states_ == 1) //degenerate case, DFA with only a state. Return only the empty string in characterization set
+		//if (num_states_ == 1) //degenerate case, DFA with only a state. Return only the empty symbol_ in characterization set
 		if(characterization_set.size()==0)
 		{
-		vector<string> empty_string;
-		characterization_set.push_back(empty_string);
+		vector<symbol_> empty_symbol_;
+		characterization_set.push_back(empty_symbol_);
 	}
 
 	return characterization_set;
 }
 
-vector<vector<string> > 			ConcreteDfa::get_augmented_characterization_set(int sigma_exponent, vector<vector<string> >& aug_characterization_set)const
+vector<vector<symbol_> > 			ConcreteDfa::get_augmented_characterization_set(int sigma_exponent, vector<vector<symbol_> >& aug_characterization_set)const
 {
 	//cout<<endl<<"sigma exponent: "<<sigma_exponent<<endl;
 
@@ -1813,7 +1812,7 @@ vector<vector<string> > 			ConcreteDfa::get_augmented_characterization_set(int s
 	cout << "... START Simple char set creation..." << flush;
 	#endif
 
-	vector<vector<string>> characterization_set = get_characterization_set();
+	vector<vector<symbol_>> characterization_set = get_characterization_set();
 
 	#ifdef DEBUG_DFA
 	cout << "END Simple char set. Size: "<< characterization_set.size() << flush;
@@ -1821,13 +1820,13 @@ vector<vector<string> > 			ConcreteDfa::get_augmented_characterization_set(int s
 
 
 	// Prefixes to be concatened
-	vector<vector<string>> prefixes;
+	vector<vector<symbol_>> prefixes;
 
 
 	///INIT
-	vector<string> alph=get_alphabet();
+	vector<symbol_> alph=get_alphabet();
 	for(int j=0; j<get_dim_alphabet();++j){
-		vector<string> tmp;
+		vector<symbol_> tmp;
 		tmp.push_back(alph[j]);
 		prefixes.push_back(tmp);
 	}
@@ -1849,13 +1848,13 @@ vector<vector<string> > 			ConcreteDfa::get_augmented_characterization_set(int s
 		// Create prefixes
 		for(int i=0; i<prefix_length; ++i)
 		{
-			// Compute a new subset of strings
-			vector<vector<string>> new_subset;
-			for(string sym : alph)
+			// Compute a new subset of symbol_s
+			vector<vector<symbol_>> new_subset;
+			for(symbol_ sym : alph)
 			{
 				for(auto &it : prefixes)
 				{
-					vector<string> tmp_prefix = it;
+					vector<symbol_> tmp_prefix = it;
 					tmp_prefix.push_back(sym);
 					new_subset.push_back(tmp_prefix);
 					//if(new_subset.size() > LIMIT_OF_TESTSET_W_METHOD)
@@ -1863,14 +1862,14 @@ vector<vector<string> > 			ConcreteDfa::get_augmented_characterization_set(int s
 				}
 			}
 
-			// It adds the new calculated sub set of strings at "prefixes"
+			// It adds the new calculated sub set of symbol_s at "prefixes"
 			for(auto &it : new_subset)
 				prefixes.push_back(it);
 
 		}
 
-    vector<string> empty_string;
-  	prefixes.push_back(empty_string);
+    vector<symbol_> empty_symbol_;
+  	prefixes.push_back(empty_symbol_);
 
 		#ifdef DEBUG_DFA
 		cout << "END prefixes to be concatenated. Size: " << prefixes.size() << endl;
@@ -1884,11 +1883,11 @@ vector<vector<string> > 			ConcreteDfa::get_augmented_characterization_set(int s
 			//aug_characterization_set.push_back(it1);
 
 			for(auto &it2 : prefixes){
-				vector<string> new_string = it2;
+				vector<symbol_> new_symbol_ = it2;
 
-				new_string.insert( new_string.end(), it1.begin(), it1.end());
+				new_symbol_.insert( new_symbol_.end(), it1.begin(), it1.end());
 
-				aug_characterization_set.push_back(new_string);
+				aug_characterization_set.push_back(new_symbol_);
 			}
 			//cout << "Current size of aug char set: "<<aug_characterization_set.size() << flush;
 			//if( aug_characterization_set.size() > LIMIT_OF_TESTSET_W_METHOD)
@@ -1904,16 +1903,16 @@ vector<vector<string> > 			ConcreteDfa::get_augmented_characterization_set(int s
 	return aug_characterization_set;
 }
 
-vector<vector<string>>	ConcreteDfa::get_w_method_test_set(ConcreteDfa* target_dfa, bool sigma) const
+vector<vector<symbol_>>	ConcreteDfa::get_w_method_test_set(ConcreteDfa* target_dfa, bool sigma) const
 {
-	set<vector<string>> w_method_test_set;
+	set<vector<symbol_>> w_method_test_set;
 
 	#ifdef DEBUG_DFA
 	cout << "START Cover set...";
 	#endif
 
-	vector<vector<string>> cover_set = get_cover_set();
-	vector<vector<string>> cover_set_target_dfa=target_dfa->get_cover_set();
+	vector<vector<symbol_>> cover_set = get_cover_set();
+	vector<vector<symbol_>> cover_set_target_dfa=target_dfa->get_cover_set();
 
 	#ifdef DEBUG_DFA
 	cout << "END. Size: "<< cover_set.size() << endl;
@@ -1921,7 +1920,7 @@ vector<vector<string>>	ConcreteDfa::get_w_method_test_set(ConcreteDfa* target_df
 	#endif
 
 	int sigma_exponent=0;
-	vector<vector<string>> characterization_set;
+	vector<vector<symbol_>> characterization_set;
 
 	if(sigma){
 
@@ -1954,7 +1953,7 @@ vector<vector<string>>	ConcreteDfa::get_w_method_test_set(ConcreteDfa* target_df
 	cout << "END. Size: " << aug_characterization_set.size() << endl;
 	#endif
 
-	// Limit the number of strings
+	// Limit the number of symbol_s
 	//if(cover_set.size() * aug_characterization_set.size() > 10000000000)
 	//	throw wMethodTestSetTooBig();
 
@@ -1966,21 +1965,21 @@ vector<vector<string>>	ConcreteDfa::get_w_method_test_set(ConcreteDfa* target_df
 	////// Compute test set: concatenating cover set and aug. charac. set
 	for(auto &it1 : cover_set)
 	{
-		// Add non-concatened string of cover set to final set
+		// Add non-concatened symbol_ of cover set to final set
 		//if(it1.size() != 0)
 		//	w_method_test_set.insert(it1);
 
 
-		// Add concatened strings
+		// Add concatened symbol_s
 		for(auto &it2 : characterization_set)
 		{
-			vector<string> tmp_string = it1;
+			vector<symbol_> tmp_symbol_ = it1;
 
-			// Concatenating strings
-			tmp_string.insert( tmp_string.end(), it2.begin(), it2.end() );
+			// Concatenating symbol_s
+			tmp_symbol_.insert( tmp_symbol_.end(), it2.begin(), it2.end() );
 
-			// Add string to final set
-			w_method_test_set.insert(tmp_string);
+			// Add symbol_ to final set
+			w_method_test_set.insert(tmp_symbol_);
 		}
 	}
 
@@ -1990,12 +1989,12 @@ vector<vector<string>>	ConcreteDfa::get_w_method_test_set(ConcreteDfa* target_df
 	#endif
 
 	
-	vector<vector<string>> w_vec(w_method_test_set.begin(),w_method_test_set.end());
+	vector<vector<symbol_>> w_vec(w_method_test_set.begin(),w_method_test_set.end());
 
 	return w_vec;
 }
 
-vector<long double> ConcreteDfa::get_w_method_statistics(vector<vector<string>> test_set, ConcreteDfa* subject_dfa) const
+vector<long double> ConcreteDfa::get_w_method_statistics(vector<vector<symbol_>> test_set, ConcreteDfa* subject_dfa) const
 {
   vector<long double> statistics;
   int tp=0;
@@ -2090,8 +2089,8 @@ vector<vector<double>> ConcreteDfa::neighbour_matching_structural_similarity(Con
 	 */
 
 	char *reference_incidence_matrix, *subject_incidence_matrix;
-	vector<map<string,int>> reference_ttable=this->get_ttable();
-	vector<map<string,int>> subject_ttable=subject_dfa->get_ttable();
+	vector<map<symbol_,int>> reference_ttable=this->get_ttable();
+	vector<map<symbol_,int>> subject_ttable=subject_dfa->get_ttable();
 
 	//get_edge_matrix() is situated in utilities.h
 	reference_incidence_matrix=get_incidence_matrix(reference_ttable,this->get_num_states(),this->get_alphabet());
@@ -2206,7 +2205,7 @@ void ConcreteDfa::print_structural_similarity(vector<vector<double>> similarity_
 }
 
 void ConcreteDfa::print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma, double eps, bool color)const{
-	vector<vector<string>> test_set = get_w_method_test_set(subject_dfa,sigma);
+	vector<vector<symbol_>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
 	print_w_method(stats);
 	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
@@ -2220,7 +2219,7 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 	long double exec_time=0;
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-	vector<vector<string>> test_set = get_w_method_test_set(subject_dfa,sigma);
+	vector<vector<symbol_>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
 	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
 
@@ -2237,4 +2236,115 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 
 	return sim;
 	
+}
+
+
+
+
+/* New code here */
+
+vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
+	vector<symbol_> sorted_alphabet = sort_alphabet();
+
+	set<int> visited_states;
+	vector<int> states_to_explore;
+	vector<int> sorted_states;
+
+	states_to_explore.push_back(get_start_state());
+	visited_states.insert(get_start_state());
+
+	//Used to compute the depth-sorted phrases we find exploring the states
+	vector<vector<symbol_>> phrases_to_explore;
+	sorted_phrases.clear();
+
+	phrases_to_explore.push_back(vector<symbol_>(0));
+	sorted_phrases.push_back(vector<symbol_>(1,""));
+
+	while(!states_to_explore.empty()){
+		int current_state = states_to_explore.back();
+		states_to_explore.pop_back();
+
+		sorted_states.push_back(current_state);
+
+		//Do the same for the phrases.
+		vector<symbol_> current_phrase = phrases_to_explore.back();
+		phrases_to_explore.pop_back();
+		if(!current_phrase.empty()){
+			sorted_phrases.push_back(current_phrase);
+		}
+
+		for(auto sym = sorted_alphabet.rbegin(); sym != sorted_alphabet.rend(); ++sym){
+			int next_state = get_ttable(current_state, *sym);
+			if( visited_states.find(next_state) == visited_states.end() ){
+				states_to_explore.push_back(next_state);
+				visited_states.insert(next_state);
+
+				//Do the same for the phrases.
+				vector<symbol_> next_phrase = current_phrase;
+				next_phrase.push_back(*sym);
+				phrases_to_explore.push_back(next_phrase);
+			}
+		}
+	}
+
+	return sorted_states;
+}
+
+vector<symbol_> ConcreteDfa::get_symbols_from_transiction(DFA_STATE_ state, DFA_STATE_ arrive_state){
+	vector<symbol_> sorted_alphabet = sort_alphabet();
+	vector<symbol_> symbols;
+	for(symbol_ sym : sorted_alphabet){
+		if(get_ttable(state, sym) == arrive_state){
+			symbols.push_back(sym);
+		}
+	}
+	return symbols;
+}
+
+void ConcreteDfa::update_state_table(){
+	//state_to_state_table_.clear();
+	state_table_.clear();
+	vector<symbol_> sorted_alphabet = sort_alphabet();
+	vector<vector<symbol_>> sorted_phrases;
+	vector <int> sorted_states = sort_states(sorted_phrases);
+
+	int i = 0;
+	for(int state : sorted_states){
+		state_table_.push_back(DfaState(is_accepting(state), sorted_phrases[i]));
+
+		++i;
+	}
+
+	i = 0;
+	for(int state : sorted_states){
+		//vector<vector<symbol_>> row;
+		for(symbol_ sym : sorted_alphabet){
+			//row.push_back(get_symbols_from_transiction(state, arrive_state));
+			int next_state = get_ttable(state, sym);
+			bool state_found = false;
+			for(int j = 0; j < sorted_states.size() && !state_found; j++){
+				if(sorted_states[j] == next_state){
+					state_table_[i].set_transiction(sym, &state_table_[j]);
+					state_found = true;
+				}
+			}
+		}
+
+		++i;
+	}
+}
+
+vector<DfaState>::iterator ConcreteDfa::begin(){
+	return state_table_.begin();
+}
+
+vector<DfaState>::iterator ConcreteDfa::end(){
+	return state_table_.end();
+}
+
+void ConcreteDfa::print_state_table(){
+	update_state_table();
+	for(auto state : *this){
+		state.print();
+	}
 }

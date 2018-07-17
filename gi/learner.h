@@ -3,6 +3,7 @@
 
 #include "oracle.h"
 
+template <class dfa_state>
 class Learner{
     protected:
         Oracle* oracle;
@@ -18,6 +19,8 @@ class Learner{
 
         void set_alphabet(vector <string> ab);
 
-        virtual Dfa* learn()=0;
+        virtual Dfa<dfa_state>* learn()=0;
 };
+
+#include "learner.tcc"
 #endif

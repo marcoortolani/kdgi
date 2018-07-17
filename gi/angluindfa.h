@@ -10,7 +10,7 @@
 
 using namespace std;
 
-class AngluinDfa : public Dfa{
+class AngluinDfa : public Dfa<vector<DfaState>*>{
 private:
 
 	/**
@@ -69,6 +69,11 @@ private:
 	 */
 	list <vector<int>> new_look_up_sa;
 
+	/* New code here */
+	vector<vector<vector<symbol_>>> state_to_state_table_;
+	vector<DfaState> state_table_;
+	/*****************/
+
 	/*
 	 * Clears all the "new" vectors (newS, newSa, new_look_up_s and so on).
 	 */
@@ -112,14 +117,6 @@ private:
 	int contain_phrase(list <string> phrase);
 
 	/**
-	 * Order the rows of S and look_up_s, or the rows of Sa and look_up_sa.
-	 * It takes some of the rows and shifts them at the end of the table.
-	 * @param table 	string "S" or "Sa".
-	 * @param sort 		indexes of the rows which will be shifted.
-	 */
-	void sort_rows(string table, vector <int> sort);
-
-	/**
 	 * Insert a new row in S and look_up_s or in Sa and look_up_sa,
 	 * in the first correct position
 	 * (rows representing the same state must be contiguous).
@@ -143,7 +140,7 @@ public:
 	 * will wait for the result of the membership queries of those phrases.
 	 * @param phrases_to_verify		the vector which will contain the phrases to verify.
 	 */
-	bool get_inconsistent_phrases(/*list <list<string>>&*/ map <list<string>, bool>* phrases_to_verify);
+	bool get_inconsistent_phrases(map <list<string>, bool>* phrases_to_verify);
 
 	/**
 	 * Return true if the dfa is closed, false otherwise.
@@ -151,7 +148,7 @@ public:
 	 * will wait for the result of the membership queries of those phrases.
 	 * @param phrases_to_verify		the vector which will contain the phrases to verify.
 	 */
-	bool get_open_phrases(/*list<list<string>>&*/ map <list<string>, bool>* phrases_to_verify);
+	bool get_open_phrases(map <list<string>, bool>* phrases_to_verify);
 
 	/**
 	 * Given a counterexample returns the phrases that must be verified
@@ -159,21 +156,21 @@ public:
 	 * @param phrases_to_verify 	the vector which will contain the phrases to verify.
 	 * @param counterexample		the counterexample.
 	 */
-	void get_phrases_from_counterexample(/*list<list<string>>&*/ map <list<string>, bool>* phrases_to_verify, vector<string> counterexample);
+	void get_phrases_from_counterexample(map <list<string>, bool>* phrases_to_verify, vector<string> counterexample);
 
 	/*
 	 *Adds a new column to the look_up_s and look_up_sa tables and a new element to E.
 	 *@param verified_phrases		the phrases passed by get_inconsistent_phrases.
 	 *@param mem_query_res			the results of the membership queries.
 	 */
-	void extend_column(/*list<list<string>>& verified_phrases, */map <list<string>, bool>* mem_query_res);
+	void extend_column(map <list<string>, bool>* mem_query_res);
 
 	/**
 	 * Adds one or more new rows to look_up_s and look_up_sa and one or more new elements to S and Sa.
 	 *@param verified_phrases		the phrases passed by get_open_phrases or get_phrases_from_counterexample.
 	 *@param mem_query_res			the results of the membership queries.
 	 */
-	void extend_rows(/*list <list<string>>& verified_phrases, */map <list<string>, bool>* mem_query_res);
+	void extend_rows(map <list<string>, bool>* mem_query_res);
 
 	/**
 	 * Returns a concrete dfa generated from the look_up_s
@@ -205,6 +202,29 @@ public:
 	 */
 	AngluinDfa(vector <string> alphabet, map <list<string>, bool>* first_queries);
 
-};
 
+	/* New code here */
+
+public:
+	vector<DfaState> :: iterator begin(){
+		return state_table_.begin();
+	};
+
+	vector<DfaState> :: iterator end(){
+		return state_table_.end();
+	};
+
+	void print_state_table();
+
+protected:
+	vector<set<list<symbol_>>> group_symbols() const;
+
+	vector<set<list<symbol_>>> sort_states(vector<set<list<symbol_>>> states, vector<vector<symbol_>>& sorted_phrases);
+
+	int get_start_index(vector<set<list<symbol_>>> states);
+
+	void update_state_table();
+
+	DFA_STATE_ get_index_from_transiction(set<list<symbol_>> current_state, symbol_ sym, vector<set<list<symbol_>>> all_states);
+};
 #endif /* ANGLUINDFA_H_ */

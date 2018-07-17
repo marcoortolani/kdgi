@@ -4,7 +4,7 @@
 #include "angluindfa.h"
 #include "learner.h"
 
-class AngluinLearner: public Learner {
+class AngluinLearner: public Learner<vector<DfaState>*>{
 private:
 	/**
 	 * Dfa structure used by Angluin algorithm.
@@ -35,7 +35,7 @@ public:
 	 * It initializes ang_dfa and implements the high level steps of the Angluin's algorithm
 	 * (all the low level operation are done by the ang_dfa).
 	 */
-	Dfa* learn();
+	AngluinDfa* learn();
 };
 
 #endif /* ANGLUINLEARNER_H_ */

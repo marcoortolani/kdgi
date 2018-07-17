@@ -43,7 +43,6 @@ protected:
 
 
 TEST_F(BaseDfaTest, getDimAlphabet){
-    cout<<"ciao"<<endl;
 	EXPECT_EQ(3,reference->get_dim_alphabet());
 }
 

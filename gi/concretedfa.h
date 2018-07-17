@@ -6,7 +6,6 @@
 #ifndef CONCRETE_DFA_H_
 #define CONCRETE_DFA_H_
 
-#include <string>
 #include <vector>
 #include <set>
 #include <map>
@@ -28,21 +27,25 @@ using namespace std;
 
 class DfaSim;
 
-class ConcreteDfa : public Dfa{
+class ConcreteDfa : public Dfa<vector<DfaState>*>{
 
 protected:
 
   //******** DATA MEMBERS: ********
   vector<int> accepting_states_;      /*!< List of accepting states */
-  vector<map<string,int>> ttable_;			  	/*!< Transition table */
+  vector<map<symbol_,int>> ttable_;			  	/*!< Transition table */
 
+  /* New data members here */
+  vector<vector<vector<symbol_>>> state_to_state_table_;
+  vector<DfaState> state_table_;
+  /* end of new data members */
   //******** CONSTRUCTORS: ********
   /**
    * Make an instance of new dfa with default start state to 0.
    * @param n_state	Number of states.
    * @param alf		Alphabet symbols.
    */
-  ConcreteDfa(const int n_state, const vector<string> alf);
+  ConcreteDfa(const int n_state, const vector<symbol_> alf);
 
   /**
    * Make an instance of new dfa. Give possibility to set the start state.
@@ -50,7 +53,7 @@ protected:
    * @param alf		Alphabet symbols.
    * @param s_state	Start state.
    */
-  ConcreteDfa(const int n_state, const vector<string> alf, const int s_state);
+  ConcreteDfa(const int n_state, const vector<symbol_> alf, const int s_state);
   /**
    * Make an instance of new dfa.
    * Set tra transistion table making a copy of "tt_copy" passed as argument.
@@ -60,14 +63,14 @@ protected:
    * @param tt_copy	Reference to extern transition table to copy inside current dfa.
    * @param accepting_states Accepting states.
    */
-  ConcreteDfa(const int n_state, const vector<string> alf, const int s_state, vector<map<string,int>> tt_copy, vector<int> accepting_states );
+  ConcreteDfa(const int n_state, const vector<symbol_> alf, const int s_state, vector<map<symbol_,int>> tt_copy, vector<int> accepting_states );
 
   //******** METHODS: ********
   /**
    * Set the transition table ("ttable") reference to an extern transition table passed as argument.
    * @param ext_ttab.
    */
-  void 	set_ttable(const vector<map<string,int>> ext_ttab);
+  void 	set_ttable(const vector<map<symbol_,int>> ext_ttab);
 
   /**
    * Set a single value "v" for ttable entry for state "i", with transition symbol"j".
@@ -75,7 +78,7 @@ protected:
    * @param j	transition symbol.
    * @param v	Value to set.
    */
-  void 	set_ttable_entry(int i, string j, int v);
+  void 	set_ttable_entry(int i, symbol_ j, int v);
 
   /**
    * Insert a particular value in accepting_states_
@@ -106,10 +109,10 @@ protected:
    * Make an equivalence query, that return true if the current dfa is equivalent to dfa "dfa_hp", argument of the function.
    * Otherwise return false and detect a witness, that is a counterexample that distinguishes the two dfa.
    * @param dfa 	Dfa to compare with the current dfa.
-   * @param witness_results 	A vector<string> in which save the witness.if miss is NULL for default,it means that the client isn't interested in witness but in ceck equivalence alone.
+   * @param witness_results 	A vector<symbol_> in which save the witness.if miss is NULL for default,it means that the client isn't interested in witness but in ceck equivalence alone.
    * @return true if the two dfas are equivalents, false otherwise.
    */
-  bool	 equivalence_query(ConcreteDfa* dfa_hp, vector<string> *witness_results=NULL);
+  bool	 equivalence_query(ConcreteDfa* dfa_hp, vector<symbol_> *witness_results=NULL);
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -117,14 +120,14 @@ protected:
    * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
    * @return A table saved in a linear array, with a list of equivalent/different states.
    */
-  vector<string>	table_filling() const;
+  vector<symbol_>	table_filling() const;
 
   /**
    * Create a list of states and corrispective equivalent states.
    * @param distincts A table build with the Table Filling Algorithm.
    * @return Every vector is a list of equivalent state for the state associate to that vector.
    */
-  vector<vector<int>> 		equivalent_states_list_from_table(vector<string> distincts);
+  vector<vector<int>> 		equivalent_states_list_from_table(vector<symbol_> distincts);
 
   /**
    * Make a conterexample from a table build with Table Filling Algorithm using the union dfa of the two dfa to compare.
@@ -132,7 +135,7 @@ protected:
    * @param start_state_dfa_hp Index of the first state of dfa_hp inside the union dfa.
    * @return A witness that distinguishes the two dfa.
    */
-  vector<string>		witness_from_table(vector<string> distinct, int start_state_dfa_hp);
+  vector<symbol_>		witness_from_table(vector<symbol_> distinct, int start_state_dfa_hp);
 
   /**
    * Utility function to determine the exponent of Sigma in w-method, which is the depth
@@ -140,31 +143,33 @@ protected:
    * @param set the set to examine
    * @return max depth of a set.
    */
-  size_t get_set_depth(vector<vector<string>> set) const;
+  size_t get_set_depth(vector<vector<symbol_>> set) const;
 
   /**
-   * Return a cover set of strings for current DFA.
-   * @return A vector of phrases (i.e. vector<string>).
+   * Return a cover set of symbol_s for current DFA.
+   * @return A vector of phrases (i.e. vector<symbol_>).
    */
-  vector<vector<string>>		get_cover_set() const;
+  vector<vector<symbol_>>		get_cover_set() const;
 
   /**
-   * Return a characterization set of strings for current DFA.
-   * @return A vector of phrases (i.e. vector<string>).
+   * Return a characterization set of symbol_s for current DFA.
+   * @return A vector of phrases (i.e. vector<symbol_>).
    */
-  vector<vector<string>> 	get_characterization_set() const;
+  vector<vector<symbol_>> 	get_characterization_set() const;
 
   /**
-   * Return an augmented characterization set of strings for current DFA.
+   * Return an augmented characterization set of symbol_s for current DFA.
    * @param sigma_exponent.
    * @param aug_characterization_set.
-   * @return A vector of phrases (i.e. vector<string>).
+   * @return A vector of phrases (i.e. vector<symbol_>).
    */
-  vector<vector<string>> 	get_augmented_characterization_set(int sigma_exponent, vector<vector<string> >& aug_characterization_set)const;
+  vector<vector<symbol_>> 	get_augmented_characterization_set(int sigma_exponent, vector<vector<symbol_> >& aug_characterization_set)const;
 
 public:
   friend class BlueFringe;
+  friend class OldAngluinDfa;
   friend class AngluinDfa;
+  friend class SillyOracle;
   //******** CONSTRUCTORS: ********
 
   /**
@@ -208,7 +213,7 @@ public:
    * @param file_name Path of the dfa.
    * @return Dfa read from file.
    */
-  static ConcreteDfa read_dfa_file(const string file_name);
+  static ConcreteDfa read_dfa_file(const symbol_ file_name);
 
   /**
    * Return accepting states.
@@ -227,15 +232,15 @@ public:
    * Return a reference to ttable_.
    * @return Pointer to ttable.
    */
-  vector<map<string,int>> 	get_ttable() const;
+  vector<map<symbol_,int>> 	get_ttable() const;
 
   /**
-   * Get transition from state i with string j.
+   * Get transition from state i with symbol_ j.
    * @param i state to start.
-   * @param j string to process.
+   * @param j symbol_ to process.
    * @return
    */
-  int 	get_ttable(int i, string j) const;
+  int 	get_ttable(int i, symbol_ j) const;
 
   /**
    * Make a new dfa from the union of current dfa and "dfa_hp".
@@ -248,9 +253,9 @@ public:
 
   /**
    * Each ttable element is extracted in a random way (uniform numbers in [0 num_states-1] instead accepting/rejecting uniform numbers in [0 1] ). Thus the ttable (transition table) is modified.
-   * @return A string representing all the number extracted.
+   * @return A symbol_ representing all the number extracted.
    */
-  string random_ttable();
+  symbol_ random_ttable();
 
   /**
    * Minimizes the current dfa exploiting the Table-Filling algorithm.
@@ -262,35 +267,35 @@ public:
    * Print the transition table of current dfa. Before the transition table print the title passed as parameter.
    * @param title Title printed before the transition table.
    */
-  void 	print_dfa_ttable(string title) const;
+  void 	print_dfa_ttable(symbol_ title) const;
 
   /**
    * Print a dot file for the current dfa, with title "title", in the path "file_path".
    * @param title	Title printed before the transition table.
    * @param file_path Path where make a dot file.
    */
-  void    print_dfa_dot(string title, const char *file_path);
+  void    print_dfa_dot(symbol_ title, const char *file_path);
 
   /**
    * Print a DFA in a text file; adopted format is the same used for reading a DFA from file.
    * @ file_path A path for the new file to be created.
    */
-  void 	print_dfa_in_text_file(const string file_path);
+  void 	print_dfa_in_text_file(const symbol_ file_path);
 
   /**
-   * Get index of arrive state for dfa_string argument.
+   * Get index of arrive state for dfa_symbol_ argument.
    * @param phrase String executed on dfa
-   * @return Index of arrive state for "dfa_string"
+   * @return Index of arrive state for "dfa_symbol_"
    */
-  int		get_arrive_state(vector<string> &phrase) const;
+  int		get_arrive_state(vector<symbol_> &phrase) const;
 
   /**
-   * Make a membership query to dfa with the "phrase" string with alphabet symbol.
+   * Make a membership query to dfa with the "phrase" symbol_ with alphabet symbol.
    * Return "true" if the arrive state for "phrase" is acceptor, else "false".
-   * @param phrase A phrase (i.e. vector<string>) to make a membership query.
+   * @param phrase A phrase (i.e. vector<symbol_>) to make a membership query.
    * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
    */
-  bool   membership_query(vector<string> phrase) const;
+  bool   membership_query(vector<symbol_> phrase) const;
 
   /**
    * Calculate the similarity of 2 DFA's languages
@@ -303,24 +308,24 @@ public:
    * @throw wMethodTestSetTooBig if the sample generated with W-Method is too big
    * @throw mandatoryMinimalDFA  if you use W-Method and one or both dfa's aren't minimal
    * @param dfa_to_compare is the dfa to compare
-   * @param method is a string indicating method generation samples to compare dfa's. Possible values are:
+   * @param method is a symbol_ indicating method generation samples to compare dfa's. Possible values are:
    *     - w-method
    *     - random-walk
    * @param stats1 It will contain statistical results (it is defined in gi_utilities.h)
    * @param stats2 It will contain statistical results if random walk is used (it is defined in gi_utilities.h)
    * @return A flag to etablish which method to generate test set was used. The flag is false if was employed W-Method, true if was used random-walk.
    */
-  bool compare_dfa( ConcreteDfa *dfa_to_compare,string method,ir_statistical_measures &stats1,ir_statistical_measures &stats2);
+  bool compare_dfa( ConcreteDfa *dfa_to_compare,symbol_ method,ir_statistical_measures &stats1,ir_statistical_measures &stats2);
 
   /**
-   * Return a set of access strings for all the states of DFA.
-   * @return A vector of string (true string!) characterizing current DFA, they adopted the alphabet.
+   * Return a set of access symbol_s for all the states of DFA.
+   * @return A vector of symbol_ (true symbol_!) characterizing current DFA, they adopted the alphabet.
    */
-  map<int,vector<string>> 	get_access_strings() const;
+  map<int,vector<symbol_>> 	get_access_strings() const;
 
   /**
    * It returns a set random samples (all different) generated from current DFA.
-   * They are within a map of vector string; each sample (vector<string>) is made up of symbols (string)
+   * They are within a map of vector symbol_; each sample (vector<symbol_>) is made up of symbols (symbol_)
    * and is associated to a number (0: negative, 1:positive).
    *
    * Based on the algorithm described in "STAMINA: a competition to encourage the development
@@ -329,39 +334,39 @@ public:
    * @param n_pos_samples Number of positive samples to be generated.
    * @param n_neg_samples Number of negative samples to be generated.
    */
-  map< vector<string>, int>	generate_pos_neg_samples_without_weights(int n_pos_samples,int n_neg_samples) const;
+  map< vector<symbol_>, int>	generate_pos_neg_samples_without_weights(int n_pos_samples,int n_neg_samples) const;
 
   /*
    * It returns a set of weigths paired to the samples generated yet.
    * @param samples Generated samples.
    * @param upper_bound_for_weights Upper bound for weights.
    */
-  map< vector<string>, int> 	generate_weights_for_pos_neg_samples(map< vector<string>, int> samples, int upper_bound_for_weights);
+  map< vector<symbol_>, int> 	generate_weights_for_pos_neg_samples(map< vector<symbol_>, int> samples, int upper_bound_for_weights);
 
   /**
    * Print the already generated set of random samples generated from current DFA.
    * @param samples Generated samples.
    * @param weights Generated weights.
    */
-  void 	print_set_of_pos_neg_samples(map< vector<string>, int> samples, map< vector<string>, int> weights);
+  void 	print_set_of_pos_neg_samples(map< vector<symbol_>, int> samples, map< vector<symbol_>, int> weights);
 
   /**
-   * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
+   * Write in a file an already generated set of random symbol_s accepted and rejected by the current DFA.
    * @param samples
    * @param weights
    * @param file_paht File path with generated samples.
    */
-  bool 	write_existent_set_of_pos_neg_samples_in_file(map< vector<string>, int> samples, map< vector<string>, int> weights, const char * file_path);
+  bool 	write_existent_set_of_pos_neg_samples_in_file(map< vector<symbol_>, int> samples, map< vector<symbol_>, int> weights, const char * file_path);
 
   /**
-   * Write in a file an already generated set of random strings accepted and rejected by the current DFA.
+   * Write in a file an already generated set of random symbol_s accepted and rejected by the current DFA.
    * @param samples
    * @param file_paht File path with generated samples.
    */
-  bool 	write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<string>, int> samples, const char * file_path);
+  bool 	write_existent_set_of_pos_neg_samples_in_file_without_weights(map< vector<symbol_>, int> samples, const char * file_path);
 
   /**
-   * It generates a set of random strings accepted and rejected by the current DFA and DIRECTLY write them to a file.
+   * It generates a set of random symbol_s accepted and rejected by the current DFA and DIRECTLY write them to a file.
    * @param n_pos_samples Number of positive samples to be generated.
    * @param n_neg_samples Number of negative samples to be generated.
    * @param upper_bound_for_weights
@@ -370,13 +375,13 @@ public:
   bool 	write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samples, int upper_bound_for_weights, const char * file_path);
 
   /**
-   * Return a W-METHOD test set of strings for current DFA.
+   * Return a W-METHOD test set of symbol_s for current DFA.
    * @param target_dfa
    * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k
    * in general sigma is true, it false for debugging purposes
-   * @return A vector of strings
+   * @return A vector of symbol_s
    */
-  vector<vector<string>> 	get_w_method_test_set(ConcreteDfa* target_dfa, bool sigma=true) const;
+  vector<vector<symbol_>> 	get_w_method_test_set(ConcreteDfa* target_dfa, bool sigma=true) const;
 
   /**
    * Given a test set and the reference and subject dfa,
@@ -385,7 +390,7 @@ public:
    * @param subject_dfa
    * @return array containing {tp,fn,tn,fp,precision,recall,f-measure,specifity,bcr}
    */
-   vector<long double> get_w_method_statistics(vector<vector<string>> test_set, ConcreteDfa* subject_dfa) const;
+   vector<long double> get_w_method_statistics(vector<vector<symbol_>> test_set, ConcreteDfa* subject_dfa) const;
 
   /**
    * Print the w-method statistics
@@ -432,6 +437,25 @@ public:
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
    */
   DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false) const;
+
+
+
+
+  /* New code here */
+
+protected:
+  vector<int> sort_states(vector<vector<symbol_>>& sorted_phrases);
+
+  vector<symbol_> get_symbols_from_transiction(DFA_STATE_ state, DFA_STATE_ arrive_state);
+
+  void update_state_table();
+
+public:
+  void print_state_table();
+
+  vector<DfaState> :: iterator begin();
+
+  vector<DfaState> :: iterator end();
 
 };
 

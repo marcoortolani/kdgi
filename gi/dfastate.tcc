@@ -1,4 +1,0 @@
-/*
- * dfastate.cc
- */
-

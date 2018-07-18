@@ -110,14 +110,27 @@ public:
 
 
 
-  /* New code here */
+  /* Code related to the "dfa common interface" */
 
   virtual iterator begin() = 0;
+
   virtual iterator end() = 0;
 
   bool is_identical(Dfa* other_dfa);
 
   vector<symbol_> sort_alphabet();
+
+  /**
+   * Return the next phrase in lexicographical order with the same length of the argument phrase or shorter.
+   */
+  vector<symbol_> get_next_phrase(vector<symbol_> phrase);
+
+  template <class SymIter>
+  DfaState* operator[](SymIter phrase){
+	  return (*begin())[phrase];
+  }
+
+  void print_state_table();
 };
 
 #include "dfa.tcc"

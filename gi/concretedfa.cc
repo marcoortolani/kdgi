@@ -2241,85 +2241,54 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 
 
 
-/* New code here */
+/* Methods related to the "common dfa interface" */
 
 vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
+
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
+	vector<symbol_> current_phrase;
 	set<int> visited_states;
-	vector<int> states_to_explore;
 	vector<int> sorted_states;
 
-	states_to_explore.push_back(get_start_state());
-	visited_states.insert(get_start_state());
+	int remaining_states = get_num_states();
 
-	//Used to compute the depth-sorted phrases we find exploring the states
-	vector<vector<symbol_>> phrases_to_explore;
-	sorted_phrases.clear();
+	do{
+		int state = get_arrive_state(current_phrase);
+		if(visited_states.find(state) == visited_states.end()){
+			visited_states.insert(state);
 
-	phrases_to_explore.push_back(vector<symbol_>(0));
-	sorted_phrases.push_back(vector<symbol_>(1,""));
-
-	while(!states_to_explore.empty()){
-		int current_state = states_to_explore.back();
-		states_to_explore.pop_back();
-
-		sorted_states.push_back(current_state);
-
-		//Do the same for the phrases.
-		vector<symbol_> current_phrase = phrases_to_explore.back();
-		phrases_to_explore.pop_back();
-		if(!current_phrase.empty()){
+			sorted_states.push_back(state);
 			sorted_phrases.push_back(current_phrase);
+
+			current_phrase.push_back(sorted_alphabet.front());
+			--remaining_states;
 		}
-
-		for(auto sym = sorted_alphabet.rbegin(); sym != sorted_alphabet.rend(); ++sym){
-			int next_state = get_ttable(current_state, *sym);
-			if( visited_states.find(next_state) == visited_states.end() ){
-				states_to_explore.push_back(next_state);
-				visited_states.insert(next_state);
-
-				//Do the same for the phrases.
-				vector<symbol_> next_phrase = current_phrase;
-				next_phrase.push_back(*sym);
-				phrases_to_explore.push_back(next_phrase);
-			}
+		else{
+			current_phrase = get_next_phrase(current_phrase);
 		}
 	}
+	while(remaining_states > 0);
 
 	return sorted_states;
 }
 
-vector<symbol_> ConcreteDfa::get_symbols_from_transiction(DFA_STATE_ state, DFA_STATE_ arrive_state){
-	vector<symbol_> sorted_alphabet = sort_alphabet();
-	vector<symbol_> symbols;
-	for(symbol_ sym : sorted_alphabet){
-		if(get_ttable(state, sym) == arrive_state){
-			symbols.push_back(sym);
-		}
-	}
-	return symbols;
-}
-
 void ConcreteDfa::update_state_table(){
-	//state_to_state_table_.clear();
 	state_table_.clear();
 	vector<symbol_> sorted_alphabet = sort_alphabet();
+
 	vector<vector<symbol_>> sorted_phrases;
 	vector <int> sorted_states = sort_states(sorted_phrases);
 
 	int i = 0;
 	for(int state : sorted_states){
 		state_table_.push_back(DfaState(is_accepting(state), sorted_phrases[i]));
-
 		++i;
 	}
 
 	i = 0;
 	for(int state : sorted_states){
-		//vector<vector<symbol_>> row;
 		for(symbol_ sym : sorted_alphabet){
-			//row.push_back(get_symbols_from_transiction(state, arrive_state));
 			int next_state = get_ttable(state, sym);
 			bool state_found = false;
 			for(int j = 0; j < sorted_states.size() && !state_found; j++){
@@ -2329,7 +2298,6 @@ void ConcreteDfa::update_state_table(){
 				}
 			}
 		}
-
 		++i;
 	}
 }

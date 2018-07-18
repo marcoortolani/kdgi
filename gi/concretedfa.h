@@ -35,10 +35,6 @@ protected:
   vector<int> accepting_states_;      /*!< List of accepting states */
   vector<map<symbol_,int>> ttable_;			  	/*!< Transition table */
 
-  /* New data members here */
-  vector<vector<vector<symbol_>>> state_to_state_table_;
-  vector<DfaState> state_table_;
-  /* end of new data members */
   //******** CONSTRUCTORS: ********
   /**
    * Make an instance of new dfa with default start state to 0.
@@ -441,20 +437,40 @@ public:
 
 
 
-  /* New code here */
+  /* Code related to the "dfa common interface" */
 
 protected:
+
+  vector<DfaState> state_table_;	/*!< The real container, ConcreteDfa is just a wrapper */
+
+  /**
+   * It sorts the states of the ConcreteDfa in a depth-first and lexicographical order
+   */
   vector<int> sort_states(vector<vector<symbol_>>& sorted_phrases);
 
-  vector<symbol_> get_symbols_from_transiction(DFA_STATE_ state, DFA_STATE_ arrive_state);
-
+  /**
+   * Read the tables of the ConcreteDfa and update the state_table member, a vector of DfaStates.
+   * The ConcreteDfa can act as a container only after this function is called (It still must learn beforehand).
+   */
   void update_state_table();
 
 public:
+
+  /**
+  	* Print in the correct order all the infos about the DfaState of the Dfa.
+  	*/
   void print_state_table();
 
+  /**
+   * Implements the Dfa's container-like behavior.
+   * @return an iterator to the first DfaState.
+   */
   vector<DfaState> :: iterator begin();
 
+  /**
+   * Implements the Dfa's container-like behavior.
+   * @return an iterator to the end of the Dfa.
+   */
   vector<DfaState> :: iterator end();
 
 };

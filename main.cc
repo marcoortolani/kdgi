@@ -42,7 +42,7 @@ int main() {
 	d3.print_state_table();
 
 	ConcreteDfa* d4 = res_dfa->gen_concrete_dfa();
-	d4->print_dfa_ttable(" concrete dfa generato dalla Angluin");
+	d4->print_dfa_ttable("concrete dfa generato dalla Angluin");
 	d4->print_state_table();
 
 	/*ConcreteDfa d2;
@@ -57,9 +57,15 @@ int main() {
 		cout << "d1 è diverso da res_dfa" << endl;
 	}
 
-	//cout << d1.is_identical(&d3) << " " << d1.is_identical(&d2) << endl;
+	vector<symbol_> phrase1 = {"a", "a", "a", "b", "a", "b"};
+	list<symbol_> phrase2 = { "a", "b", "b", "a", "b"};
 
-	DfaState ds(true, a, map<symbol_, DfaState*>());
+
+	DfaState* dsp1 = (*res_dfa)[phrase1];
+	DfaState* dsp2 = d1[phrase2];
+
+	dsp1->print();
+	dsp2->print();
 
 	return 0;
 }

@@ -69,11 +69,6 @@ private:
 	 */
 	list <vector<int>> new_look_up_sa;
 
-	/* New code here */
-	vector<vector<vector<symbol_>>> state_to_state_table_;
-	vector<DfaState> state_table_;
-	/*****************/
-
 	/*
 	 * Clears all the "new" vectors (newS, newSa, new_look_up_s and so on).
 	 */
@@ -203,28 +198,64 @@ public:
 	AngluinDfa(vector <string> alphabet, map <list<string>, bool>* first_queries);
 
 
-	/* New code here */
-
-public:
-	vector<DfaState> :: iterator begin(){
-		return state_table_.begin();
-	};
-
-	vector<DfaState> :: iterator end(){
-		return state_table_.end();
-	};
-
-	void print_state_table();
+	/* Code related to the "dfa common interface" */
 
 protected:
-	vector<set<list<symbol_>>> group_symbols() const;
 
+	vector<DfaState> state_table_;	/*!< The real container, AngluinDfa is just a wrapper */
+
+	/**
+	 * Return the states of the Dfa as sets of phrases sorted by the "AngluinDfa rules".
+	 * (see AngluinDfa::correct_order for better understanding)
+	 */
+	vector<set<list<symbol_>>> group_phrases_into_states() const;
+
+	/**
+	 * Order the states given by AngluinDfa::group_phrases_into_states in a depth-first and lexicographical order
+	 */
 	vector<set<list<symbol_>>> sort_states(vector<set<list<symbol_>>> states, vector<vector<symbol_>>& sorted_phrases);
 
+	/**
+	 * Return the index of the initial state of the Dfa as represented by
+	 * the return value of AngluinDfa::group_phrases_into_states.
+	 */
 	int get_start_index(vector<set<list<symbol_>>> states);
 
+	/**
+	 * Return the index of the state we will end into processing the symbol passed as argument given a starting state.
+	 * The states are represented as intended by AngluinDfa::group_phrases_into_states and AngluinDfa::sort_states
+	 * @param current_state		the starting state, intended as specified before.
+	 * @param sym 				the symbol causing the transition.
+	 * @param all_states 		all the states as returned by AngluinDfa::group_phrases_into_states.
+	 * @return					the index of the state we arrive after the transition.
+	 */
+	int get_index_from_transition(set<list<symbol_>> current_state, symbol_ sym, vector<set<list<symbol_>>> all_states);
+
+	/**
+	 * Read the tables of the AngluinDfa and update the state_table member, a vector of DfaStates.
+	 * The AngluinDfa can act as a container only after this function is called (It still must learn beforehand).
+	 */
 	void update_state_table();
 
-	DFA_STATE_ get_index_from_transiction(set<list<symbol_>> current_state, symbol_ sym, vector<set<list<symbol_>>> all_states);
+public:
+
+	/**
+	 * Implements the Dfa's container-like behavior.
+	 * @return an iterator to the first DfaState.
+	 */
+	vector<DfaState> :: iterator begin();
+
+	/**
+	 * Implements the Dfa's container-like behavior.
+	 * @return an iterator to the end of the Dfa.
+	 */
+	vector<DfaState> :: iterator end();
+
+	/**
+	 * Print in the correct order all the infos about the DfaState of the Dfa.
+	 */
+	void print_state_table();
+
+
 };
 #endif /* ANGLUINDFA_H_ */

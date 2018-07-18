@@ -36,6 +36,25 @@ public:
 	void set_transiction(symbol_ sym, DfaState* arrive_state);
 
 	void print();
+
+	template <class Container>
+	DfaState* operator[](Container phrase){
+		if(phrase.empty()){
+			return this;
+		}
+		else if(phrase.size() == 1){
+			symbol_ s = phrase.front();
+			return next(s);
+		}
+		else{
+			Container new_phrase;
+			symbol_ s = phrase.front();
+			auto it = phrase.begin();
+			++it;
+			new_phrase.insert(new_phrase.end(), it, phrase.end());
+			return (*next(s))[new_phrase];
+		}
+	}
 };
 
 #endif /* DFASTATE_H_ */

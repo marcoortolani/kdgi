@@ -24,8 +24,8 @@ AngluinDfa* AngluinLearner::learn(){
 	//cout << "start learning " << endl;
 	map <list<string>, bool>* mem_query_res = new map<list<string>, bool>;
 	//TO-DO: cercare di risolvere questa "ridondanza"
-	vector <string> str_vec;
-	list <string> str_lis;
+	vector <symbol_> str_vec;
+	list <symbol_> str_lis;
 	for(unsigned int i=0; i<alphabet.size(); i++){
 		str_vec = vector<string>(1, alphabet[i]);
 		str_lis = list<string>(1, alphabet[i]);
@@ -35,7 +35,7 @@ AngluinDfa* AngluinLearner::learn(){
 	str_lis = list<symbol_>(1, "");
 	(*mem_query_res)[str_lis] = oracle->is_member(str_vec);
 	ang_dfa = new AngluinDfa(alphabet, mem_query_res);
-	free(mem_query_res);
+	delete(mem_query_res);
 	//ang_dfa->print();
 
 	while(true){

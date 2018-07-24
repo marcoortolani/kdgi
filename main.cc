@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <map>
+#include <deque>
 
 #include "angluindfa.h"
 #include "angluinlearner.h"
@@ -10,62 +11,37 @@
 
 int main() {
 
-	string file_path;
-	cout <<  "inserire percorso file" << endl;
-	cin  >> file_path;
-	
-	ConcreteDfa d1;
-	d1 = d1.read_dfa_file(file_path);
-	SillyOracle silly(&d1);
-
-	vector <string> alphabet;
-	alphabet.push_back("a");
-	alphabet.push_back("b");
-
-	//TO-DO
-	AngluinLearner ang_learner(&silly, alphabet);
-	AngluinDfa* res_dfa = ang_learner.learn();
-	cout << "dfa della Angluin" << endl;
-	res_dfa->print_state_table();
-
-
-	d1.print_dfa_ttable("dfa originale");
-	d1.print_state_table();
-
-	ConcreteDfa d3(d1);
-	vector<symbol_> a;
-	a.push_back("b");
-	a.push_back("a");
-
-	d3.set_alphabet(a);
-	d3.print_dfa_ttable("dfa copia del primo con alfabeto invertito");
-	d3.print_state_table();
-
-	ConcreteDfa* d4 = res_dfa->gen_concrete_dfa();
-	d4->print_dfa_ttable("concrete dfa generato dalla Angluin");
-	d4->print_state_table();
-
-	/*ConcreteDfa d2;
-	d2 = d2.read_dfa_file("data/_no_repetitions.txt");
-	d2.print_dfa_ttable("dfa completamente diverso");
-	d2.print_state_table();*/
-
-	if(d1.is_identical(res_dfa)){
-		cout << "d1 è identico a res_dfa" << endl;
-	}
-	else{
-		cout << "d1 è diverso da res_dfa" << endl;
+	vector<string> file_names = {"_2_instance_of_aab", "_ab_aaaa", "_all_except_abab", "_no_repetitions", "_odd_a_odd_b", "dfa_test"};
+	vector<ConcreteDfa> Dfas;
+	for(auto name : file_names){
+		ConcreteDfa d1 = d1.read_dfa_file("../gi/data/" + name + ".txt");
+		Dfas.push_back(d1);
 	}
 
-	vector<symbol_> phrase1 = {"a", "a", "a", "b", "a", "b"};
-	list<symbol_> phrase2 = { "a", "b", "b", "a", "b"};
+	for(auto dfa1 : Dfas){
+		for(auto dfa2 : Dfas){
+			vector<symbol_> phrase;
+			bool test = dfa1.is_identical(&dfa2, phrase);
+			if(test){
+				cout << "1";
+			}
+			else{
+				cout << phrase;
+			}
+			cout << "\t";
+		}
+		cout << endl;
+	}
 
+	DfaState ds = *(Dfas.front().begin());
 
-	DfaState* dsp1 = (*res_dfa)[phrase1];
-	DfaState* dsp2 = d1[phrase2];
+	deque<symbol_>{"a", "b", "a"};
+	ds[vector<symbol_>{"a", "b", "a"}];								//compila
+	ds[list<symbol_>{"a", "b", "a"}];								//compila
+	ds[deque<symbol_>{"a", "b", "a"}];								//compila
 
-	dsp1->print();
-	dsp2->print();
+	//ds[vector<int>{1,2,3}];										//non compila
+
 
 	return 0;
 }

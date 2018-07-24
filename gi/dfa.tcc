@@ -106,12 +106,14 @@ bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
 		DfaState other_state = *other_state_it;
 			  
 		if(state.get_depth_phrase() != other_state.get_depth_phrase() || state.is_accepting() != other_state.is_accepting()){
+			
 			if(state.get_depth_phrase() == other_state.get_depth_phrase()){
 				phrase = state.get_depth_phrase();
 			}
 			else{
 				phrase = lexicographical_compare(state.get_depth_phrase().begin(), state.get_depth_phrase().end(), other_state.get_depth_phrase().begin(), other_state.get_depth_phrase().end()) ? state.get_depth_phrase() : other_state.get_depth_phrase();
 			}
+			
 			return false;
 		}
 			  
@@ -120,8 +122,10 @@ bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
 			DfaState* other_next_state = other_state.next(sym);
 			
 			if(next_state->get_depth_phrase() != other_next_state->get_depth_phrase() || next_state->is_accepting() != other_next_state->is_accepting()){
+				
 				phrase = state.get_depth_phrase();
 				phrase.push_back(sym);
+				
 				return false;
 			}
 		}

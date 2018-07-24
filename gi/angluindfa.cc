@@ -1079,4 +1079,5 @@ void AngluinDfa::print_state_table(){
 	cout << endl;
 	for(auto state : *this){
 		state.print();
-	}}
+	}
+}

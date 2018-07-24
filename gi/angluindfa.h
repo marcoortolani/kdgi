@@ -256,6 +256,9 @@ public:
 	 */
 	void print_state_table();
 
-
+	template <class SymIter>
+	DfaState* operator[](SymIter phrase){
+		return (*begin())[phrase];
+	}
 };
 #endif /* ANGLUINDFA_H_ */

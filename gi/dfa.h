@@ -116,8 +116,14 @@ public:
 
   virtual iterator end() = 0;
 
-  bool is_identical(Dfa* other_dfa);
+  /**
+   * Returns true if the 2 Dfas are identical false otherwise.
+   */
+  bool is_identical(Dfa* other_dfa, vector<symbol_>& phrase = vector<symbol_>());
 
+  /**
+   * Returns the alphabet in lexicographical order.
+   */
   vector<symbol_> sort_alphabet();
 
   /**
@@ -125,12 +131,18 @@ public:
    */
   vector<symbol_> get_next_phrase(vector<symbol_> phrase);
 
+  /**
+   * Returns the DfaState related to the phrase passed regardless of the type of container of symbol_.
+   * It explores the graph symbol_ by symbol_ and DfaState by DfaState, making it usable for every Dfa.
+   * A Dfa that need efficiency should override this operator.
+   * It should be noted that any function defined in the Dfa generic template class that use this operator, use
+   * this version whether another one is implemented in the derived class or not.
+   */
   template <class SymIter>
-  DfaState* operator[](SymIter phrase){
-	  return (*begin())[phrase];
-  }
+  DfaState* operator[](SymIter phrase);
 
-  void print_state_table();
+  bool find_counterexample(Dfa* other_dfa, vector<symbol_> counter_example);
+
 };
 
 #include "dfa.tcc"

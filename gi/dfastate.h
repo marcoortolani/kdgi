@@ -43,12 +43,12 @@ public:
 			return this;
 		}
 		else if(phrase.size() == 1){
-			symbol_ s = phrase.front();
+			symbol_ s = static_cast<symbol_>(phrase.front());
 			return next(s);
 		}
 		else{
 			Container new_phrase;
-			symbol_ s = phrase.front();
+			symbol_ s = static_cast<symbol_>(phrase.front());
 			auto it = phrase.begin();
 			++it;
 			new_phrase.insert(new_phrase.end(), it, phrase.end());

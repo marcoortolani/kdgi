@@ -448,16 +448,16 @@ protected:
    */
   vector<int> sort_states(vector<vector<symbol_>>& sorted_phrases);
 
-  /**
-   * Read the tables of the ConcreteDfa and update the state_table member, a vector of DfaStates.
-   * The ConcreteDfa can act as a container only after this function is called (It still must learn beforehand).
-   */
-  void update_state_table();
-
 public:
 
   /**
-  	* Print in the correct order all the infos about the DfaState of the Dfa.
+   * Read the tables of the ConcreteDfa and update the state_table member, a vector of DfaStates.
+   * The ConcreteDfa can act as a container only after this function is called.
+   */
+  void update_state_table();
+
+  /**
+  	* Prints all the infos about the DfaState of the Dfa in the correct order.
   	*/
   void print_state_table();
 

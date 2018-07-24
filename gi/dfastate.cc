@@ -33,7 +33,7 @@ vector <symbol_> DfaState::get_depth_phrase(){
 }
 
 void DfaState::print(){
-	cout << "-------------------------" << endl;
+	cout << "+-----------------------+" << endl;
 	cout << " depth phrase: \"";
 	for(auto sym : depth_phrase){
 		cout << sym;
@@ -47,7 +47,7 @@ void DfaState::print(){
 		}
 		cout << endl;
 	}
-	cout << "-------------------------" << endl;
+	cout << "+-----------------------+" << endl;
 }
 
 void DfaState::set_transiction(symbol_ sym, DfaState* arrive_state){

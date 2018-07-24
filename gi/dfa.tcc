@@ -4,6 +4,13 @@
 
 template <class I>
 Dfa<I>::Dfa(){
+	//TO-DO: implementare questo controllo per ogni costruttore di Dfa (spostare quelli non necessari in ConcreteDfa)
+	//Nota bene: questo controllo permette di usare solo i container sequenziali, in quanto quelli associativi richiedono
+	//un ordinamento forte (non deve essere possibile l'uguaglianza su elementi diversi(?)) che non abbiamo definito per DfaState
+	
+	DfaState test(true, vector<symbol_>());
+	static_cast<typename basetype::value_type>(test);
+	
 	num_states_   = 0;
 	start_state_  = 0;
 	alphabet_	= vector<symbol_>();
@@ -65,7 +72,7 @@ int Dfa<I>::get_start_state() const{
 
 
 
-/* New code here */
+/* Methods related to the "dfa common interface" */
 
 template <class I>
 vector<symbol_> Dfa<I>::sort_alphabet(){
@@ -88,7 +95,7 @@ vector<symbol_> Dfa<I>::sort_alphabet(){
 }
 
 template <class I>
-bool Dfa<I>::is_identical(Dfa* other_dfa){
+bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 	
 	auto state_it = this->begin();
@@ -99,6 +106,12 @@ bool Dfa<I>::is_identical(Dfa* other_dfa){
 		DfaState other_state = *other_state_it;
 			  
 		if(state.get_depth_phrase() != other_state.get_depth_phrase() || state.is_accepting() != other_state.is_accepting()){
+			if(state.get_depth_phrase() == other_state.get_depth_phrase()){
+				phrase = state.get_depth_phrase();
+			}
+			else{
+				phrase = lexicographical_compare(state.get_depth_phrase().begin(), state.get_depth_phrase().end(), other_state.get_depth_phrase().begin(), other_state.get_depth_phrase().end()) ? state.get_depth_phrase() : other_state.get_depth_phrase();
+			}
 			return false;
 		}
 			  
@@ -107,6 +120,8 @@ bool Dfa<I>::is_identical(Dfa* other_dfa){
 			DfaState* other_next_state = other_state.next(sym);
 			
 			if(next_state->get_depth_phrase() != other_next_state->get_depth_phrase() || next_state->is_accepting() != other_next_state->is_accepting()){
+				phrase = state.get_depth_phrase();
+				phrase.push_back(sym);
 				return false;
 			}
 		}
@@ -114,6 +129,12 @@ bool Dfa<I>::is_identical(Dfa* other_dfa){
 		++other_state_it;
 	}
 	if(state_it != this->end() || other_state_it != other_dfa->end()){
+		if(state_it != this->end()){
+			phrase = state_it->get_depth_phrase();
+		}
+		else{
+			phrase = other_state_it->get_depth_phrase();
+		}
 		return false;
 	}
 	  
@@ -153,4 +174,10 @@ vector<symbol_> Dfa<I>::get_next_phrase(vector<symbol_> phrase){
 	}
 	
 	return phrase;
+}
+
+template <class I>
+template <class SymIter>
+DfaState* Dfa<I>::operator[](SymIter phrase){
+	return (*begin())[phrase];
 }

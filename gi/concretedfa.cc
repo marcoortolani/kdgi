@@ -74,7 +74,9 @@ ConcreteDfa::ConcreteDfa(const int n_state, const vector<symbol_> alf, const int
 
 
 ConcreteDfa::ConcreteDfa(const ConcreteDfa &d1)
-:ConcreteDfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.ttable_, d1.accepting_states_){}
+:ConcreteDfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.ttable_, d1.accepting_states_){
+	update_state_table();
+}
 
 
 ConcreteDfa &ConcreteDfa::operator=(const ConcreteDfa &d1)
@@ -96,6 +98,8 @@ ConcreteDfa &ConcreteDfa::operator=(const ConcreteDfa &d1)
 			accepting_states_.clear();
 			accepting_states_.reserve(d1.accepting_states_.size());
 			copy(d1.accepting_states_.begin(),d1.accepting_states_.end(),back_inserter(accepting_states_));
+
+			update_state_table();
 	}
 
 	return *this;
@@ -2311,7 +2315,6 @@ vector<DfaState>::iterator ConcreteDfa::end(){
 }
 
 void ConcreteDfa::print_state_table(){
-	update_state_table();
 	for(auto state : *this){
 		state.print();
 	}

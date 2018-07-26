@@ -4,12 +4,13 @@
 
 #include "dfastate.h"
 
-DfaState::DfaState(bool final, vector<symbol_> dep_ph){
+DfaState::DfaState(bool final, vector<symbol_> dep_ph, int ind){
 	accepting_state = final;
 	depth_phrase = dep_ph;
+	index_ = ind;
 }
 
-DfaState::DfaState(bool final, vector<symbol_> dep_ph, map<symbol_, DfaState*> tr):DfaState(final, dep_ph){
+DfaState::DfaState(bool final, vector<symbol_> dep_ph, map<symbol_, DfaState*> tr, int ind):DfaState(final, dep_ph, ind){
 	transictions = tr;
 }
 
@@ -52,4 +53,23 @@ void DfaState::print(){
 
 void DfaState::set_transiction(symbol_ sym, DfaState* arrive_state){
 	transictions[sym] = arrive_state;
+}
+
+int DfaState::get_index() const{
+	return index_;
+}
+
+void DfaState::set_incoming_transictions(pair<DfaState*, symbol_> in_trans){
+	incoming_transictions_.push_back(in_trans);
+}
+
+vector<pair<DfaState*, symbol_> > DfaState::get_incoming_transictions() const{
+	return incoming_transictions_;
+}
+
+vector<DfaState*> DfaState::get_incoming_states() const{
+	vector<DfaState*> accumulatore;
+	for(pair<DfaState*,symbol_> coppia : incoming_transictions_)
+		accumulatore.push_back(coppia.first);
+	return accumulatore;
 }

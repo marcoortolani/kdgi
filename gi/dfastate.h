@@ -20,12 +20,14 @@ private:
 	bool accepting_state;
 	vector<symbol_> depth_phrase;
 	map<symbol_, DfaState*> transictions;
+	int index_;
+	vector<pair<DfaState*, symbol_> > incoming_transictions_;
 
 public:
 
-	DfaState(bool accepting, vector<symbol_> dep_ph);
+	DfaState(bool accepting, vector<symbol_> dep_ph, int ind);
 
-	DfaState(bool accepting, vector<symbol_> dep_ph, map<symbol_, DfaState*> tr);
+	DfaState(bool accepting, vector<symbol_> dep_ph, map<symbol_, DfaState*> tr, int ind);
 
 	DfaState* next(symbol_ sym);
 
@@ -35,7 +37,15 @@ public:
 
 	void set_transiction(symbol_ sym, DfaState* arrive_state);
 
+	void set_incoming_transictions(pair<DfaState*, symbol_> in_trans);
+
+	vector<pair<DfaState*, symbol_> > get_incoming_transictions() const;
+
+	vector<DfaState*> get_incoming_states() const;
+
 	void print();
+
+	int get_index() const;
 
 	template <class Container>
 	DfaState* operator[](Container phrase){

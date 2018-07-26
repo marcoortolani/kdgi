@@ -8,8 +8,6 @@
 #ifndef UTILITIES_H_
 #define UTILITIES_H_
 
-#define INF 0x7fffffff
-
 #include <iostream>
 #include <string>
 #include <set>
@@ -432,31 +430,8 @@ public:
 class NMSimilarity
 {
 private:
-
-	// iterazione corrente
     double **node_similarity;
-
-	// ultima iterazione
     double **tmp_similarity;
-
-	// penultima iterazione
-	double **second_to_last_similarity;
-
-	// storia delle iterazioni
-	vector<vector<vector<double> > > history_similarity;
-
-	// ogni coppia di stati, ha un suo vettore di coppie (i,j), i del primo grafo, j del secondo grafo
-	// che hanno fatto variare il loro punteggio di similarità all' ultima iterazione
-	// differenziando il discorso in entrata e in uscita
-	// una tupla è una tripla in cui i primi due parametri sono i nodi effettivi
-	// il terzo parametro rappresenta il numero dell'iterazione in cui è stata rilevata la modifica
-	// questo ci è utile perchè se la coppia modificante che stiamo considerando all'iterazione corrente
-	// è gia stata presa in esame in passato, allora il loro punteggio di similarità da sommare
-	// deve essere preso dalla matrice dell'iterazione precedente a quella in cui è stata aggiunta la coppia
-	vector<vector<vector<tuple<int, int, int> > > > last_modified_by_in;
-	vector<vector<vector<tuple<int, int, int> > > > last_modified_by_out;
-
-
     Graph *graph_a;
     Graph *graph_b;
     int graph_a_n;
@@ -464,200 +439,53 @@ private:
     long *solution;
     long *costs;
     int first_time;
-
+    
     int Iteration(double eps, int iter)
     {
-		// flag per fermare l'iterazione, 1 significa che la condizione di terminazione è soddisfatta
 		int precision_achieved=1;
-
-		double sim_to_add = 0;
-
-		// accumulatore per la corrente iterazione
-		//vector<vector<vector<pair<int, int> > > > temp_last_modified_by_in(graph_a_n, vector<vector<pair<int,int> > >(graph_b_n, vector<pair<int, int> >()));
-		//vector<vector<vector<pair<int, int> > > > temp_last_modified_by_out(graph_a_n, vector<vector<pair<int,int> > >(graph_b_n, vector<pair<int, int> >()));
-
-    std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
-
 		for(int i=0; i<graph_a_n; i++)
-			for(int j=0; j<graph_b_n; j++){
-				if(iter>=1)
-					// la penultima iterazione è uguale a quella che la precedente iterazione era l'ultima iterazione
-					second_to_last_similarity[i][j]=tmp_similarity[i][j];
-
-				// l'ultima iterazione è uguale a quella corrente prima di effettuare un qualsiasi conto
-				tmp_similarity[i][j]=node_similarity[i][j];
-			}
-
+			for(int j=0; j<graph_b_n; j++)
+			tmp_similarity[i][j]=node_similarity[i][j];
 		for(int i=0; i<graph_a_n; i++)
 			for(int j=0; j<graph_b_n; j++)
 			{
-				// faccenda stati accettanti/rigettanti
 				if(graph_a->Label(i)!=graph_b->Label(j))
 					continue;
-
-				// nodi del vicinato: kaddr == vicinato del nodo del grafo A; laddr == vicinato del nodo del grafo B
 				vector<int>::iterator kaddr,laddr;
-
-				// cardinalità del vicinato
 				int klen, llen;
-
-				//vector<int>::iterator opt_match_kaddr,opt_match_laddr;
-				//int opt_match_klen, opt_match_llen;
-
 				double in_similarity=0;
 				double out_similarity=0;
-
-				// nodi e cardinalità del vicinato uscente
 				graph_a->EnumBeginningEdges(i,&kaddr,&klen);
 				graph_b->EnumBeginningEdges(j,&laddr,&llen);
-
-				if(klen>0 && llen>0)
+					if(klen>0 && llen>0)
 				{
-					// costs è la sottomatrice costituita dal vicinato (entrante o uscente)
-					// che contiene i pesi, cioe i punteggi di similarità internodo,
-					// è in sostanza la matrice su cui risolvere l'assignment problem per
-					// trovare il matching ottimo
 					costs=(long *)malloc(klen*llen*sizeof(long));
 					solution=new long[klen];
 					for(int k=0; k<klen; k++)
 						for(int l=0; l<llen; l++)
-							// l'hungarian algorithm di suo risolve il MINIMUM assignment problem
-							// noi siamo interessati al MAXIMUM assignment problem, ecco che
-							// prendiamo il complementare rispetto a 1 di ciascun peso.
 							costs[k*llen+l]=(1-tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[l])])/eps;
-
-					// solution è un vettore di dimensione pari alla cardinalità del vicinato del nodo
-					// del grafo A, e cioè i della corrente iterazione.
-					// l'indice con cui si accede a solution indica il nodo del vicinato di i appartenente al grafo A
-					// (indice scalato alla sottomatrice che comprende solo il vicinato, kaddr ed laddr consentono di recuperare il nodo vero a partire dall'indice scalato)
-					// il valore contenuto nel vettore indica quale nodo del vicinato di j appartenente al grafo B
-					// si deve associare all'indice per avere il matching ottimo.
-					// un valore negativo indica che il nodo i non fa parte del matching
+					
 					hungarian(&costs, klen, llen, solution, 0);
-
-					#ifdef HUNG_DEBUG
-						cout<<endl<<"Coppia ("<<i<<","<<j<<"), uscente:"<<endl;
-					#endif
-
-					for(int k=0; k<klen; k++){
-
-						#ifdef HUNG_DEBUG
-							cout<<"K="<<k<<" solution[k]="<<solution[k]<<endl;
-						#endif
-
-						if(solution[k]>=0){
-
-							std::vector<std::tuple<int, int, int> >:: iterator it ;
-							bool already_modified = false;
-
-							// Controlla se la coppia del matching ottimo, il cui valore locale di similarità alla precedente iterazione
-							// è da sommare al punteggio di similarità dei nodi (i,j) alla iterazione corrente,
-							// è stata già tenuta in considerazione nell'ultima iterazione:
-							// se è cosi allora pesca il punteggio di similarità della coppia dalla penultima iterazione
-
-							for (it = last_modified_by_out[i][j].begin(); it != last_modified_by_out[i][j].end(); ++it)
-
-								if ((get<0>(*it) == graph_a->TerminatingNode(kaddr[k])) && (get<1>(*it) == graph_b->TerminatingNode(laddr[solution[k]]))){
-
-									sim_to_add = history_similarity[get<2>(*it)-1][graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])];
-
-									// fare così, cioe guardare alla penultima iterazione, va bene e.g. per la coppia (0,0) fino alla iterazione 3, perchè poi,
-									// nonostante le liste modificanti siano saturate, il punteggio di similarità cambia perchè non tiene memoria di quei calcoli
-									// svolti per il vicinato: ad esempio il punteggio di similarita entrante s_in(0,0) = 1/2 * (x_3_3_iterazione_0 + x_1_1_iterazione_1)
-									//sim_to_add = second_to_last_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])];
-
-									#ifdef DEBUG2
-										if(iter==3){
-										cout<<endl<<"history_similarity[get<2>(*it)-1] = "<<get<2>(*it)-1<<endl;	//per la coppia (0,0) alla iterazione 3, quando guarda al vicinato entrante(3,3) dovrebbe restituire l'iterazione a cui guardare, cioè in questo caso 0. E lo stampa, giusto
-										cout<<endl<<"Confronto nodi ("<<i<<", "<<j<<"): "<<endl;
-										cout<<"La coppia del vicinato uscente ("<<graph_a->TerminatingNode(kaddr[k])<<", "<<graph_b->TerminatingNode(laddr[solution[k]])<<"):"<<endl;
-										cout<<"è già stata considerata all'iterazione precedente."<<endl<<"Considero il punteggio della iterazione STORICA precedente a quella in cui la coppia è stata aggiunta: "<<sim_to_add<<endl<<second_to_last_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])]<<endl;
-										}
-									#endif
-
-									already_modified = true;
-									break;
-								}
-
-							// se la coppia non è già intervenuta nella passata iterazione, considera
-							// il loro punteggio all' ultima iterazione
-							if(!already_modified){
-
-								sim_to_add = tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])];
-
-								#ifdef DEBUG2
-									if(iter==3){
-									cout<<endl<<"Confronto nodi ("<<i<<", "<<j<<"): "<<endl;
-									cout<<"La coppia del vicinato uscente ("<<graph_a->TerminatingNode(kaddr[k])<<", "<<graph_b->TerminatingNode(laddr[solution[k]])<<"):"<<endl;
-									cout<<"NON è stata considerata all'iterazione precedente."<<endl<<"Considero il punteggio della PRECEDENTE iterazione: "<<sim_to_add<<endl<<tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])]<<endl;
-									}
-								#endif
-
-								// aggiungi all' insieme di coppie modificanti il punteggio di similarità corrente
-								// solo se sei alla prima iterazione, o se il punteggio di similarità della coppia in esame
-								// è diverso da quello alla penultima iterazione
-
-
-								//graph_a->EnumBeginningEdges(i,&opt_match_kaddr,&opt_match_klen);
-								//graph_b->EnumBeginningEdges(j,&opt_match_laddr,&opt_match_llen);
-								// la condizione guarda alle coppie di nodi ritornate dal matching ottimo
-								// alla prima iterazione, se queste coppie di nodi hanno al loro interno un numero diverso
-								// di transizioni uscenti/entranti, allora sono "modificanti"
-								/* if(iter == 0 && opt_match_klen!=opt_match_llen){
-
-									last_modified_by_out[i][j].push_back(std::make_pair(graph_a->TerminatingNode(kaddr[k]), graph_b->TerminatingNode(laddr[solution[k]])));
-
-									#ifdef DEBUG0
-										cout<<"Sei all'iterazione 0. Aggiungi per la coppia ("<<i<<","<<j<<") la coppia modificante uscente: ("<<graph_a->TerminatingNode(kaddr[k])<<", "<<graph_b->TerminatingNode(laddr[solution[k]])<<")"<<endl;
-									#endif
-
-								} */
-
-								//if(iter >= 1 && tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])] != second_to_last_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])]){
-								if(iter >=1 && tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])] < 1){
-									last_modified_by_out[i][j].push_back(std::make_tuple(graph_a->TerminatingNode(kaddr[k]), graph_b->TerminatingNode(laddr[solution[k]]), iter));
-
-									#ifdef DEBUG2
-										if(iter==3){
-										cout<<endl<<"La coppia del vicinato uscente: ("<<graph_a->TerminatingNode(kaddr[k])<<", "<<graph_b->TerminatingNode(laddr[solution[k]])<<")"<<endl;
-										//cout<<"ha un punteggio di similarità che è cambiato tra l'ultima iterazione e la penultima. Dunque aggiungila"<<endl;
-										cout<<"ha un punteggio di similarità < 1. Dunque aggiungila"<<endl;
-										cout<<"al vettore delle coppie modificanti per lo stato "<<i<<endl;
-										}
-									#endif
-
-								}
-							}
-
-							out_similarity+=sim_to_add;
-
-							#ifdef DEBUG0
-								if(iter==0){
-									cout<<"Confronto nodo "<<i<<" del grafo A con il nodo "<<j<<" del grafo B"<<endl;
-									cout<<"Punteggio sim uscente prima di dividere per il max degli archi uscenti: "<<out_similarity<<endl;
-								}
-							#endif
-						}
-					}
+					for(int k=0; k<klen; k++)
+					if(solution[k]>=0)
+						out_similarity+=tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])];
 					delete solution;
 					free(costs);
 				}
-
 				if(max(klen,llen)!=0)
+					if(iter<=min(klen,llen))
 					out_similarity/=(max(klen,llen));
+					else{
+						if((klen==0 && llen !=0) || (klen!=0 && llen==0))
+							out_similarity=0;
+						else
+							out_similarity/=(min(klen,llen));
+					}
 				else
-					out_similarity=1;
+				out_similarity=1;
 
-
-
-				/* Fine similarità uscente */
-
-
-
-				// nodi e cardinalità del vicinato entrante
 				graph_a->EnumTerminatingEdges(i,&kaddr,&klen);
 				graph_b->EnumTerminatingEdges(j,&laddr,&llen);
-
 				if(klen>0 && llen>0)
 				{
 					costs=(long *)malloc(klen*llen*sizeof(long));
@@ -665,215 +493,29 @@ private:
 					for(int k=0; k<klen; k++)
 						for(int l=0; l<llen; l++)
 							costs[k*llen+l]=(1-tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[l])])/eps;
-					hungarian(&costs, klen, llen, solution, 0);
-
-					#ifdef HUNG_DEBUG
-							cout<<endl<<"Coppia ("<<i<<","<<j<<"), entrante:"<<endl;
-					#endif
-
-					for(int k=0; k<klen; k++){
-
-						#ifdef HUNG_DEBUG
-							cout<<"K="<<k<<" solution[k]="<<solution[k]<<endl;
-						#endif
-
-						if(solution[k]>=0){
-
-							std::vector<std::tuple<int, int, int> >:: iterator it ;
-							bool already_modified = false;
-
-							// Controlla se la coppia del matching ottimo da sommare al punteggio di similarità
-							// è stata già tenuta in considerazione nell'ultima iterazione:
-							// se è cosi allora pesca il punteggio di similarità della coppia dalla penultima iterazione
-
-							for (it = last_modified_by_in[i][j].begin(); it != last_modified_by_in[i][j].end(); ++it)
-
-								if (get<0>(*it) == graph_a->SourceNode(kaddr[k]) && get<1>(*it) == graph_b->SourceNode(laddr[solution[k]])){
-
-									sim_to_add = history_similarity[get<2>(*it)-1][graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])];
-
-									// fare così, cioe guardare alla penultima iterazione, va bene e.g. per la coppia (0,0) fino alla iterazione 3, perchè poi,
-									// nonostante le liste modificanti siano saturate, il punteggio di similarità cambia perchè non tiene memoria di quei calcoli
-									// svolti per il vicinato: ad esempio il punteggio di similarita entrante s_in(0,0) = 1/2 * (x_3_3_iterazione_0 + x_1_1_iterazione_1)
-									//sim_to_add = second_to_last_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])];
-
-									#ifdef DEBUG2
-										if(iter==3){
-										cout<<endl<<"Confronto nodi ("<<i<<", "<<j<<"): "<<endl;
-										cout<<"La coppia del vicinato entrante ("<<graph_a->SourceNode(kaddr[k])<<", "<<graph_b->SourceNode(laddr[solution[k]])<<"):"<<endl;
-										cout<<"è già stata considerata all'iterazione precedente."<<endl<<"Considero il punteggio della iterazione STORICA precedente a quella in cui la coppia è stata aggiunta: "<<sim_to_add<<endl<<second_to_last_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])]<<endl;
-										}
-									#endif
-
-									already_modified = true;
-									break;
-								}
-
-							// se la coppia non è già intervenuta nella passata iterazione, considera proprio
-							// il loro punteggio alla passata iterazione
-
-							if(!already_modified){
-								sim_to_add = tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])];
-
-								#ifdef DEBUG2
-									if(iter==3){
-									cout<<endl<<"Confronto nodi ("<<i<<", "<<j<<"): "<<endl;
-									cout<<"La coppia del vicinato entrante ("<<graph_a->SourceNode(kaddr[k])<<", "<<graph_b->SourceNode(laddr[solution[k]])<<"):"<<endl;
-									cout<<"NON è stata considerata all'iterazione precedente."<<endl<<"Considero il punteggio della PRECEDENTE iterazione: "<<sim_to_add<<endl<<tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])]<<endl;
-									}
-								#endif
-
-								// aggiungi all' insieme di coppie modificanti il punteggio di similarità corrente
-								// solo se o sei alla prima iterazione, o se il punteggio di similarità della coppia in esame
-								// è diverso da quello alla penultima iterazione
-
-								// la condizione guarda alle coppie di nodi ritornate dal matching ottimo
-								// alla prima iterazione, se queste coppie di nodi hanno al loro interno un numero diverso
-								// di transizioni uscenti/entranti, allora sono "modificanti"
-
-								//graph_a->EnumTerminatingEdges(i,&opt_match_kaddr,&opt_match_klen);
-								//graph_b->EnumTerminatingEdges(j,&opt_match_laddr,&opt_match_llen);
-
-
-								/* if(iter == 0 && opt_match_klen!=opt_match_llen){
-
-									last_modified_by_in[i][j].push_back(std::make_pair(graph_a->SourceNode(kaddr[k]), graph_b->SourceNode(laddr[solution[k]])));
-
-									#ifdef DEBUG0
-										cout<<"Sei all'iterazione 0. Aggiungi per la coppia ("<<i<<","<<j<<") la coppia modificante entrante: ("<<graph_a->SourceNode(kaddr[k])<<", "<<graph_b->SourceNode(laddr[solution[k]])<<")"<<endl;
-									#endif
-								} */
-
-								//if(iter >= 1 && second_to_last_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])] != tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])]){
-								if(iter >= 1 && tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])]<1){
-									#ifdef DEBUG2
-										if(iter==3){
-										cout<<endl<<"La coppia del vicinato entrante: ("<<graph_a->SourceNode(kaddr[k])<<", "<<graph_b->SourceNode(laddr[solution[k]])<<")"<<endl;
-										//cout<<"ha un punteggio di similarità che è cambiato tra l'ultima iterazione e la penultima. Dunque aggiungila"<<endl;
-										cout<<"ha un punteggio di similarità < 1. Dunque aggiungila"<<endl;
-										cout<<"al vettore delle coppie modificanti per lo stato "<<i<<endl;
-										}
-									#endif
-
-									last_modified_by_in[i][j].push_back(std::make_tuple(graph_a->SourceNode(kaddr[k]), graph_b->SourceNode(laddr[solution[k]]), iter));
-								}
-							}
-
-							in_similarity+=sim_to_add;
-
-							#ifdef DEBUG0
-								if(iter==0){
-									cout<<"Confronto nodo "<<i<<" del grafo A con il nodo "<<j<<" del grafo B"<<endl;
-									cout<<"Punteggio sim entrante prima di dividere per il max degli archi entranti: "<<in_similarity<<endl;
-								}
-							#endif
-						}
-					}
+					hungarian(&costs, klen, llen, solution, 0);			
+					for(int k=0; k<klen; k++)
+					if(solution[k]>=0)
+						in_similarity+=tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])];
 					delete solution;
 					free(costs);
 				}
-
 				if(max(klen,llen)!=0)
+					if(iter<=min(klen,llen))
 					in_similarity/=(max(klen,llen));
+					else{
+					if((klen==0 && llen !=0) || (klen!=0 && llen==0))
+						in_similarity=0;
+					else
+						in_similarity/=(min(klen,llen));
+					}
 				else
-					in_similarity=1;
-
-
-				/* Fine similarità entrante */
-
-				#ifdef MOD_DEBUG
-//					if(iter==1){
-					cout<<endl<<"Coppia ("<<i<<","<<j<<"):"<<endl;
-					cout<<"modified_by_out["<<i<<"]["<<j<<"] = {";
-					for(int w = 0; w < last_modified_by_out[i][j].size(); w++)
-						{
-							cout <<"(" << get<0>(last_modified_by_out[i][j][w]) << ", " << get<1>(last_modified_by_out[i][j][w]) << "), ";
-						}
-					cout<<"}"<<endl;
-					cout<<"modified_by_in["<<i<<"]["<<j<<"] = {";
-					for(int z = 0; z < last_modified_by_in[i][j].size(); z++)
-						{
-							cout <<"(" << get<0>(last_modified_by_in[i][j][z]) << ", " << get<1>(last_modified_by_in[i][j][z]) << "), ";
-						}
-					cout<<"}"<<endl;
-//					}
-				#endif
-		#ifdef UPDATE_DEBUG
-       		cout << "Aggiorno sim(" << i << "," << j << "): " << node_similarity[i][j] << " -> ";
-		#endif
+				in_similarity=1;
 
 				node_similarity[i][j]=(in_similarity+out_similarity)/2;
-		#ifdef UPDATE_DEBUG
-        	cout << node_similarity[i][j] << endl;
-		#endif
-        
-				// se uno qualunque tra gli elementi della matrice di similarità corrente
-				// sottratto in valore assoluto all'elemento corrispondente della matrice
-				// dell'iterazione passata, si mantiene maggiore o uguale a epsilon,
-				// la condizione di terminazione non è soddisfata, continua a iterare
-				if(abs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
-					precision_achieved=0;	// continua a iterare
+				if(fabs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
+					precision_achieved=0;
 			}
-
-		vector<vector<double> > current_similarity(graph_a_n, vector<double>(graph_b_n));
-
-		for(int i=0; i<graph_a_n; i++)
-			for(int j=0; j<graph_b_n; j++)
-				current_similarity[i][j] = node_similarity[i][j];
-
-		history_similarity.push_back(current_similarity);
-
-
-		// rimpiazza il vettore dei vettori degli stati modificanti con quello corrente
-		//last_modified_by_in = temp_last_modified_by_in;
-		//last_modified_by_out = temp_last_modified_by_out;
-
-		// Stampa matrice di similarità iterazione corrente
-		// std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
-		printf("Matrice similarità corrente:\n\n");
-		for(int i=0; i<graph_a_n; i++)
-		{
-			printf(" [ ");
-			for(int j=0; j<graph_b_n; j++)
-				printf("%lf ", node_similarity[i][j]);
-			printf("]\n");
-		}
-		#ifdef MATRICES_DEBUG
-		printf("\n\nMatrice similarità precedente iterazione:\n\n");
-		for(int i=0; i<graph_a_n; i++)
-		{
-			printf(" [ ");
-			for(int j=0; j<graph_b_n; j++)
-				printf("%lf ", tmp_similarity[i][j]);
-			printf("]\n");
-		}
-		printf("\n\nMatrice similarità penultima iterazione:\n\n");
-		for(int i=0; i<graph_a_n; i++)
-		{
-			printf(" [ ");
-			for(int j=0; j<graph_b_n; j++)
-				printf("%lf ", second_to_last_similarity[i][j]);
-			printf("]\n");
-		}
-		#endif
-
-		#ifdef HISTORY_DEBUG
-		if(iter==3){
-			printf("\n\nMatrici similarità storiche:\n\n");
-			for(int z = 0; z < history_similarity.size(); z++){
-				cout<<"Iterazione: "<<z<<endl<<endl;
-				for(int i=0; i<graph_a_n; i++)
-				{
-					//printf("Iterazione: %d", z, "\n\n");
-					printf(" [ ");
-					for(int j=0; j<graph_b_n; j++)
-						printf("%lf ", history_similarity[z][i][j]);
-					printf("]\n");
-				}
-			}
-		}
-		#endif
-
 		return precision_achieved;
     }
     void Clear()
@@ -885,7 +527,7 @@ private:
 			delete tmp_similarity[i];
 		delete tmp_similarity;
     }
-
+    
 public:
     NMSimilarity(Graph *gr_a, Graph *gr_b): graph_a(gr_a), graph_b(gr_b)
     {
@@ -901,23 +543,14 @@ public:
 		graph_b=gr_b;
 		graph_a_n=graph_a->NodeCount();
 		graph_b_n=graph_b->NodeCount();
-
-		last_modified_by_in = vector<vector<vector<tuple<int, int, int> > > > (graph_a_n, vector<vector<tuple<int,int,int> > >(graph_b_n, vector<tuple<int, int, int> >()));
-		last_modified_by_out = vector<vector<vector<tuple<int, int, int> > > > (graph_a_n, vector<vector<tuple<int,int,int> > >(graph_b_n, vector<tuple<int, int, int> >()));
 		node_similarity=new double*[graph_a_n];
 		tmp_similarity=new double*[graph_a_n];
-		second_to_last_similarity=new double*[graph_a_n];
 		for(int i=0; i<graph_a_n; i++)
 		{
 			node_similarity[i]=new double[graph_b_n];
-
+			for(int j=0; j<graph_b_n; j++)
+			node_similarity[i][j]=graph_a->Label(i)==graph_b->Label(j);
 			tmp_similarity[i]=new double[graph_b_n];
-			second_to_last_similarity[i]=new double[graph_b_n];
-
-			for(int j=0; j<graph_b_n; j++){
-				node_similarity[i][j]=graph_a->Label(i)==graph_b->Label(j);
-				second_to_last_similarity[i][j]=graph_a->Label(i)==graph_b->Label(j);
-			}
 		}
     }
     ~NMSimilarity()
@@ -928,12 +561,11 @@ public:
     {
 		int iter=0;
 		int it=0;
-
 		while(!it && iter<max_iter)
 		{
-			it=Iteration(eps, iter);
+			it=Iteration(eps,iter);
 			iter++;
-		}
+		}	
 		return iter;
     }
     double NodeSimilarity(int i, int j)
@@ -956,19 +588,19 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
     long *slack;
     long *slack_row;
     long unmatched;
-
+    
     long *tmtx;
     long transposed;
 
-    register long k;
-    register long l;
-    register long j;
-    register long s;
-
+    long k;
+    long l;
+    long j;
+    long s;
+    
     assert(*mtx);
     assert(m);
     assert(n);
-
+    
     if (m != n)
 	heur = 0;
 
@@ -1023,7 +655,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 	 row_mate[l] = -1;
 	 parent_row[l] = -1;
 	 col_inc[l] = 0;
-	 slack[l] = INF;
+	 slack[l] = INF_UTIL;
     }
     for (k = 0; k < m; k++) {
 	 s = (*mtx)[k*n+0];
@@ -1056,7 +688,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 		     s = row_dec[k];
 		    for (l = 0; l < n; l++)
 			if ( slack[l]) {
-			    register long del;
+			    long del;
 			     del = (*mtx)[k*n+l] - s + col_inc[l];
 			    if (del < slack[l]) {
 				if (del == 0) {
@@ -1077,7 +709,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 	    }
 
 
-	    s = INF;
+	    s = INF_UTIL;
 	    for (l = 0; l < n; l++)
 		if ( slack[l] && slack[l] < s)
 		    s = slack[l];
@@ -1122,7 +754,7 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 	t = 0;
 	for (l = 0; l < n; l++) {
 	     parent_row[l] = -1;
-	     slack[l] = INF;
+	     slack[l] = INF_UTIL;
 	}
 	for (k = 0; k < m; k++)
 	    if ( col_mate[k] < 0) {
@@ -1188,7 +820,6 @@ static int hungarian(long **mtx, int m, int n, long *solution, long heur)
 }
 
 };
-
 
 inline char* get_incidence_matrix(vector<map<string,int>> ttable, int num_states, vector<string> alphabet){
 

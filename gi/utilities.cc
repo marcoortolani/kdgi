@@ -382,7 +382,7 @@ void print_ir_stats(ir_statistical_measures &stats)
 }
 
 
-void compute_ir_stats(const Dfa* dfa1, ir_statistical_measures &stats, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* &wp, int* &wn)
+void compute_ir_stats(const ConcreteDfa* dfa1, ir_statistical_measures &stats, vector<string>* positive, int dim_positive, vector<string>* negative, int dim_negative, int* &wp, int* &wn)
 {
 
 

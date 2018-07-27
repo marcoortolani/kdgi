@@ -452,7 +452,7 @@ public:
    * @param n, (5/4)*n nodes
    * @param file_path
    */
-  static void  random_dfa_abbadingo(int n, string file_path);
+  static void  random_dfa_abbadingo(int n, int seed, string file_path);
 
   /* New code here */
 

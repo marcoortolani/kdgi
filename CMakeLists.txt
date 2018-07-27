@@ -1,9 +1,11 @@
+# MODIFICA PER FAR COMPILARE SUL SERVER 
+# Andrea: 27/07/18
 cmake_minimum_required(VERSION 3.5)
 
 project("GI learner")
 
 # Enable all warning by default
-set(CMAKE_CXX_FLAGS "-g -Wall -fvisibility=hidden")
+set(CMAKE_CXX_FLAGS "-g -Wall -fvisibility=hidden -std=gnu++11 -fPIC")
 
 set (CMAKE_CXX_STANDARD 11)
 
@@ -24,18 +26,18 @@ target_link_libraries(gilearner gi_lib)
 # Doxygen documentation
 ################################
 # Require dot
-find_package(Doxygen
-             REQUIRED dot)
+#find_package(Doxygen
+#             REQUIRED dot)
 
 # # Require dot, treat the other components as optional
 # find_package(Doxygen
 #             REQUIRED dot
 #             OPTIONAL_COMPONENTS mscgen dia)
 
-set(DOXYGEN_EXCLUDE_PATTERNS */gtest/* */py/*)
-doxygen_add_docs(docs
-  ${PROJECT_SOURCE_DIR}
-  COMMENT "Generate man pages")
+#set(DOXYGEN_EXCLUDE_PATTERNS */gtest/* */py/*)
+#doxygen_add_docs(docs
+#  ${PROJECT_SOURCE_DIR}
+#  COMMENT "Generate man pages")
    # [filesOrDirs...]
    # [WORKING_DIRECTORY dir]
    # [COMMENT comment])

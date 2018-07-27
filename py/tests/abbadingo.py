@@ -1,5 +1,6 @@
 from gi_gipy import *
 import os
+import random
 
 
 for n in range(10, 51):
@@ -10,7 +11,9 @@ for n in range(10, 51):
 
         file_path = './struct_sim_experiments/automata/n' + str(n) + '/' + dfa_name + '.txt'
 
-        Dfa.abbadingo_rand(n, file_path)
+        seed = n * automata_number * random.randint(1,101)
+
+        Dfa.abbadingo_rand(n, seed, file_path)
 
         x=Dfa(Dfa.read_dfa_file(file_path))
 

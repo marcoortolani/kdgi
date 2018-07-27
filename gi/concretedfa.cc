@@ -2380,7 +2380,7 @@ void ConcreteDfa::print_state_table(){
  * the subgraph reachable from the randomly chosen root node, and
  * label the graph's states by flipping a fair coin.
 */
-void ConcreteDfa::random_dfa_abbadingo(int n, string file_path){
+void ConcreteDfa::random_dfa_abbadingo(int n, int seed, string file_path){
 
 	srand (time(NULL));
 
@@ -2392,10 +2392,10 @@ void ConcreteDfa::random_dfa_abbadingo(int n, string file_path){
 
 	int alphabet_size = alphabet.size();
 
-	int start_node = rand() % (nodes_number-1);
+	int start_node = (rand() * seed) % (nodes_number-1);
 
 	default_random_engine e;
-	e.seed(rand() * 383 % 379);
+	e.seed((rand() * 383 * seed));
 	uniform_int_distribution<unsigned> accettante(0, 1);
 	uniform_int_distribution<unsigned> nodo_arrivo(0, (nodes_number-1));
 

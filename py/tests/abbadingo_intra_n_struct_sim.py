@@ -13,12 +13,12 @@ for n in range(10, 11):
     row = 0
     col = 0
     worksheet.write(row, col, 'Comparisons intra level n = ' + str(n))
-    worksheet.write(row, col + 1, 'Similarity score')
+    worksheet.write(row, col + 3, 'Similarity score')
     #worksheet.write(row, col + 2, 'Iterations number')
 
-    row += 1
+    row += 2
 
-    for automata_number in range(1, 10):
+    for automata_number in range(1, 3):
 
         dfa_name1 = 'n' + str(n) + '_' + str(automata_number)
 
@@ -26,7 +26,7 @@ for n in range(10, 11):
 
         dfa1 = Dfa.read_dfa_file(dfa_path1)
 
-        for automata_number2 in range(automata_number+1, 11):
+        for automata_number2 in range(automata_number+1, 4):
 
             dfa_name2 = 'n' + str(n) + '_' + str(automata_number2)
 
@@ -43,14 +43,14 @@ for n in range(10, 11):
             description = dfa_name1 + ' <-> ' + dfa_name2
 
             worksheet.write(row, col, description)
-            worksheet.write(row, col + 1, sim)
+            worksheet.write(row, col + 3, sim)
             #worksheet.write(row, col + 2, n_iter)
             row += 1
 
-            
+    row += 1
     # Write the medium similarity between automatas of level n using a formula.
     worksheet.write(row, 0, 'Average structural similarity between automatas created with parameter: '+str(n))
-    worksheet.write(row, 1, '=AVERAGE(B1:B45)')
+    worksheet.write(row, 3, '=AVERAGE(D3:D47)')
     #worksheet.write(row + 1, 0, 'Average number of iterations:')
     #worksheet.write(row + 1, 1, '=AVERAGE(C1:C45)')
 

@@ -125,6 +125,9 @@ PYBIND11_MODULE(gi_gipy, m) {
 
     ;
 
+    // MODIFICA PER SERVER
+    // Andrea: 27/7/18
+    /*
     py::class_<BlueStar>(m,"BlueStar")
 
       .def(py::init<const char *,double,double>(),"Instance an object with all the members and methods for Edsm inference process.",py::arg("path"),py::arg("alpha_value") = 0.01, py::arg("delta_value") = 0.005)
@@ -132,5 +135,6 @@ PYBIND11_MODULE(gi_gipy, m) {
       .def("run", &BlueStar::run,"Start an EDSM inference process.",py::arg("path"),py::arg("exec_time") = -1)
 
     ;    
+    */
 
 }

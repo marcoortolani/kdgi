@@ -156,6 +156,7 @@ TEST_F(BaseDfaTest, operatorEqual){
     EXPECT_EQ(1,equal);
 }
 
+
 TEST_F(BaseDfaTest, operatorEqualEqual){
     bool flag=true;
     flag=(*reference==*subject);
@@ -164,6 +165,7 @@ TEST_F(BaseDfaTest, operatorEqualEqual){
     EXPECT_EQ(1,flag);
 }
 
+/*
 
 TEST_F(BaseDfaTest, unionDfa){
     TestDfa* test = new TestDfa(3,alph,2);
@@ -197,6 +199,7 @@ TEST_F(BaseDfaTest, unionDfa){
 }
 
 
+
 TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     bool flag=true;
     ConcreteDfa* test=nullptr; 
@@ -204,6 +207,9 @@ TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     flag=reference->equivalence_query(test);
     EXPECT_EQ(1,flag);
 }
+
+*/
+
 
 TEST_F(BaseDfaTest, copyConstructor){
     TestDfa* test = new TestDfa(*reference);

@@ -166,6 +166,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 	int start_state_ = 0;
 
 	symbol_ n;
+	symbol_ accepting_symbol;
 
 	ifstream read;
 	symbol_ template_line;
@@ -190,7 +191,15 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 	start_state_ = 0;
 
 	int dim_alphabet;
-	// Read first line and set "num states", "dim alf" and "dfa name"
+
+	// First line contains the symbol to denote the accepting state
+	read.getline(line,BUFFER_SIZE);
+	istringstream iss1(line);
+	iss1 >> n;
+	accepting_symbol = n;
+
+
+	// Read second line and set "num states", "dim alf" and "dfa name"
 	read.getline(line,BUFFER_SIZE);
 	counter = sscanf(line, "%d %d %s", &(dim_alphabet), &(res.num_states_), nameDFA);
 
@@ -199,7 +208,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 
 	// Check if the first line is complete
 	if(counter != 3){
-		cout << "Error in first line of file" << endl;
+		cout << "Error in second line of file" << endl;
 		throw invalidFormat();
 	}
 
@@ -292,7 +301,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 		//cout<<"res.ttable_[cstato][transition_symbol]="<<res.ttable_[cstato][transition_symbol]<<endl;
 		//res.set_ttable_entry(cstato,transition_symbol,ctransizione);
 		// It detects the row for type of state (accepting or rejecting)
-		if(transition_symbol.compare(std::to_string(dim_alphabet)) == 0)
+		if(transition_symbol.compare(accepting_symbol) == 0)
 			res.accepting_states_[cstato]=ctransizione;
 			//res.set_accepting_state(cstato);
 
@@ -368,7 +377,7 @@ void ConcreteDfa::set_ttable_from_sequence(const vector<int> &sequence)
 		}
 		if(sequence[i*(alph.size()+1)+alph.size()])
 			accepting_states_[i]=1;
-	}	
+	}
 }
 
 symbol_ ConcreteDfa::random_ttable()

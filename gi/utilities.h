@@ -282,7 +282,7 @@ struct lex_compare {
     };
 
 
-static int hungarian(long **mtx, int m, int n, long *solution, long heur)
+static inline int hungarian(long **mtx, int m, int n, long *solution, long heur)
 {
     long *col_mate;
     long *row_mate;

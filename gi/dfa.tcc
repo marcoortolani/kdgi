@@ -472,11 +472,36 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 		iter++;
 	}
 
-	vector<vector<double> > struct_sim(num_states_, vector<double>(num_states_subject_));
+	vector<vector<double> > struct_sim(num_states_+1, vector<double>(num_states_subject_));
 
 	for(int i = 0; i<num_states_; ++i)
 		for(int j = 0; j<num_states_subject_; ++j)
 			struct_sim[i][j]=node_similarity[i][j];	
+
+
+	//Overall Dfas similarity
+	long *r = nullptr;
+    long *final_solution = nullptr;
+    
+    r=(long *)malloc(num_states_*num_states_subject_*sizeof(long));
+    for(int i=0; i<num_states_; i++)
+	    for(int j=0; j<num_states_subject_; j++)
+	        r[i*num_states_subject_+j]=(1-struct_sim[i][j])/eps;
+
+    solution=new long[num_states_];
+    hungarian(&r, num_states_, num_states_subject_, final_solution, 0);
+
+    double similarity=0;
+    int no=0;
+    for(int i=0; i<num_states_; i++)
+      if(solution[i]>=0)
+      {
+        similarity+=struct_sim[i][solution[i]];
+	    no++;
+      }
+
+	struct_sim[num_states_][0]=similarity/no;
+    
 
 	return struct_sim;
 

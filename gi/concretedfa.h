@@ -413,7 +413,7 @@ public:
     */
    vector<vector<double>> neighbour_matching_structural_similarity(ConcreteDfa* subject_dfa, double eps=0.0001, bool color=false) const;
 
-  vector<double> struct_sim(ConcreteDfa* subject_dfa, double eps=0.0001, bool color=false) const;
+  pair<double, unsigned long long int> struct_sim(ConcreteDfa* subject_dfa, double eps=0.0001, bool color=false) const;
   /**
    * Print the matrix containing the similarity score between pair of nodes.
    * @param similarity_matrix 

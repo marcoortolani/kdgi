@@ -2445,7 +2445,7 @@ void ConcreteDfa::random_dfa_abbadingo(int n, string file_path){
 	myfile.close();
 }
 
-vector<double> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, double eps, bool color) const{
+pair<double, unsigned long long int> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, double eps, bool color) const{
 
 	fpu_control_t oldcw, newcw;
     _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
@@ -2521,7 +2521,7 @@ vector<double> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, double eps, boo
 		ga=new Graph(reference_incidence_matrix, this->get_num_states(), reference_labels);
 	}
 	catch(...){
-		return sim_v[0];
+		//return sim_v[0];
 	}
 	//Subject_dfa to graphb
 	try{
@@ -2529,7 +2529,7 @@ vector<double> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, double eps, boo
 		gb=new Graph(subject_incidence_matrix, subject_dfa->get_num_states(), subject_labels);
 	}
 	catch(...){
-		return sim_v[0];
+		//return sim_v[0];
 	}
 
 	s=new NMSimilarity(ga,gb);
@@ -2537,7 +2537,7 @@ vector<double> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, double eps, boo
 	//Similarity between pair of states
 	//printf("\nNumber of iterations: %d\n", s->Iterate(eps,100000));
     //printf("\nSimilarity matrix:\n\n");
-	int n_iter = s->Iterate(eps,100000);
+	unsigned long long int n_iter = s->Iterate(eps,100000);
     similarity=0;
 	double sim=0;
     for(int i=0; i<ga->NodeCount(); i++)
@@ -2584,8 +2584,10 @@ vector<double> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, double eps, boo
 	sim_v[this->get_num_states()][0]=similarity/no;
 
 	double final_value = similarity/no;
-	vector<double> final_v;
-	final_v.push_back(final_value);
-	final_v.push_back(n_iter);
-	return final_v;
+
+	//vector<double> final_v;
+	//final_v.push_back(final_value);
+	//final_v.push_back(n_iter);
+	
+	return std::make_pair(final_value, n_iter);
 }

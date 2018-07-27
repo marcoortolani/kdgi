@@ -95,7 +95,7 @@ TEST_F(BaseDfaTest, getAcceptingStates){
 
 TEST_F(BaseDfaTest, readDfaFile){
     ConcreteDfa* test=nullptr; 
-    test=new ConcreteDfa(test->read_dfa_file("../py/data/automata/tomita15.txt"));
+    test=new ConcreteDfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
     vector<map<string,int>> ttable_test=test->get_ttable();
     vector<map<string,int>> ttable_ref=reference->get_ttable();
     bool equal=true;
@@ -203,7 +203,7 @@ TEST_F(BaseDfaTest, unionDfa){
 TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     bool flag=true;
     ConcreteDfa* test=nullptr; 
-    test=new ConcreteDfa(test->read_dfa_file("../py/data/automata/tomita15.txt"));
+    test=new ConcreteDfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
     flag=reference->equivalence_query(test);
     EXPECT_EQ(1,flag);
 }

@@ -301,6 +301,10 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 					vicinato_uscente_reference.push_back(state_reference.next(sym));
 				}
 
+				#ifdef STRUCT_SIM_DEBUG
+					cout<<endl<<"Per lo stato: "<<state_reference.get_index()<<" il vicinato uscente è:"<<endl;
+				#endif
+
 				int cardinalita_vicinato_uscente_reference = vicinato_uscente_reference.size();
 
 				vector<DfaState*> vicinato_uscente_subject;

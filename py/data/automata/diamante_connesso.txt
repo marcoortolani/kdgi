@@ -1,5 +1,6 @@
 4 5 dfa
 a b c d
+0
 @
 dfa[0][a]=1;
 dfa[0][b]=2;

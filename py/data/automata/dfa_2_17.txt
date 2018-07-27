@@ -1,5 +1,6 @@
 2 17 dfa
 tao pippo 
+0
 @
 dfa[0][tao]=1;
 dfa[0][pippo]=2;

@@ -705,6 +705,9 @@ void ConcreteDfa::print_dfa_in_text_file(const symbol_ file_path)
 		myfile << sym << " ";
 	myfile << "\n";
 
+	// Write accepting symbol
+	myfile << "@" << "\n";
+
 
 	// Write transition table
 	for(int i=0; i<num_states_; ++i){
@@ -715,7 +718,7 @@ void ConcreteDfa::print_dfa_in_text_file(const symbol_ file_path)
 			myfile << sym << "]="<< get_ttable(i,sym) <<";\n";
 		}
 		myfile << "dfa["<<std::to_string(i)<<"][";
-		myfile << std::to_string(get_dim_alphabet()) << "]=";
+		myfile << "@" << "]=";
 		if(is_accepting(i))
 			myfile << "1";
 		else 

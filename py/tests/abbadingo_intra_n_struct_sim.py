@@ -1,7 +1,7 @@
 from gi_gipy import *
 import xlsxwriter
 
-for n in range(10, 11):
+for n in range(10, 51):
 
     # Create a workbook and add a worksheet.
     xls_path = './struct_sim_experiments/results/intra_n/n' + str(n) + '/results_n_' + str(n) + '.xlsx'
@@ -18,7 +18,7 @@ for n in range(10, 11):
 
     row += 2
 
-    for automata_number in range(1, 3):
+    for automata_number in range(1, 10):
 
         dfa_name1 = 'n' + str(n) + '_' + str(automata_number)
 
@@ -26,7 +26,7 @@ for n in range(10, 11):
 
         dfa1 = Dfa.read_dfa_file(dfa_path1)
 
-        for automata_number2 in range(automata_number+1, 4):
+        for automata_number2 in range(automata_number+1, 11):
 
             dfa_name2 = 'n' + str(n) + '_' + str(automata_number2)
 

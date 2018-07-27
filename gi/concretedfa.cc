@@ -146,7 +146,7 @@ void ConcreteDfa::set_ttable(const vector<map<symbol_,int>> ext_ttable){
 }
 
 
-ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
+ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 {
 	char nameDFA[BUFFER_SIZE];
 	char line[BUFFER_SIZE];
@@ -162,6 +162,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 	int start_state_ = 0;
 
 	symbol_ n;
+	symbol_ accepting_symbol;
 
 	ifstream read;
 	symbol_ template_line;
@@ -186,6 +187,8 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 	start_state_ = 0;
 
 	int dim_alphabet;
+
+
 	// Read first line and set "num states", "dim alf" and "dfa name"
 	read.getline(line,BUFFER_SIZE);
 	counter = sscanf(line, "%d %d %s", &(dim_alphabet), &(res.num_states_), nameDFA);
@@ -228,6 +231,16 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 
 	// Set alphabet_ for the current dfa
 	res.set_alphabet(alphabet_file);
+
+	// Third line contains the index of the start node
+	read.getline(line,BUFFER_SIZE);
+	counter = sscanf(line, "%d", &(res.start_state_));
+
+	// Fourth line contains the symbol to denote the accepting state
+	read.getline(line,BUFFER_SIZE);
+	istringstream iss1(line);
+	iss1 >> n;
+	accepting_symbol = n;
 
 	//if(alphabet_file)
 	//	alphabet_file.clear();
@@ -288,7 +301,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 		//cout<<"res.ttable_[cstato][transition_symbol]="<<res.ttable_[cstato][transition_symbol]<<endl;
 		//res.set_ttable_entry(cstato,transition_symbol,ctransizione);
 		// It detects the row for type of state (accepting or rejecting)
-		if(transition_symbol.compare(std::to_string(dim_alphabet)) == 0)
+		if(transition_symbol.compare(accepting_symbol) == 0)
 			res.accepting_states_[cstato]=ctransizione;
 			//res.set_accepting_state(cstato);
 
@@ -722,6 +735,12 @@ void ConcreteDfa::print_dfa_in_text_file(const symbol_ file_path)
 		myfile << sym << " ";
 	myfile << "\n";
 
+	// Write start state
+	myfile << get_start_state() << "\n";
+
+	// Write accepting symbol
+	myfile << "@" << "\n";
+
 
 	// Write transition table
 	for(int i=0; i<num_states_; ++i){
@@ -732,7 +751,7 @@ void ConcreteDfa::print_dfa_in_text_file(const symbol_ file_path)
 			myfile << sym << "]="<< get_ttable(i,sym) <<";\n";
 		}
 		myfile << "dfa["<<std::to_string(i)<<"][";
-		myfile << std::to_string(get_dim_alphabet()) << "]=";
+		myfile << "@" << "]=";
 		if(is_accepting(i))
 			myfile << "1";
 		else 
@@ -2354,4 +2373,219 @@ void ConcreteDfa::print_state_table(){
 	for(auto state : *this){
 		state.print();
 	}
+}
+
+/*
+ * Construct a random degree-2 digraph on (5/4)*n nodes, extract
+ * the subgraph reachable from the randomly chosen root node, and
+ * label the graph's states by flipping a fair coin.
+*/
+void ConcreteDfa::random_dfa_abbadingo(int n, string file_path){
+
+	srand (time(NULL));
+
+	int nodes_number = ceil(n * 5 / 4);
+
+	vector<symbol_> alphabet;
+	alphabet.push_back("a");
+	alphabet.push_back("b");
+
+	int alphabet_size = alphabet.size();
+
+	int start_node = rand() % (nodes_number-1);
+
+	default_random_engine e;
+	e.seed(rand() * 383 % 379);
+	uniform_int_distribution<unsigned> accettante(0, 1);
+	uniform_int_distribution<unsigned> nodo_arrivo(0, (nodes_number-1));
+
+	ofstream myfile;
+	myfile.open(file_path.c_str());
+
+
+	// Write alphabet_ size
+	myfile << std::to_string(alphabet_size) << " ";
+
+	// Write num of states
+	myfile << std::to_string(nodes_number) << " ";
+
+	// Write dfa name
+	myfile << "dfa" << "\n";
+
+	// Write alphabet_ symbols
+	for(symbol_ sym : alphabet)
+		myfile << sym << " ";
+	myfile << "\n";
+
+	// Write start state
+	myfile << start_node <<"\n";
+
+	// Write accepting symbol
+	myfile << "@" << "\n";
+
+
+	// Write transition table
+	for(int i=0; i<nodes_number; ++i){
+		for(symbol_ sym : alphabet)
+		{
+			myfile << "dfa[" <<std::to_string(i)<<"][";
+			
+			myfile << sym << "]="<< nodo_arrivo(e) <<";\n";
+		}
+		myfile << "dfa["<<std::to_string(i)<<"][";
+		myfile << "@" << "]=";
+		if(accettante(e))
+			myfile << "1";
+		else 
+			myfile << "0";
+
+		myfile <<";\n";
+	}
+
+	myfile.close();
+}
+
+vector<double> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, double eps, bool color) const{
+
+	fpu_control_t oldcw, newcw;
+    _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
+    Graph *ga, *gb;
+    NMSimilarity *s;
+    double similarity;
+	double** similarity_matrix= new double*[this->get_num_states()+1];
+	vector<vector<double>> sim_v;
+	for(int w=0; w<this->get_num_states();++w){
+		similarity_matrix[w]=new double[subject_dfa->get_num_states()];
+		vector<double> init=vector<double>();
+		for(int i=0;i<subject_dfa->get_num_states();++i)
+			init.push_back(0);
+		sim_v.push_back(init);
+	}
+	similarity_matrix[this->get_num_states()]=new double[1];
+	sim_v.push_back({0});
+
+	//Here we translate the Dfas in their corresponding simple graph following the encoding:
+	/*Input file format
+	 *=================
+	 *The programs use a custom file format. First line specifies the number 
+	 *of the nodes in the graph N. Next N lines contain numbers denoting node 
+	 *colors. The following lines describe edges. Each edge is described by
+	 *a pair of indices of its constituent nodes, the beginning node being 
+	 *written first, and the termination node being writen second. Indices
+	 *of the nodes are zero based. For instance input file
+	 *
+	 *3
+	 *1
+	 *1
+	 *1
+	 *0 1
+	 *1 2
+	 *
+	 *describes the graph 0->1->2.
+	 */
+
+	char *reference_incidence_matrix, *subject_incidence_matrix;
+	vector<map<symbol_,int>> reference_ttable=this->get_ttable();
+	vector<map<symbol_,int>> subject_ttable=subject_dfa->get_ttable();
+
+	//get_edge_matrix() is situated in utilities.h
+	reference_incidence_matrix=get_incidence_matrix(reference_ttable,this->get_num_states(),this->get_alphabet());
+	subject_incidence_matrix=get_incidence_matrix(subject_ttable,subject_dfa->get_num_states(),subject_dfa->get_alphabet());
+	vector<int> *reference_labels= new vector<int>[this->get_num_states()]; 
+	vector<int> *subject_labels= new vector<int>[subject_dfa->get_num_states()];	//useful for coloured graphs
+
+	//we consider every state to have label 1 if color is FALSE
+	if(!color){
+		for(int i=0; i<this->get_num_states();++i)
+			(*reference_labels).push_back(1);
+		for(int j=0; j<subject_dfa->get_num_states();++j)
+			(*subject_labels).push_back(1);
+	}
+	else{	//If color is TRUE we give label 1 to accepting states and label 0 to rejecting states
+		
+		for(int i=0; i<this->get_num_states();++i)
+			if(this->is_accepting(i))
+				(*reference_labels).push_back(1);
+			else	
+				(*reference_labels).push_back(0);
+
+		for(int j=0; j<subject_dfa->get_num_states();++j)
+			if(subject_dfa->is_accepting(j))
+				(*subject_labels).push_back(1);
+			else
+				(*subject_labels).push_back(0);
+		
+	}
+	//Reference_dfa to grapha
+	try{
+		ga=new Graph(reference_incidence_matrix, this->get_num_states(), reference_labels);
+	}
+	catch(...){
+		return sim_v[0];
+	}
+	//Subject_dfa to graphb
+	try{
+		cout<<endl;
+		gb=new Graph(subject_incidence_matrix, subject_dfa->get_num_states(), subject_labels);
+	}
+	catch(...){
+		return sim_v[0];
+	}
+
+	s=new NMSimilarity(ga,gb);
+
+	//Similarity between pair of states
+	//printf("\nNumber of iterations: %d\n", s->Iterate(eps,100000));
+    //printf("\nSimilarity matrix:\n\n");
+	int n_iter = s->Iterate(eps,100000);
+    similarity=0;
+	double sim=0;
+    for(int i=0; i<ga->NodeCount(); i++)
+    {
+        for(int j=0; j<gb->NodeCount(); j++){
+			sim=s->NodeSimilarity(i,j);
+			similarity_matrix[i][j]=sim;
+		}
+    }
+
+	//Overall Dfas similarity
+	long *r;
+    long *solution;
+
+	//s->Iterate(eps,100000);
+    
+    r=(long *)malloc(ga->NodeCount()*gb->NodeCount()*sizeof(long));
+    for(int i=0; i<ga->NodeCount(); i++)
+	    for(int j=0; j<gb->NodeCount(); j++)
+	        r[i*gb->NodeCount()+j]=(1-s->NodeSimilarity(i,j))/eps;
+
+    solution=new long[ga->NodeCount()];
+    NMSimilarity::hungarian(&r, ga->NodeCount(), gb->NodeCount(), solution, 0);
+
+    similarity=0;
+    int no=0;
+    for(int i=0; i<ga->NodeCount(); i++)
+      if(solution[i]>=0)
+      {
+        similarity+=s->NodeSimilarity(i,solution[i]);
+	    no++;
+      }
+
+	similarity_matrix[this->get_num_states()][0]=similarity/no;
+    
+    delete s;
+    delete ga;
+    delete gb;
+
+	for(int i=0; i<this->get_num_states();++i)
+		for(int j=0; j<subject_dfa->get_num_states();++j)
+			sim_v[i][j]=similarity_matrix[i][j];
+
+	sim_v[this->get_num_states()][0]=similarity/no;
+
+	double final_value = similarity/no;
+	vector<double> final_v;
+	final_v.push_back(final_value);
+	final_v.push_back(n_iter);
+	return final_v;
 }

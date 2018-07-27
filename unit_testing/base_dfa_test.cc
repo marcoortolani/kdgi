@@ -96,6 +96,7 @@ TEST_F(BaseDfaTest, getAcceptingStates){
 TEST_F(BaseDfaTest, readDfaFile){
     ConcreteDfa* test=nullptr; 
     test=new ConcreteDfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
+    test->print_dfa_ttable("test");
     vector<map<string,int>> ttable_test=test->get_ttable();
     vector<map<string,int>> ttable_ref=reference->get_ttable();
     bool equal=true;

@@ -10,7 +10,8 @@
 #include <set>
 #include <map>
 #include <limits>
-
+#include <time.h>
+#include <random>
 #include "dfa.h"
 #include "exceptions.h"
 #include "utilities.h"
@@ -215,7 +216,7 @@ public:
    * @param file_name Path of the dfa.
    * @return Dfa read from file.
    */
-  static ConcreteDfa read_dfa_file(const symbol_ file_name);
+  static ConcreteDfa read_dfa_file(const string file_name);
 
   /**
    * Return accepting states.
@@ -412,6 +413,7 @@ public:
     */
    vector<vector<double>> neighbour_matching_structural_similarity(ConcreteDfa* subject_dfa, double eps=0.0001, bool color=false) const;
 
+  vector<double> struct_sim(ConcreteDfa* subject_dfa, double eps=0.0001, bool color=false) const;
   /**
    * Print the matrix containing the similarity score between pair of nodes.
    * @param similarity_matrix 
@@ -441,7 +443,16 @@ public:
   DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false) const;
 
 
-
+  /**
+   * Procedure taken from paper: "Results of the Abbadingo One Dfa Learning Competition and a New EDSM algorithm"
+   * by Kevin J. Lang, Barak A. Pearlmutter, Rodney A. Price (1998)
+   * Constructs a random degree-2 digraph on 5/4 n nodes,
+   * extracting the subgraph reachable from the randomly
+   * chosen root node, and label the graph's flipping a fair coin.
+   * @param n, (5/4)*n nodes
+   * @param file_path
+   */
+  static void  random_dfa_abbadingo(int n, string file_path);
 
   /* New code here */
 

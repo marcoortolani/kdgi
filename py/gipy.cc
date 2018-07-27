@@ -76,6 +76,8 @@ PYBIND11_MODULE(gi_gipy, m) {
       //.def("print_dfa_ttable",&ConcreteDfa::print_dfa_ttable,"Print the transition table of current dfa. Before the transition table print the title passed as parameter.")
       
       .def_static("read_dfa_file", &ConcreteDfa::read_dfa_file, "Read a dfa from a file.")
+
+      .def_static("abbadingo_rand", &ConcreteDfa::random_dfa_abbadingo, "Constructs a random degree-2 digraph")
       
       .def("save_dfa", &ConcreteDfa::print_dfa_in_text_file, "Print a DFA in a text file. Adopted format is the same used for reading a DFA from file.")
       
@@ -98,7 +100,7 @@ PYBIND11_MODULE(gi_gipy, m) {
 
       //*** Structural similarity ***
       .def("neighbour_matching_structural_similarity", &ConcreteDfa::neighbour_matching_structural_similarity, "Gives the structural similarity score matrix between every pair of states of two DFAs",py::arg("target_dfa"), py::arg("eps") = 0.0001, py::arg("color") = 0)
-
+      .def("struct_sim", &ConcreteDfa::struct_sim, "Return raw structural similarity score between two dfas (utility function)",py::arg("target_dfa"), py::arg("eps") = 0.0001, py::arg("color") = 0)
       .def("print_structural_similarity", &ConcreteDfa::print_structural_similarity, "Print the matrix containing the similarity score between pair of nodes.")
       
       //===========================================================================================

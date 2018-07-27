@@ -192,14 +192,8 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 
 	int dim_alphabet;
 
-	// First line contains the symbol to denote the accepting state
-	read.getline(line,BUFFER_SIZE);
-	istringstream iss1(line);
-	iss1 >> n;
-	accepting_symbol = n;
 
-
-	// Read second line and set "num states", "dim alf" and "dfa name"
+	// Read first line and set "num states", "dim alf" and "dfa name"
 	read.getline(line,BUFFER_SIZE);
 	counter = sscanf(line, "%d %d %s", &(dim_alphabet), &(res.num_states_), nameDFA);
 
@@ -208,7 +202,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 
 	// Check if the first line is complete
 	if(counter != 3){
-		cout << "Error in second line of file" << endl;
+		cout << "Error in first line of file" << endl;
 		throw invalidFormat();
 	}
 
@@ -241,6 +235,12 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 
 	// Set alphabet_ for the current dfa
 	res.set_alphabet(alphabet_file);
+
+	// Third line contains the symbol to denote the accepting state
+	read.getline(line,BUFFER_SIZE);
+	istringstream iss1(line);
+	iss1 >> n;
+	accepting_symbol = n;
 
 	//if(alphabet_file)
 	//	alphabet_file.clear();

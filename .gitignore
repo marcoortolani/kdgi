@@ -3,7 +3,7 @@
 # =============== #
 build/
 gi/tests
-
+py/tests/exp_out
 # ============ #
 # OS generated #
 # ============ #

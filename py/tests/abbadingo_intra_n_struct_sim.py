@@ -1,7 +1,7 @@
 from gi_gipy import *
 import xlsxwriter
 
-for n in range(10, 51):
+for n in range(11, 51):
 
     # Create a workbook and add a worksheet.
     xls_path = './struct_sim_experiments/results/intra_n/n' + str(n) + '/results_n_' + str(n) + '.xlsx'

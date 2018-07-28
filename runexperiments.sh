@@ -3,26 +3,27 @@
 # per lanciare da remoto:
 # ssh kdgi@147.163.5.232 screen -d -m ./runexperiments.sh
 
-cd /home/kdgi/kdgi/py/tests
+cd kdgi/py/tests
 
 
 
 expname="exp-abbadingo_struct_sim"
 
-echo "Experiment "$expname > test.out
-date >> test.out
+echo "Experiment "$expname > exp_out/test.out
+date >> exp_out/test.out
 
-echo "Experiment "$expname > error.out
-date >> error.out
+echo "Experiment "$expname > exp_out/error.out
+date >> exp_out/error.out
 
 
-echo "START " >> test.out
+echo "START " >> exp_out/test.out
 
   
-outputfile=${expname}.out
+outputfile=exp_out/${expname}.out
 
+source /home/kdgi/virtualenvs/kdgi-py2/bin/activate kdgi-py2
 
-python abbadingo_intra_n_struct_sim.py > ${outputfile} 2>> error.out
+python abbadingo_intra_n_struct_sim.py > ${outputfile} 2>> exp_out/error.out
 
-echo "END" >> test.out
+echo "END" >> exp_out/test.out
 

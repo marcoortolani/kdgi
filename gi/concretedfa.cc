@@ -2380,15 +2380,44 @@ void ConcreteDfa::print_state_table(){
  * the subgraph reachable from the randomly chosen root node, and
  * label the graph's states by flipping a fair coin.
 */
-void ConcreteDfa::random_dfa_abbadingo(int n, int seed, string file_path){
+void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string file_path){
 
 	srand (time(NULL));
 
 	int nodes_number = ceil(n * 5 / 4);
 
+	vector<symbol_> simboli;
+	simboli.push_back("a");
+	simboli.push_back("b");
+	simboli.push_back("c");
+	simboli.push_back("d");
+	simboli.push_back("e");
+	simboli.push_back("f");
+	simboli.push_back("g");
+	simboli.push_back("h");
+	simboli.push_back("i");
+	simboli.push_back("j");
+	simboli.push_back("k");
+	simboli.push_back("l");
+	simboli.push_back("m");
+	simboli.push_back("n");
+	simboli.push_back("o");
+	simboli.push_back("p");
+	simboli.push_back("q");
+	simboli.push_back("r");
+	simboli.push_back("s");
+	simboli.push_back("t");
+	simboli.push_back("u");
+	simboli.push_back("v");
+	simboli.push_back("w");
+	simboli.push_back("x");
+	simboli.push_back("y");
+	simboli.push_back("z");
+
 	vector<symbol_> alphabet;
-	alphabet.push_back("a");
-	alphabet.push_back("b");
+	for(int i=0; i<n_symbols; i++){
+		alphabet.push_back(simboli[i]);
+	}
 
 	int alphabet_size = alphabet.size();
 

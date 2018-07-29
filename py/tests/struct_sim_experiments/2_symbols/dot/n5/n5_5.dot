@@ -1,0 +1,26 @@
+digraph n5_5 {
+__start0 [label="" shape="none"];
+
+rankdir=LR;
+size="8,5";
+
+s0 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="0"];
+s1 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="1"];
+s2 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="2"];
+s3 [style="filled", color="black", fillcolor="white" shape="circle", label="3"];
+s4 [style="filled", color="black", fillcolor="white" shape="circle", label="4"];
+s5 [style="filled", color="black", fillcolor="white" shape="circle", label="5"];
+s0 -> s4 [label="a"];
+s0 -> s4 [label="b"];
+s1 -> s3 [label="a"];
+s1 -> s5 [label="b"];
+s2 -> s4 [label="a"];
+s2 -> s4 [label="b"];
+s3 -> s1 [label="a"];
+s3 -> s0 [label="b"];
+s4 -> s1 [label="a"];
+s4 -> s3 [label="b"];
+s5 -> s4 [label="a"];
+s5 -> s2 [label="b"];
+
+}

@@ -450,9 +450,11 @@ public:
    * extracting the subgraph reachable from the randomly
    * chosen root node, and label the graph's flipping a fair coin.
    * @param n, (5/4)*n nodes
+   * @param seed, to initialize random number engine
+   * @param n_symbols, size of Dfa's alphabet
    * @param file_path
    */
-  static void  random_dfa_abbadingo(int n, int seed, string file_path);
+  static void  random_dfa_abbadingo(int n, int seed, int n_symbols, string file_path);
 
   /* New code here */
 

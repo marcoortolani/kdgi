@@ -1,61 +1,69 @@
 from gi_gipy import *
+import os
 import xlsxwriter
 
-for n in range(10, 51):
+# range(min_included, max_NOT_included, incremento)
+for n_symbols in range(3, 7):
 
-    # Create a workbook and add a worksheet.
-    xls_path = './struct_sim_experiments/results/intra_n/n' + str(n) + '/results_n_' + str(n) + '.xlsx'
-    workbook = xlsxwriter.Workbook(xls_path)
-    worksheet = workbook.add_worksheet()
+    print('\nProcessing n_symbols = ' + str(n_symbols) + '\n\n')
+    
+    for n in range(10, 51, 10):
 
-    # Excel formatting:
-    # Start from the first cell. Rows and columns are zero indexed.
-    row = 0
-    col = 0
-    worksheet.write(row, col, 'Comparisons intra level n = ' + str(n))
-    worksheet.write(row, col + 3, 'Similarity score')
-    #worksheet.write(row, col + 2, 'Iterations number')
+        print('Processing Abbadingo parameter N = ' + str(n) + '\n')
+        
+        dir_path = './struct_sim_experiments/' + str(n_symbols) + '_symbols/results/intra_n/n' + str(n)
+        if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
 
-    row += 2
+        # Create a workbook and add a worksheet.
+        xls_path = dir_path + '/results_n_' + str(n) + '.xlsx'
+        workbook = xlsxwriter.Workbook(xls_path)
+        worksheet = workbook.add_worksheet()
 
-    for automata_number in range(1, 10):
+        # Excel formatting:
+        # Start from the first cell. Rows and columns are zero indexed.
+        row = 0
+        col = 0
+        worksheet.write(row, col, 'n = ' + str(n))
+        worksheet.write(row, col + 3, 'Similarity score')
 
-        dfa_name1 = 'n' + str(n) + '_' + str(automata_number)
+        row += 2
 
-        dfa_path1 = './struct_sim_experiments/automata/n' + str(n) + '/' + dfa_name1 + '.txt'
+        for automata_number in range(1, 10):
 
-        dfa1 = Dfa.read_dfa_file(dfa_path1)
+            dfa_name1 = 'n' + str(n) + '_' + str(automata_number)
 
-        for automata_number2 in range(automata_number+1, 11):
+            dfa_path1 = './struct_sim_experiments/' + str(n_symbols) + '_symbols/automata/n' + str(n) + '/' + dfa_name1 + '.txt'
 
-            dfa_name2 = 'n' + str(n) + '_' + str(automata_number2)
+            dfa1 = Dfa.read_dfa_file(dfa_path1)
 
-            dfa_path2 = './struct_sim_experiments/automata/n' + str(n) + '/' + dfa_name2 + '.txt'
+            for automata_number2 in range(automata_number+1, 11):
 
-            dfa2 = Dfa.read_dfa_file(dfa_path2)
+                dfa_name2 = 'n' + str(n) + '_' + str(automata_number2)
 
-            sim_v = dfa1.struct_sim(dfa2, 0.000001)
+                dfa_path2 = './struct_sim_experiments/' + str(n_symbols) + '_symbols/automata/n' + str(n) + '/' + dfa_name2 + '.txt'
 
-            sim = sim_v[0]
+                dfa2 = Dfa.read_dfa_file(dfa_path2)
 
-            n_iter = sim_v[1]
+                sim_v = dfa1.struct_sim(dfa2, 0.000001)
 
-            description = dfa_name1 + ' <-> ' + dfa_name2
+                sim = sim_v[0]
 
-            worksheet.write(row, col, description)
-            worksheet.write(row, col + 3, sim)
-            #worksheet.write(row, col + 2, n_iter)
-            row += 1
+                description = dfa_name1 + ' <-> ' + dfa_name2
 
-    row += 1
-    # Write the medium similarity between automatas of level n using a formula.
-    worksheet.write(row, 0, 'Average structural similarity between automatas created with parameter: '+str(n))
-    worksheet.write(row, 3, '=AVERAGE(D3:D47)')
-    #worksheet.write(row + 1, 0, 'Average number of iterations:')
-    #worksheet.write(row + 1, 1, '=AVERAGE(C1:C45)')
+                worksheet.write(row, col, description)
+                worksheet.write(row, col + 3, sim)
+                row += 1
 
-    workbook.close()
+        row += 1
 
+        # Write the medium similarity between automatas of level n using a formula.
+        worksheet.write(row, 0, 'Average '+str(n))
+        worksheet.write(row, 3, '=AVERAGE(D3:D47)')
+        worksheet.write(row+1, 0, 'n')
+        worksheet.write(row+1, 3, str(n))
+
+        workbook.close()
 
 
 

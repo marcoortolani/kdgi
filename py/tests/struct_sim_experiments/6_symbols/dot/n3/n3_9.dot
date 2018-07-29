@@ -1,0 +1,29 @@
+digraph n3_9 {
+__start0 [label="" shape="none"];
+
+rankdir=LR;
+size="8,5";
+
+s0 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="0"];
+s1 [style="filled", color="black", fillcolor="white" shape="circle", label="1"];
+s2 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="2"];
+s0 -> s2 [label="a"];
+s0 -> s0 [label="b"];
+s0 -> s0 [label="c"];
+s0 -> s1 [label="d"];
+s0 -> s0 [label="e"];
+s0 -> s2 [label="f"];
+s1 -> s1 [label="a"];
+s1 -> s0 [label="b"];
+s1 -> s2 [label="c"];
+s1 -> s2 [label="d"];
+s1 -> s1 [label="e"];
+s1 -> s2 [label="f"];
+s2 -> s1 [label="a"];
+s2 -> s2 [label="b"];
+s2 -> s2 [label="c"];
+s2 -> s2 [label="d"];
+s2 -> s0 [label="e"];
+s2 -> s1 [label="f"];
+
+}

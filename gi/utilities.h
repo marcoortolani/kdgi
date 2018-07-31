@@ -830,9 +830,9 @@ private:
 		//last_modified_by_out = temp_last_modified_by_out;
 
 		// Stampa matrice di similarità iterazione corrente
-		// std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
+		std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
 		
-		#ifdef MATRICES_DEBUG
+		//#ifdef MATRICES_DEBUG
 		printf("Matrice similarità corrente:\n\n");
 		for(int i=0; i<graph_a_n; i++)
 		{
@@ -849,7 +849,7 @@ private:
 				printf("%lf ", tmp_similarity[i][j]);
 			printf("]\n");
 		}
-		#endif
+		//#endif
 
 		#ifdef HISTORY_DEBUG
 		if(iter==3){

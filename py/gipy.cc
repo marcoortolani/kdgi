@@ -73,7 +73,7 @@ PYBIND11_MODULE(gi_gipy, m) {
 
       .def("get_start_state",&ConcreteDfa::get_start_state,"Get index of start state.")
 
-      //.def("print_dfa_ttable",&ConcreteDfa::print_dfa_ttable,"Print the transition table of current dfa. Before the transition table print the title passed as parameter.")
+      .def("print_dfa_ttable",&ConcreteDfa::print_dfa_ttable,"Print the transition table of current dfa. Before the transition table print the title passed as parameter.")
       
       .def_static("read_dfa_file", &ConcreteDfa::read_dfa_file, "Read a dfa from a file.")
 

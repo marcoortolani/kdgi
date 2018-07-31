@@ -443,27 +443,6 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 		}
 		}
-		if(iter==0){
-		std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
-		
-		//#ifdef MATRICES_DEBUG
-		printf("Matrice similarità corrente:\n\n");
-		for(int i=0; i<num_states_; i++)
-		{
-			printf(" [ ");
-			for(int j=0; j<num_states_subject_; j++)
-				printf("%lf ", node_similarity[i][j]);
-			printf("]\n");
-		}
-		printf("\n\nMatrice similarità precedente iterazione:\n\n");
-		for(int i=0; i<num_states_; i++)
-		{
-			printf(" [ ");
-			for(int j=0; j<num_states_subject_; j++)
-				printf("%lf ", tmp_similarity[i][j]);
-			printf("]\n");
-		}
-		}
 
 		iter++;
 	}

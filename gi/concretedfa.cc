@@ -1482,7 +1482,31 @@ vector<symbol_> ConcreteDfa::table_filling() const{
 	return table_of_distinct_states;
 }
 
-ConcreteDfa* ConcreteDfa::unionDFA(ConcreteDfa* s) const{}
+ConcreteDfa* ConcreteDfa::unionDFA(ConcreteDfa* dfa_hp) const{
+	int count_state = dfa_hp->num_states_ + num_states_;
+
+	// Instance of union dfa
+	ConcreteDfa* union_dfa = new ConcreteDfa(count_state, alphabet_, start_state_);
+
+	// Configuration of Union DFA
+	// Smaller indexes are given to target dfa, while others to hypothesis
+	for(int j=0; j<num_states_; ++j)									// Target automaton
+		for(symbol_ sym : alphabet_)
+			union_dfa->set_ttable_entry(j,sym,get_ttable(j,sym));
+
+	for(int j=0; j<dfa_hp->num_states_; ++j)						// Hypothesis automaton
+		for(symbol_ sym_hp : alphabet_)					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
+			union_dfa->set_ttable_entry(num_states_+j,sym_hp, (dfa_hp->get_ttable(j,sym_hp) + num_states_));
+
+	for(int i=0; i<num_states_;++i)
+		if(is_accepting(i))
+			union_dfa->accepting_states_[i]=1;
+	for(int j=0; j<dfa_hp->num_states_;++j)
+		if(dfa_hp->is_accepting(j))
+			union_dfa->accepting_states_[j+num_states_]=1;
+
+	return union_dfa;
+}
 
 vector<vector<int>> ConcreteDfa::equivalent_states_list_from_table(vector<symbol_> distincts)
 {
@@ -2114,6 +2138,7 @@ vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
 }
 
 void ConcreteDfa::update_state_table(){
+
 	state_table_.clear();
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 

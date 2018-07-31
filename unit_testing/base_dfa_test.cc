@@ -175,12 +175,14 @@ TEST_F(BaseDfaTest, unionDfa){
     const vector<int> sequence2 = {0, 1, 2, 0, 0, 1, 2, 1, 0, 1, 2, 0};
     test->set_ttable_from_sequence(sequence2);
     test->update_state_table();
+
     ConcreteDfa* uni=reference->unionDFA(test);
-    uni->update_state_table();
+    cout<<"qui"<<endl;
+
     TestDfa* uni_ref = new TestDfa(8,alph,0);
     const vector<int> sequence3 = {1, 2, 4, 0, 3, 4, 1, 0, 4, 3, 2, 0, 4, 4, 4, 1, 4, 4, 4, 0, 5, 6, 7, 0, 5, 6, 7, 1, 5, 6, 7, 0};
     uni_ref->set_ttable_from_sequence(sequence3);
-    uni_ref->update_state_table();
+
     vector<map<string,int>> ttable_test=uni->get_ttable();
     vector<map<string,int>> ttable_ref=uni_ref->get_ttable();
     bool equal=true;

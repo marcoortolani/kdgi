@@ -68,8 +68,19 @@ vector<pair<DfaState*, symbol_> > DfaState::get_incoming_transictions() const{
 }
 
 vector<DfaState*> DfaState::get_incoming_states() const{
-	vector<DfaState*> accumulatore;
+	set<DfaState*> accumulatore;
 	for(pair<DfaState*,symbol_> coppia : incoming_transictions_)
-		accumulatore.push_back(coppia.first);
-	return accumulatore;
+		accumulatore.insert(coppia.first);
+	vector<DfaState*> v;
+	v.insert(v.end(), accumulatore.begin(), accumulatore.end());
+	return v;
+}
+
+vector<DfaState*> DfaState::get_outcoming_states() const{
+	set<DfaState*> accumulatore;
+	for(auto coppia : transictions)
+		accumulatore.insert(coppia.second);
+	vector<DfaState*> v;
+	v.insert(v.end(), accumulatore.begin(), accumulatore.end());
+	return v;
 }

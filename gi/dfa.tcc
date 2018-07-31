@@ -283,21 +283,11 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 				// nodi del vicinato: kaddr == vicinato del nodo del grafo A; laddr == vicinato del nodo del grafo B
 				//vector<int>::iterator kaddr,laddr;
-				vector<DfaState*> vicinato_uscente_reference;
-
-				vector<symbol_> s_alphabet_reference = sort_alphabet();
-				for(auto sym : s_alphabet_reference){
-					vicinato_uscente_reference.push_back(state_reference.next(sym));
-				}
+				vector<DfaState*> vicinato_uscente_reference = state_reference.get_outcoming_states();
 
 				int cardinalita_vicinato_uscente_reference = vicinato_uscente_reference.size();
 
-				vector<DfaState*> vicinato_uscente_subject;
-
-				vector<symbol_> s_alphabet_subject = subject_dfa->sort_alphabet();
-				for(auto sym : s_alphabet_subject){
-					vicinato_uscente_subject.push_back(state_subject.next(sym));
-				}
+				vector<DfaState*> vicinato_uscente_subject = state_subject.get_outcoming_states();
 
 				int cardinalita_vicinato_uscente_subject = vicinato_uscente_subject.size();
 
@@ -451,6 +441,27 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 				if(abs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
 					precision_achieved=0;	// continua a iterare
 
+		}
+		}
+		if(iter==0){
+		std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
+		
+		//#ifdef MATRICES_DEBUG
+		printf("Matrice similarità corrente:\n\n");
+		for(int i=0; i<num_states_; i++)
+		{
+			printf(" [ ");
+			for(int j=0; j<num_states_subject_; j++)
+				printf("%lf ", node_similarity[i][j]);
+			printf("]\n");
+		}
+		printf("\n\nMatrice similarità precedente iterazione:\n\n");
+		for(int i=0; i<num_states_; i++)
+		{
+			printf(" [ ");
+			for(int j=0; j<num_states_subject_; j++)
+				printf("%lf ", tmp_similarity[i][j]);
+			printf("]\n");
 		}
 		}
 

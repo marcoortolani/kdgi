@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
 
 #define symbol_ string
 
@@ -42,6 +43,8 @@ public:
 	vector<pair<DfaState*, symbol_> > get_incoming_transictions() const;
 
 	vector<DfaState*> get_incoming_states() const;
+
+	vector<DfaState*> get_outcoming_states() const;
 
 	void print();
 

@@ -7,7 +7,7 @@ for n_symbols in range(3, 7):
 
     print('\nProcessing n_symbols = ' + str(n_symbols) + '\n\n')
     
-    for n in range(10, 51, 10):
+    for n in range(9, 10):
 
         print('Processing Abbadingo parameter N = ' + str(n) + '\n')
         
@@ -16,7 +16,7 @@ for n_symbols in range(3, 7):
                 os.makedirs(dir_path)
 
         # Create a workbook and add a worksheet.
-        xls_path = dir_path + '/results_n_' + str(n) + '.xlsx'
+        xls_path = dir_path + '/results_' + str(n_symbols) + '_symbols_n_' + str(n) + '.xlsx'
         workbook = xlsxwriter.Workbook(xls_path)
         worksheet = workbook.add_worksheet()
 
@@ -58,7 +58,7 @@ for n_symbols in range(3, 7):
         row += 1
 
         # Write the medium similarity between automatas of level n using a formula.
-        worksheet.write(row, 0, 'Average '+str(n))
+        worksheet.write(row, 0, 'Average')
         worksheet.write(row, 3, '=AVERAGE(D3:D47)')
         worksheet.write(row+1, 0, 'n')
         worksheet.write(row+1, 3, str(n))

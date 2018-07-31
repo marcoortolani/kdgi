@@ -216,7 +216,7 @@ DfaState* Dfa<I>::operator[](SymIter phrase){
 template <class I>
 vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, bool color){
 
-	int max_iter = 10000;
+	int max_iter = 1000000;
 
 	int num_states_subject_ = subject_dfa -> get_num_states();
 
@@ -231,56 +231,45 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 	node_similarity=new double*[num_states_];
 	tmp_similarity=new double*[num_states_subject_];
 
-	int i = 0;
-	
-	
-	  
-	for(auto state_it = this->begin(); state_it != this->end(); ++state_it)
-		{
-			DfaState state = *state_it;
-			node_similarity[i]=new double[num_states_subject_];
+	for(DfaState state_reference : *this)
+	{
+		node_similarity[state_reference.get_index()]=new double[num_states_subject_];
 
-			tmp_similarity[i]=new double[num_states_subject_];
+		tmp_similarity[state_reference.get_index()]=new double[num_states_subject_];
 
-			int j = 0;
-
-			for(auto other_state_it = subject_dfa->begin(); other_state_it != subject_dfa->end(); ++other_state_it){
-				DfaState state2 = *other_state_it;
-				if(color)
-					node_similarity[i][j]=state.is_accepting()==state2.is_accepting();
-				else
-					node_similarity[i][j] = 1;
-				
-				j++;
-			}
-
-			++i;
+		for(DfaState state_subject : *subject_dfa){
+			if(color)
+				node_similarity[state_reference.get_index()][state_subject.get_index()]=state_reference.is_accepting()==state_subject.is_accepting();
+			else
+				node_similarity[state_reference.get_index()][state_subject.get_index()]=1;
 		}
-
+	}
 
 	vector<vector<vector<tuple<int, int, double> > > > last_modified_by_in;
 	vector<vector<vector<tuple<int, int, double> > > > last_modified_by_out;
+
+	last_modified_by_in = vector<vector<vector<tuple<int, int, double> > > > (num_states_, vector<vector<tuple<int,int,double> > >(subject_dfa->num_states_, vector<tuple<int, int, double> >()));
+	last_modified_by_out = vector<vector<vector<tuple<int, int, double> > > > (num_states_, vector<vector<tuple<int,int,double> > >(subject_dfa->num_states_, vector<tuple<int, int, double> >()));
 
 	long *solution;
     long *costs;
 
 
 	int iter=0;
-	int it=0;
-	while(!it && iter<max_iter)
+	int precision_achieved=0;
+	while(!precision_achieved && iter<max_iter)
 	{
 		// flag per fermare l'iterazione, 1 significa che la condizione di terminazione è soddisfatta
-		int precision_achieved=1;
+		precision_achieved=1;
 
 		double sim_to_add = 0;
 
 		for(int i=0; i<num_states_; i++)
 			for(int j=0; j<num_states_subject_; j++){
-				if(iter>=1)
 				// l'ultima iterazione è uguale a quella corrente prima di effettuare un qualsiasi conto
 				tmp_similarity[i][j]=node_similarity[i][j];
 			}
-		
+
 		for(auto state_it = this->begin(); state_it != this->end(); ++state_it){
 			DfaState state_reference = *state_it;
 			int i = state_reference.get_index();
@@ -301,15 +290,11 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 					vicinato_uscente_reference.push_back(state_reference.next(sym));
 				}
 
-				#ifdef STRUCT_SIM_DEBUG
-					cout<<endl<<"Per lo stato: "<<state_reference.get_index()<<" il vicinato uscente è:"<<endl;
-				#endif
-
 				int cardinalita_vicinato_uscente_reference = vicinato_uscente_reference.size();
 
 				vector<DfaState*> vicinato_uscente_subject;
-				
-				vector<symbol_> s_alphabet_subject = sort_alphabet();
+
+				vector<symbol_> s_alphabet_subject = subject_dfa->sort_alphabet();
 				for(auto sym : s_alphabet_subject){
 					vicinato_uscente_subject.push_back(state_subject.next(sym));
 				}
@@ -355,7 +340,7 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 							// è stata già tenuta in considerazione nell'ultima iterazione:
 							// se è cosi allora pesca il punteggio di similarità della coppia dalla penultima iterazione
 
-							for (it = last_modified_by_out[i][j].begin(); it != last_modified_by_out[i][j].end(); ++it)
+							for (it = last_modified_by_out[i][j].begin(); it != last_modified_by_out[i][j].end(); ++it)  /** ERRORE QUI **/
 								if (get<0>(*it) == vicinato_uscente_reference[k]->get_index() && get<1>(*it) == vicinato_uscente_subject[solution[k]]->get_index()){
 
 									sim_to_add = get<2>(*it);
@@ -372,16 +357,15 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 								if(iter >=1 && tmp_similarity[vicinato_uscente_reference[k]->get_index()][vicinato_uscente_subject[solution[k]]->get_index()] < 1)
 									last_modified_by_out[i][j].push_back(std::make_tuple(vicinato_uscente_reference[k]->get_index(), vicinato_uscente_subject[solution[k]]->get_index(), sim_to_add));
-								
+
 							}
 
 							out_similarity+=sim_to_add;
 
 						}
-					
-						delete solution;
-						free(costs);
 					}
+					delete solution;
+					free(costs);
 				}
 
 				if(max(cardinalita_vicinato_uscente_reference,cardinalita_vicinato_uscente_subject)!=0)
@@ -411,7 +395,7 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 							costs[k*cardinalita_vicinato_entrante_subject+l]=(1-tmp_similarity[vicinato_entrante_reference[k]->get_index()][vicinato_entrante_subject[l]->get_index()])/eps;
 
 					hungarian(&costs, cardinalita_vicinato_entrante_reference, cardinalita_vicinato_entrante_subject, solution, 0);
-					
+
 					for(int k=0; k<cardinalita_vicinato_entrante_reference; k++){
 
 						if(solution[k]>=0){
@@ -440,26 +424,24 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 								if(iter >=1 && tmp_similarity[vicinato_entrante_reference[k]->get_index()][vicinato_entrante_subject[solution[k]]->get_index()] < 1)
 									last_modified_by_in[i][j].push_back(std::make_tuple(vicinato_entrante_reference[k]->get_index(), vicinato_entrante_subject[solution[k]]->get_index(), sim_to_add));
-								
+
 							}
 
 							in_similarity+=sim_to_add;
 
 						}
-					
-						delete solution;
-						free(costs);
-					
 					}	//end for
 
+					delete solution;
+					free(costs);
 				}	// end if
-				
+
 				if(max(cardinalita_vicinato_entrante_reference,cardinalita_vicinato_entrante_subject)!=0)
 					in_similarity/=(max(cardinalita_vicinato_entrante_reference,cardinalita_vicinato_entrante_subject));
 				else
 					in_similarity=1;
 
-				
+
 				node_similarity[i][j]=(in_similarity+out_similarity)/2;
 
 				// se uno qualunque tra gli elementi della matrice di similarità corrente
@@ -472,7 +454,6 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 		}
 		}
 
-
 		iter++;
 	}
 
@@ -480,20 +461,20 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 	for(int i = 0; i<num_states_; ++i)
 		for(int j = 0; j<num_states_subject_; ++j)
-			struct_sim[i][j]=node_similarity[i][j];	
+			struct_sim[i][j]=node_similarity[i][j];
 
 
 	//Overall Dfas similarity
-	long *r = nullptr;
-    long *final_solution = nullptr;
-    
-    r=(long *)malloc(num_states_*num_states_subject_*sizeof(long));
+	/*long *r = nullptr;
+    long *final_solution = nullptr;*/
+
+    costs =(long *)malloc(num_states_*num_states_subject_*sizeof(long));
     for(int i=0; i<num_states_; i++)
 	    for(int j=0; j<num_states_subject_; j++)
-	        r[i*num_states_subject_+j]=(1-struct_sim[i][j])/eps;
+	        costs[i*num_states_subject_+j]=(1-struct_sim[i][j])/eps;
 
     solution=new long[num_states_];
-    hungarian(&r, num_states_, num_states_subject_, final_solution, 0);
+    hungarian(&costs, num_states_, num_states_subject_, solution, 0);
 
     double similarity=0;
     int no=0;
@@ -505,7 +486,7 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
       }
 
 	struct_sim[num_states_][0]=similarity/no;
-    
+
 
 	return struct_sim;
 

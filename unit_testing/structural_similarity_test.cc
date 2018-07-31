@@ -23,6 +23,8 @@ protected:
 		// before each test).
 		reference->set_ttable_from_sequence(sequence);
 		subject->set_ttable_from_sequence(sequence);
+		reference->update_state_table();
+		subject->update_state_table();
 	}
 
 	virtual void TearDown() {

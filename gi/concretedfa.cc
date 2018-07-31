@@ -236,12 +236,16 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 	// Set alphabet_ for the current dfa
 	res.set_alphabet(alphabet_file);
 
-	// Third line contains the symbol to denote the accepting state
+	// Third line contains the index of the start node
+	read.getline(line,BUFFER_SIZE);
+	counter = sscanf(line, "%d", &(res.start_state_));
+
+	// Fourth line contains the symbol to denote the accepting state
 	read.getline(line,BUFFER_SIZE);
 	istringstream iss1(line);
 	iss1 >> n;
 	accepting_symbol = n;
-
+	
 	//if(alphabet_file)
 	//	alphabet_file.clear();
 

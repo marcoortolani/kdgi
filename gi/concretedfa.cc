@@ -74,7 +74,9 @@ ConcreteDfa::ConcreteDfa(const int n_state, const vector<symbol_> alf, const int
 
 
 ConcreteDfa::ConcreteDfa(const ConcreteDfa &d1)
-:ConcreteDfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.ttable_, d1.accepting_states_){}
+:ConcreteDfa(d1.num_states_, d1.alphabet_, d1.start_state_, d1.ttable_, d1.accepting_states_){
+	update_state_table();
+}
 
 
 ConcreteDfa &ConcreteDfa::operator=(const ConcreteDfa &d1)
@@ -96,6 +98,8 @@ ConcreteDfa &ConcreteDfa::operator=(const ConcreteDfa &d1)
 			accepting_states_.clear();
 			accepting_states_.reserve(d1.accepting_states_.size());
 			copy(d1.accepting_states_.begin(),d1.accepting_states_.end(),back_inserter(accepting_states_));
+
+			update_state_table();
 	}
 
 	return *this;
@@ -241,7 +245,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 	istringstream iss1(line);
 	iss1 >> n;
 	accepting_symbol = n;
-
+	
 	//if(alphabet_file)
 	//	alphabet_file.clear();
 
@@ -380,34 +384,7 @@ void ConcreteDfa::set_ttable_from_sequence(const vector<int> &sequence)
 		}
 		if(sequence[i*(alph.size()+1)+alph.size()])
 			accepting_states_[i]=1;
-	}	
-}
-
-ConcreteDfa* ConcreteDfa::unionDFA(ConcreteDfa* dfa_hp)
-{
-	int count_state = dfa_hp->num_states_ + num_states_;
-
-	// Instance of union dfa
-	ConcreteDfa* union_dfa = new ConcreteDfa(count_state, alphabet_, start_state_);
-
-	// Configuration of Union DFA
-	// Smaller indexes are given to target dfa, while others to hypothesis
-	for(int j=0; j<num_states_; ++j)									// Target automaton
-		for(symbol_ sym : alphabet_)
-			union_dfa->set_ttable_entry(j,sym,get_ttable(j,sym));
-
-	for(int j=0; j<dfa_hp->num_states_; ++j)						// Hypothesis automaton
-		for(symbol_ sym_hp : alphabet_)					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
-			union_dfa->set_ttable_entry(num_states_+j,sym_hp, (dfa_hp->get_ttable(j,sym_hp) + num_states_));
-
-	for(int i=0; i<num_states_;++i)
-		if(is_accepting(i))
-			union_dfa->accepting_states_[i]=1;
-	for(int j=0; j<dfa_hp->num_states_;++j)
-		if(dfa_hp->is_accepting(j))
-			union_dfa->accepting_states_[j+num_states_]=1;
-
-	return union_dfa;
+	}
 }
 
 symbol_ ConcreteDfa::random_ttable()
@@ -734,9 +711,6 @@ void ConcreteDfa::print_dfa_in_text_file(const symbol_ file_path)
 	for(symbol_ sym : get_alphabet())
 		myfile << sym << " ";
 	myfile << "\n";
-
-	// Write start state
-	myfile << get_start_state() << "\n";
 
 	// Write accepting symbol
 	myfile << "@" << "\n";
@@ -1511,6 +1485,32 @@ vector<symbol_> ConcreteDfa::table_filling() const{
 	return table_of_distinct_states;
 }
 
+ConcreteDfa* ConcreteDfa::unionDFA(ConcreteDfa* dfa_hp) const{
+	int count_state = dfa_hp->num_states_ + num_states_;
+
+	// Instance of union dfa
+	ConcreteDfa* union_dfa = new ConcreteDfa(count_state, alphabet_, start_state_);
+
+	// Configuration of Union DFA
+	// Smaller indexes are given to target dfa, while others to hypothesis
+	for(int j=0; j<num_states_; ++j)									// Target automaton
+		for(symbol_ sym : alphabet_)
+			union_dfa->set_ttable_entry(j,sym,get_ttable(j,sym));
+
+	for(int j=0; j<dfa_hp->num_states_; ++j)						// Hypothesis automaton
+		for(symbol_ sym_hp : alphabet_)					// In union dfa, start state of HP dfa is recorded in "num_state" index of target dfa
+			union_dfa->set_ttable_entry(num_states_+j,sym_hp, (dfa_hp->get_ttable(j,sym_hp) + num_states_));
+
+	for(int i=0; i<num_states_;++i)
+		if(is_accepting(i))
+			union_dfa->accepting_states_[i]=1;
+	for(int j=0; j<dfa_hp->num_states_;++j)
+		if(dfa_hp->is_accepting(j))
+			union_dfa->accepting_states_[j+num_states_]=1;
+
+	return union_dfa;
+}
+
 vector<vector<int>> ConcreteDfa::equivalent_states_list_from_table(vector<symbol_> distincts)
 {
 	#ifdef DEBUG_DFA
@@ -2071,185 +2071,24 @@ void ConcreteDfa::print_w_method(vector<long double> statistics)const{
 	cout<<"============================"<<endl;
 }
 
-vector<vector<double>> ConcreteDfa::neighbour_matching_structural_similarity(ConcreteDfa* subject_dfa, double eps, bool color) const{
-
-	fpu_control_t oldcw, newcw;
-    _FPU_GETCW(oldcw); newcw = (oldcw & ~_FPU_EXTENDED) | _FPU_DOUBLE; _FPU_SETCW(newcw);
-    Graph *ga, *gb;
-    NMSimilarity *s;
-    double similarity;
-	double** similarity_matrix= new double*[this->get_num_states()+1];
-	vector<vector<double>> sim_v;
-	for(int w=0; w<this->get_num_states();++w){
-		similarity_matrix[w]=new double[subject_dfa->get_num_states()];
-		vector<double> init=vector<double>();
-		for(int i=0;i<subject_dfa->get_num_states();++i)
-			init.push_back(0);
-		sim_v.push_back(init);
-	}
-	similarity_matrix[this->get_num_states()]=new double[1];
-	sim_v.push_back({0});
-
-	//Here we translate the Dfas in their corresponding simple graph following the encoding:
-	/*Input file format
-	 *=================
-	 *The programs use a custom file format. First line specifies the number 
-	 *of the nodes in the graph N. Next N lines contain numbers denoting node 
-	 *colors. The following lines describe edges. Each edge is described by
-	 *a pair of indices of its constituent nodes, the beginning node being 
-	 *written first, and the termination node being writen second. Indices
-	 *of the nodes are zero based. For instance input file
-	 *
-	 *3
-	 *1
-	 *1
-	 *1
-	 *0 1
-	 *1 2
-	 *
-	 *describes the graph 0->1->2.
-	 */
-
-	char *reference_incidence_matrix, *subject_incidence_matrix;
-	vector<map<symbol_,int>> reference_ttable=this->get_ttable();
-	vector<map<symbol_,int>> subject_ttable=subject_dfa->get_ttable();
-
-	//get_edge_matrix() is situated in utilities.h
-	reference_incidence_matrix=get_incidence_matrix(reference_ttable,this->get_num_states(),this->get_alphabet());
-	subject_incidence_matrix=get_incidence_matrix(subject_ttable,subject_dfa->get_num_states(),subject_dfa->get_alphabet());
-	vector<int> *reference_labels= new vector<int>[this->get_num_states()]; 
-	vector<int> *subject_labels= new vector<int>[subject_dfa->get_num_states()];	//useful for coloured graphs
-
-	//we consider every state to have label 1 if color is FALSE
-	if(!color){
-		for(int i=0; i<this->get_num_states();++i)
-			(*reference_labels).push_back(1);
-		for(int j=0; j<subject_dfa->get_num_states();++j)
-			(*subject_labels).push_back(1);
-	}
-	else{	//If color is TRUE we give label 1 to accepting states and label 0 to rejecting states
-		
-		for(int i=0; i<this->get_num_states();++i)
-			if(this->is_accepting(i))
-				(*reference_labels).push_back(1);
-			else	
-				(*reference_labels).push_back(0);
-
-		for(int j=0; j<subject_dfa->get_num_states();++j)
-			if(subject_dfa->is_accepting(j))
-				(*subject_labels).push_back(1);
-			else
-				(*subject_labels).push_back(0);
-		
-	}
-	//Reference_dfa to grapha
-	try{
-		ga=new Graph(reference_incidence_matrix, this->get_num_states(), reference_labels);
-	}
-	catch(...){
-		return sim_v;
-	}
-	//Subject_dfa to graphb
-	try{
-		cout<<endl;
-		gb=new Graph(subject_incidence_matrix, subject_dfa->get_num_states(), subject_labels);
-	}
-	catch(...){
-		return sim_v;
-	}
-
-	s=new NMSimilarity(ga,gb);
-
-	//Similarity between pair of states
-	//printf("\nNumber of iterations: %d\n", s->Iterate(eps,100000));
-    //printf("\nSimilarity matrix:\n\n");
-	int iter = s->Iterate(eps,100000);
-    similarity=0;
-	double sim=0;
-    for(int i=0; i<ga->NodeCount(); i++)
-    {
-        for(int j=0; j<gb->NodeCount(); j++){
-			sim=s->NodeSimilarity(i,j);
-			similarity_matrix[i][j]=sim;
-		}
-    }
-
-	//Overall Dfas similarity
-	long *r;
-    long *solution;
-
-	//s->Iterate(eps,100000);
-    
-    r=(long *)malloc(ga->NodeCount()*gb->NodeCount()*sizeof(long));
-    for(int i=0; i<ga->NodeCount(); i++)
-	    for(int j=0; j<gb->NodeCount(); j++)
-	        r[i*gb->NodeCount()+j]=(1-s->NodeSimilarity(i,j))/eps;
-
-    solution=new long[ga->NodeCount()];
-    NMSimilarity::hungarian(&r, ga->NodeCount(), gb->NodeCount(), solution, 0);
-
-    similarity=0;
-    int no=0;
-    for(int i=0; i<ga->NodeCount(); i++)
-      if(solution[i]>=0)
-      {
-        similarity+=s->NodeSimilarity(i,solution[i]);
-	    no++;
-      }
-
-	similarity_matrix[this->get_num_states()][0]=similarity/no;
-    
-    delete s;
-    delete ga;
-    delete gb;
-
-	for(int i=0; i<this->get_num_states();++i)
-		for(int j=0; j<subject_dfa->get_num_states();++j)
-			sim_v[i][j]=similarity_matrix[i][j];
-
-	sim_v[this->get_num_states()][0]=similarity/no;
-
-	cout<< endl << "N iter: "<<iter<<endl;
-
-	return sim_v;
-}
-
-void ConcreteDfa::print_structural_similarity(vector<vector<double>> similarity_matrix) const{
-	cout<<"======================================"<<endl;
-	cout<<"***** NEIGHBOUR MATCHING RESULTS *****";
-	printf("\nSimilarity matrix:\n\n");
-	int num_states_subject_dfa = similarity_matrix[0].size();
-    for(int i=0; i<this->get_num_states(); i++)
-    {
-        printf(" [ ");
-        for(int j=0; j<num_states_subject_dfa; j++){
-       		printf("%lf ", similarity_matrix[i][j]);
-		}
-        printf("]\n");
-    }
-	cout<<"--------------------------------------"<<endl;
-	cout <<"Structural similarity between the Dfas: " <<similarity_matrix[this->get_num_states()][0] << endl;
-	cout<<"======================================"<<endl;
-}
-
-void ConcreteDfa::print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma, double eps, bool color)const{
+void ConcreteDfa::print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma, double eps, bool color){
 	vector<vector<symbol_>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
 	print_w_method(stats);
-	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
+	vector<vector<double>> sim_matrix = neighbour_matching(subject_dfa,eps,color);
 	print_structural_similarity(sim_matrix);
 	long double similarity = (stats[6]+sim_matrix[num_states_][0])/2;
 	cout<<"***** GLOBAL SIMILARITY *****"<<endl;
 	cout<<"The global similarity score between the two dfas is: "<<similarity<<endl;
 }
 
-DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool sigma, double eps, bool color)const{
+DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool sigma, double eps, bool color){
 	long double exec_time=0;
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
 	vector<vector<symbol_>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
-	vector<vector<double>> sim_matrix = neighbour_matching_structural_similarity(subject_dfa,eps,color);
+	vector<vector<double>> sim_matrix = neighbour_matching(subject_dfa,eps,color);
 
 	std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 	exec_time = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
@@ -2269,95 +2108,65 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 
 
 
-/* New code here */
+/* Methods related to the "common dfa interface" */
 
 vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
+
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
+	vector<symbol_> current_phrase;
 	set<int> visited_states;
-	vector<int> states_to_explore;
 	vector<int> sorted_states;
 
-	states_to_explore.push_back(get_start_state());
-	visited_states.insert(get_start_state());
+	int remaining_states = get_num_states();
 
-	//Used to compute the depth-sorted phrases we find exploring the states
-	vector<vector<symbol_>> phrases_to_explore;
-	sorted_phrases.clear();
+	do{
+		int state = get_arrive_state(current_phrase);
+		if(visited_states.find(state) == visited_states.end()){
+			visited_states.insert(state);
 
-	phrases_to_explore.push_back(vector<symbol_>(0));
-	sorted_phrases.push_back(vector<symbol_>(1,""));
-
-	while(!states_to_explore.empty()){
-		int current_state = states_to_explore.back();
-		states_to_explore.pop_back();
-
-		sorted_states.push_back(current_state);
-
-		//Do the same for the phrases.
-		vector<symbol_> current_phrase = phrases_to_explore.back();
-		phrases_to_explore.pop_back();
-		if(!current_phrase.empty()){
+			sorted_states.push_back(state);
 			sorted_phrases.push_back(current_phrase);
+
+			current_phrase.push_back(sorted_alphabet.front());
+			--remaining_states;
 		}
-
-		for(auto sym = sorted_alphabet.rbegin(); sym != sorted_alphabet.rend(); ++sym){
-			int next_state = get_ttable(current_state, *sym);
-			if( visited_states.find(next_state) == visited_states.end() ){
-				states_to_explore.push_back(next_state);
-				visited_states.insert(next_state);
-
-				//Do the same for the phrases.
-				vector<symbol_> next_phrase = current_phrase;
-				next_phrase.push_back(*sym);
-				phrases_to_explore.push_back(next_phrase);
-			}
+		else{
+			current_phrase = get_next_phrase(current_phrase);
 		}
 	}
+	while(remaining_states > 0);
 
 	return sorted_states;
 }
 
-vector<symbol_> ConcreteDfa::get_symbols_from_transiction(DFA_STATE_ state, DFA_STATE_ arrive_state){
-	vector<symbol_> sorted_alphabet = sort_alphabet();
-	vector<symbol_> symbols;
-	for(symbol_ sym : sorted_alphabet){
-		if(get_ttable(state, sym) == arrive_state){
-			symbols.push_back(sym);
-		}
-	}
-	return symbols;
-}
-
 void ConcreteDfa::update_state_table(){
-	//state_to_state_table_.clear();
+
 	state_table_.clear();
 	vector<symbol_> sorted_alphabet = sort_alphabet();
+
 	vector<vector<symbol_>> sorted_phrases;
 	vector <int> sorted_states = sort_states(sorted_phrases);
 
 	int i = 0;
 	for(int state : sorted_states){
-		state_table_.push_back(DfaState(is_accepting(state), sorted_phrases[i]));
-
+		state_table_.push_back(DfaState(is_accepting(state), sorted_phrases[i], i));
 		++i;
 	}
 
 	i = 0;
 	for(int state : sorted_states){
-		//vector<vector<symbol_>> row;
 		for(symbol_ sym : sorted_alphabet){
-			//row.push_back(get_symbols_from_transiction(state, arrive_state));
 			int next_state = get_ttable(state, sym);
 			bool state_found = false;
 			for(int j = 0; j < sorted_states.size() && !state_found; j++){
 				if(sorted_states[j] == next_state){
 					state_table_[i].set_transiction(sym, &state_table_[j]);
+					state_table_[j].set_incoming_transictions(std::make_pair(&state_table_[i], sym));
 					state_found = true;
 				}
 			}
 		}
-
 		++i;
 	}
 }
@@ -2371,7 +2180,6 @@ vector<DfaState>::iterator ConcreteDfa::end(){
 }
 
 void ConcreteDfa::print_state_table(){
-	update_state_table();
 	for(auto state : *this){
 		state.print();
 	}

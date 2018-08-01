@@ -36,10 +36,6 @@ protected:
   vector<int> accepting_states_;      /*!< List of accepting states */
   vector<map<symbol_,int>> ttable_;			  	/*!< Transition table */
 
-  /* New data members here */
-  vector<vector<vector<symbol_>>> state_to_state_table_;
-  vector<DfaState> state_table_;
-  /* end of new data members */
   //******** CONSTRUCTORS: ********
   /**
    * Make an instance of new dfa with default start state to 0.
@@ -122,6 +118,16 @@ protected:
    * @return A table saved in a linear array, with a list of equivalent/different states.
    */
   vector<symbol_>	table_filling() const;
+
+  /**
+   * Make a new dfa from the union of current dfa and "dfa_hp".
+   * The first states are from current dfa, last states from "dfa_hp". The total number of states are sum of the number of states for the 2 dfa.
+   * The start state is assumed to be the one of the method's caller.
+   * Note: DO NOT USE update_state_table on the dfa returned by this procedure
+   * @param dfa_hp Dfa to add to the current dfa.
+   * @return Pointer to the union dfa of two dfa.
+   */
+  ConcreteDfa* unionDFA(ConcreteDfa* s) const;
 
   /**
    * Create a list of states and corrispective equivalent states.
@@ -245,14 +251,6 @@ public:
    */
   int 	get_ttable(int i, symbol_ j) const;
 
-  /**
-   * Make a new dfa from the union of current dfa and "dfa_hp".
-   * The first states are from current dfa, last states from "dfa_hp". The total number of states are sum of the number of states for the 2 dfa.
-   * The start state is assumed to be the one of the method's caller.
-   * @param dfa_hp Dfa to add to the current dfa.
-   * @return Pointer to the union dfa of two dfa.
-   */
-  ConcreteDfa*	unionDFA(ConcreteDfa* dfa_hp);										// Return a union dfa of (this) and "dfa_hp"
 
   /**
    * Each ttable element is extracted in a random way (uniform numbers in [0 num_states-1] instead accepting/rejecting uniform numbers in [0 1] ). Thus the ttable (transition table) is modified.
@@ -401,6 +399,7 @@ public:
    */
   void print_w_method(vector<long double> statistics) const;
 
+<<<<<<< HEAD
    /**
     * Gives the structural similarity score matrix between every pair of states of two DFAs
     * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
@@ -420,6 +419,8 @@ public:
    * @param num_states_target_dfa
    */
    void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
+=======
+>>>>>>> origin/master
 
   /**
    * Print the similarity score between dfas, taking into account both linguistical
@@ -429,7 +430,7 @@ public:
    * @param eps precision of the termination condition, a by default is eps=0.0001
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
    */
-  void print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false) const;
+  void print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false);
 
   /**
    * Returns a DfaSim object which contains all the similarity score between dfas,
@@ -440,7 +441,7 @@ public:
    * @param eps precision of the termination condition, a by default is eps=0.0001
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
    */
-  DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false) const;
+  DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false);
 
 
   /**
@@ -456,20 +457,40 @@ public:
    */
   static void  random_dfa_abbadingo(int n, int seed, int n_symbols, string file_path);
 
-  /* New code here */
+  /* Code related to the "dfa common interface" */
 
 protected:
+
+  vector<DfaState> state_table_;	/*!< The real container, ConcreteDfa is just a wrapper */
+
+  /**
+   * It sorts the states of the ConcreteDfa in a depth-first and lexicographical order
+   */
   vector<int> sort_states(vector<vector<symbol_>>& sorted_phrases);
 
-  vector<symbol_> get_symbols_from_transiction(DFA_STATE_ state, DFA_STATE_ arrive_state);
+public:
 
+  /**
+   * Read the tables of the ConcreteDfa and update the state_table member, a vector of DfaStates.
+   * The ConcreteDfa can act as a container only after this function is called.
+   */
   void update_state_table();
 
-public:
+  /**
+  	* Prints all the infos about the DfaState of the Dfa in the correct order.
+  	*/
   void print_state_table();
 
+  /**
+   * Implements the Dfa's container-like behavior.
+   * @return an iterator to the first DfaState.
+   */
   vector<DfaState> :: iterator begin();
 
+  /**
+   * Implements the Dfa's container-like behavior.
+   * @return an iterator to the end of the Dfa.
+   */
   vector<DfaState> :: iterator end();
 
 };

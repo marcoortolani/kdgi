@@ -21,6 +21,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(gi_gipy, m) {
     m.doc() = "pybind11 plugin for the kdgi library";
 
+
     py::class_<DfaSim>(m,"DfaSim")
 
       .def(py::init())
@@ -99,8 +100,7 @@ PYBIND11_MODULE(gi_gipy, m) {
       //===========================================================================================
 
       //*** Structural similarity ***
-      .def("neighbour_matching_structural_similarity", &ConcreteDfa::neighbour_matching_structural_similarity, "Gives the structural similarity score matrix between every pair of states of two DFAs",py::arg("target_dfa"), py::arg("eps") = 0.0001, py::arg("color") = 0)
-      .def("struct_sim", &ConcreteDfa::struct_sim, "Return raw structural similarity score between two dfas (utility function)",py::arg("target_dfa"), py::arg("eps") = 0.0001, py::arg("color") = 0)
+      .def("neighbour_matching_structural_similarity", &ConcreteDfa::neighbour_matching, "Gives the structural similarity score matrix between every pair of states of two DFAs",py::arg("target_dfa"), py::arg("eps") = 0.0001, py::arg("color") = 0)
       .def("print_structural_similarity", &ConcreteDfa::print_structural_similarity, "Print the matrix containing the similarity score between pair of nodes.")
       
       //===========================================================================================

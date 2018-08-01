@@ -11,6 +11,7 @@
 #include <iostream>
 
 #include "dfastate.h"
+#include "utilities.h"
 
 #define symbol_ string
 #define DFA_STATE_ int
@@ -106,15 +107,69 @@ public:
   virtual bool   membership_query(vector<symbol_> phrase) const = 0;
 
 
+  /**
+   * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
+   * and also for generating a witness between different DFAs.
+   * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
+   * @return A table saved in a linear array, with a list of equivalent/different states.
+   */
+  vector<symbol_>	table_filling1(Dfa* subject_dfa);
 
-  /* New code here */
+
+
+  /* Code related to the "dfa common interface" */
 
   virtual iterator begin() = 0;
+
   virtual iterator end() = 0;
 
-  bool is_identical(Dfa* other_dfa);
+  /**
+   * Returns true if the 2 Dfas are identical false otherwise.
+   */
+  bool is_identical(Dfa* other_dfa, vector<symbol_>& phrase);
 
+  /**
+   * Returns the alphabet in lexicographical order.
+   */
   vector<symbol_> sort_alphabet();
+
+  /**
+   * Return the next phrase in lexicographical order with the same length of the argument phrase or shorter.
+   */
+  vector<symbol_> get_next_phrase(vector<symbol_> phrase);
+
+  /**
+   * Returns the DfaState related to the phrase passed regardless of the type of container of symbol_.
+   * It explores the graph symbol_ by symbol_ and DfaState by DfaState, making it usable for every Dfa.
+   * A Dfa that need efficiency should override this operator.
+   * It should be noted that any function defined in the Dfa generic template class that use this operator, use
+   * this version whether another one is implemented in the derived class or not.
+   */
+  template <class SymIter>
+  DfaState* operator[](SymIter phrase);
+
+  bool find_counterexample(Dfa* other_dfa, vector<symbol_> counter_example);
+
+  /**
+    * Gives the structural similarity score matrix between every pair of states of two DFAs
+    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
+    * @param subject_dfa
+    * @param eps precision of the termination condition, a by default is eps=0.0001
+    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
+    * @return similarity_matrix contains the similarity score of reference_dfa's state i
+    * with subject_dfa's state j. The last row, so similarity_matrix[reference_dfa->num_states][1]
+    * contains the overall structural similarity score between the two Dfas.      
+    */
+   vector<vector<double>> neighbour_matching(Dfa* subject_dfa, double eps=0.0001, bool color=false);
+
+    /**
+   * Print the matrix containing the similarity score between pair of nodes.
+   * @param similarity_matrix 
+   * @param num_states_target_dfa
+   */
+   void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
+
+
 };
 
 #include "dfa.tcc"

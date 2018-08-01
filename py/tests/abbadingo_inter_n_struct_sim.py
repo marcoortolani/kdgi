@@ -4,7 +4,7 @@ import xlsxwriter
 from xlsxwriter.utility import xl_range
 
 # range(min_included, max_NOT_included, incremento)
-for n_symbols in range(2, 3):
+for n_symbols in range(6, 7):
 
     # print('\nProcessing n_symbols = ' + str(n_symbols) + '\n\n')
 
@@ -13,7 +13,7 @@ for n_symbols in range(2, 3):
                 os.makedirs(inter_n_path)
 
     
-    for n_fisso in range(5, 31, 5):
+    for n_fisso in range(5, 6):
 
         print('Processing N_fisso = ' + str(n_fisso) + ' with \n')
         
@@ -35,10 +35,11 @@ for n_symbols in range(2, 3):
 
         row += 2
 
-        row_final_results = 107
+        row_final_results = 108
         col_final_results = 0
         worksheet.write(row_final_results, col_final_results, 'N_mobile')
-        worksheet.write(row_final_results, col_final_results + 1, 'Average similarity')
+        worksheet.write(row_final_results, col_final_results + 1, 'Average')
+        worksheet.write(row_final_results, col_final_results + 2, 'Variance')
         row_final_results += 1
 
         # ogni automa del livello n fisso, deve essere confrontato con ogni automa dei livelli da 2 a 30
@@ -80,16 +81,20 @@ for n_symbols in range(2, 3):
 
             # Write the medium similarity between automatas of level n using a formula.
             worksheet.write(row, col, 'Average')
+            worksheet.write(row + 1, col, 'Variance')
             # Se confronto i 10 automi di un n fisso, con tutti i 10 automi di un n mobile
             # ho in totale 100 confronti per ogni n mobile
 
             cell_range = xl_range(4, col+2, 103, col+2)
 
             formula = '=AVERAGE(%s)' % cell_range
+            formula2 = '=VAR(%s)' % cell_range
             worksheet.write(row, col + 2, formula)
+            worksheet.write(row + 1, col + 2, formula2)
             worksheet.write(row_final_results, col_final_results, str(n_mobile))
             #worksheet.write(row_final_results, col_final_results + 1, worksheet.cell_value(row, col + 2))
             worksheet.write(row_final_results, col_final_results + 1, formula)
+            worksheet.write(row_final_results, col_final_results + 2, formula2)
 
 
             # I risultati di n_mobile successivo riportali a destra con uno spazio in mezzo

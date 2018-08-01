@@ -829,13 +829,14 @@ private:
 		//last_modified_by_in = temp_last_modified_by_in;
 		//last_modified_by_out = temp_last_modified_by_out;
 
-		// Stampa matrice di similarità iterazione corrente
-		std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
 		
-		//#ifdef MATRICES_DEBUG
+		#ifdef MATRICES_DEBUG
 		printf("Matrice similarità corrente:\n\n");
 		for(int i=0; i<graph_a_n; i++)
 		{
+			// Stampa matrice di similarità iterazione corrente
+			std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
+		
 			printf(" [ ");
 			for(int j=0; j<graph_b_n; j++)
 				printf("%lf ", node_similarity[i][j]);
@@ -849,7 +850,7 @@ private:
 				printf("%lf ", tmp_similarity[i][j]);
 			printf("]\n");
 		}
-		//#endif
+		#endif
 
 		#ifdef HISTORY_DEBUG
 		if(iter==3){

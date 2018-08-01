@@ -216,7 +216,7 @@ DfaState* Dfa<I>::operator[](SymIter phrase){
 template <class I>
 vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, bool color){
 
-	int max_iter = 1000000;
+	int max_iter = 100000;
 
 	int num_states_subject_ = subject_dfa -> get_num_states();
 

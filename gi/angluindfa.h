@@ -231,13 +231,13 @@ protected:
 	 */
 	int get_index_from_transition(set<list<symbol_>> current_state, symbol_ sym, vector<set<list<symbol_>>> all_states);
 
+public:
+
 	/**
 	 * Read the tables of the AngluinDfa and update the state_table member, a vector of DfaStates.
 	 * The AngluinDfa can act as a container only after this function is called (It still must learn beforehand).
 	 */
 	void update_state_table();
-
-public:
 
 	/**
 	 * Implements the Dfa's container-like behavior.

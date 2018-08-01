@@ -26,6 +26,8 @@ protected:
 		// before each test).
 		reference->set_ttable_from_sequence(sequence);
         subject->set_ttable_from_sequence(sequence);
+        reference->update_state_table();
+        subject->update_state_table();
 	}
 
 	virtual void TearDown() {
@@ -96,6 +98,7 @@ TEST_F(BaseDfaTest, getAcceptingStates){
 TEST_F(BaseDfaTest, readDfaFile){
     ConcreteDfa* test=nullptr; 
     test=new ConcreteDfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
+    test->update_state_table();
     vector<map<string,int>> ttable_test=test->get_ttable();
     vector<map<string,int>> ttable_ref=reference->get_ttable();
     bool equal=true;
@@ -156,6 +159,7 @@ TEST_F(BaseDfaTest, operatorEqual){
     EXPECT_EQ(1,equal);
 }
 
+
 TEST_F(BaseDfaTest, operatorEqualEqual){
     bool flag=true;
     flag=(*reference==*subject);
@@ -165,14 +169,20 @@ TEST_F(BaseDfaTest, operatorEqualEqual){
 }
 
 
+
 TEST_F(BaseDfaTest, unionDfa){
     TestDfa* test = new TestDfa(3,alph,2);
     const vector<int> sequence2 = {0, 1, 2, 0, 0, 1, 2, 1, 0, 1, 2, 0};
     test->set_ttable_from_sequence(sequence2);
+    test->update_state_table();
+
     ConcreteDfa* uni=reference->unionDFA(test);
+    cout<<"qui"<<endl;
+
     TestDfa* uni_ref = new TestDfa(8,alph,0);
     const vector<int> sequence3 = {1, 2, 4, 0, 3, 4, 1, 0, 4, 3, 2, 0, 4, 4, 4, 1, 4, 4, 4, 0, 5, 6, 7, 0, 5, 6, 7, 1, 5, 6, 7, 0};
     uni_ref->set_ttable_from_sequence(sequence3);
+
     vector<map<string,int>> ttable_test=uni->get_ttable();
     vector<map<string,int>> ttable_ref=uni_ref->get_ttable();
     bool equal=true;
@@ -197,6 +207,7 @@ TEST_F(BaseDfaTest, unionDfa){
 }
 
 
+
 TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     bool flag=true;
     ConcreteDfa* test=nullptr; 
@@ -204,6 +215,9 @@ TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     flag=reference->equivalence_query(test);
     EXPECT_EQ(1,flag);
 }
+
+
+
 
 TEST_F(BaseDfaTest, copyConstructor){
     TestDfa* test = new TestDfa(*reference);

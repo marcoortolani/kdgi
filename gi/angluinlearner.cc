@@ -90,6 +90,7 @@ AngluinDfa* AngluinLearner::learn(){
 		bool right_dfa = oracle->is_equiv(test_dfa, w_results);
 
 		if(right_dfa){
+			ang_dfa->update_state_table();
 			return ang_dfa;
 		}
 		else{

@@ -119,6 +119,16 @@ protected:
   vector<symbol_>	table_filling() const;
 
   /**
+   * Make a new dfa from the union of current dfa and "dfa_hp".
+   * The first states are from current dfa, last states from "dfa_hp". The total number of states are sum of the number of states for the 2 dfa.
+   * The start state is assumed to be the one of the method's caller.
+   * Note: DO NOT USE update_state_table on the dfa returned by this procedure
+   * @param dfa_hp Dfa to add to the current dfa.
+   * @return Pointer to the union dfa of two dfa.
+   */
+  ConcreteDfa* unionDFA(ConcreteDfa* s) const;
+
+  /**
    * Create a list of states and corrispective equivalent states.
    * @param distincts A table build with the Table Filling Algorithm.
    * @return Every vector is a list of equivalent state for the state associate to that vector.
@@ -238,14 +248,6 @@ public:
    */
   int 	get_ttable(int i, symbol_ j) const;
 
-  /**
-   * Make a new dfa from the union of current dfa and "dfa_hp".
-   * The first states are from current dfa, last states from "dfa_hp". The total number of states are sum of the number of states for the 2 dfa.
-   * The start state is assumed to be the one of the method's caller.
-   * @param dfa_hp Dfa to add to the current dfa.
-   * @return Pointer to the union dfa of two dfa.
-   */
-  ConcreteDfa*	unionDFA(ConcreteDfa* dfa_hp);										// Return a union dfa of (this) and "dfa_hp"
 
   /**
    * Each ttable element is extracted in a random way (uniform numbers in [0 num_states-1] instead accepting/rejecting uniform numbers in [0 1] ). Thus the ttable (transition table) is modified.
@@ -394,24 +396,6 @@ public:
    */
   void print_w_method(vector<long double> statistics) const;
 
-   /**
-    * Gives the structural similarity score matrix between every pair of states of two DFAs
-    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
-    * @param subject_dfa
-    * @param eps precision of the termination condition, a by default is eps=0.0001
-    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
-    * @return similarity_matrix contains the similarity score of reference_dfa's state i
-    * with subject_dfa's state j. The last row, so similarity_matrix[reference_dfa->num_states][1]
-    * contains the overall structural similarity score between the two Dfas.      
-    */
-   vector<vector<double>> neighbour_matching_structural_similarity(ConcreteDfa* subject_dfa, double eps=0.0001, bool color=false) const;
-
-  /**
-   * Print the matrix containing the similarity score between pair of nodes.
-   * @param similarity_matrix 
-   * @param num_states_target_dfa
-   */
-   void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
 
   /**
    * Print the similarity score between dfas, taking into account both linguistical
@@ -421,7 +405,7 @@ public:
    * @param eps precision of the termination condition, a by default is eps=0.0001
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
    */
-  void print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false) const;
+  void print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false);
 
   /**
    * Returns a DfaSim object which contains all the similarity score between dfas,
@@ -432,7 +416,7 @@ public:
    * @param eps precision of the termination condition, a by default is eps=0.0001
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
    */
-  DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false) const;
+  DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false);
 
 
 

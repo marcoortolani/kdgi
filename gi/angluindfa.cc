@@ -1051,7 +1051,7 @@ void AngluinDfa::update_state_table(){
 			}
 		}
 
-		state_table_.push_back(DfaState(accepting, depth_sorted_phrases[i]));
+		state_table_.push_back(DfaState(accepting, depth_sorted_phrases[i], i));
 		++i;
 	}
 
@@ -1061,9 +1061,12 @@ void AngluinDfa::update_state_table(){
 			DFA_STATE_ j = get_index_from_transition(s, sym, states);
 			//state_to_state_table_[i][j].push_back(sym);
 			state_table_[i].set_transiction(sym, &state_table_[j]);
+			state_table_[j].set_incoming_transictions(std::make_pair(&state_table_[i], sym));
 		}
 		++i;
 	}
+
+	num_states_ = state_table_.size();
 }
 
 vector<DfaState> :: iterator AngluinDfa::begin(){
@@ -1075,7 +1078,7 @@ vector<DfaState> :: iterator AngluinDfa::end(){
 };
 
 void AngluinDfa::print_state_table(){
-	update_state_table();
+	//update_state_table();
 	cout << endl;
 	for(auto state : *this){
 		state.print();

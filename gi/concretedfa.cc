@@ -163,6 +163,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 	char calfabeto[30];
 	int ctransizione = 0;
 	int current_line = 0;
+	int header_line = 0;
 	int start_state_ = 0;
 
 	symbol_ n;
@@ -205,6 +206,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 		cout << "Error in first line of file" << endl;
 		throw invalidFormat();
 	}
+	header_line += 1;
 
 
 	// read the alphabet_
@@ -232,6 +234,8 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 		throw wrongAlphabetSize();
 	}
 
+	header_line += 1;
+
 
 	// Set alphabet_ for the current dfa
 	res.set_alphabet(alphabet_file);
@@ -239,12 +243,18 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 	// Third line contains the index of the start node
 	read.getline(line,BUFFER_SIZE);
 	counter = sscanf(line, "%d", &(res.start_state_));
+	if(res.start_state_ >= res.num_states_){
+		cerr << "ERROR in third line of file: start_state is not a state of dfa. i.e. start_state >= num_states"<<endl;
+	}
+	header_line += 1;
 
 	// Fourth line contains the symbol to denote the accepting state
 	read.getline(line,BUFFER_SIZE);
 	istringstream iss1(line);
 	iss1 >> n;
 	accepting_symbol = n;
+
+	header_line += 1;
 	
 	//if(alphabet_file)
 	//	alphabet_file.clear();
@@ -309,6 +319,10 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 			res.accepting_states_[cstato]=ctransizione;
 			//res.set_accepting_state(cstato);
 
+	}
+
+	if(read.eof() && (current_line+header_line)!=(num_total_line+4)){
+		cerr << "ERROR in current Dfa file"<<endl<<endl << "Correct encoding is:"<<endl <<"*********************"<<endl<<endl<<"dim_alphabet	num_states	dfa"<<endl<<"alphabet_symbols"<<endl<<"start_state"<<endl<<"accepting/rejecting_state_marker"<<endl<<"<list_of_transitions written like dfa[state][symbol]=arrive_state>"<<endl<<endl<<"*********************"<<endl<<endl;
 	}
 
 	// Close connection

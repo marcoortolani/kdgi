@@ -343,6 +343,8 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 							// il loro punteggio all' ultima iterazione
 							if(!already_modified){
 
+								precision_achieved = 0;
+
 								sim_to_add = tmp_similarity[vicinato_uscente_reference[k]->get_index()][vicinato_uscente_subject[solution[k]]->get_index()];
 
 								if(iter >=1 && tmp_similarity[vicinato_uscente_reference[k]->get_index()][vicinato_uscente_subject[solution[k]]->get_index()] < 1)
@@ -410,6 +412,8 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 							// il loro punteggio all' ultima iterazione
 							if(!already_modified){
 
+								precision_achieved = 0;
+
 								sim_to_add = tmp_similarity[vicinato_entrante_reference[k]->get_index()][vicinato_entrante_subject[solution[k]]->get_index()];
 
 								if(iter >=1 && tmp_similarity[vicinato_entrante_reference[k]->get_index()][vicinato_entrante_subject[solution[k]]->get_index()] < 1)
@@ -438,8 +442,9 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 				// sottratto in valore assoluto all'elemento corrispondente della matrice
 				// dell'iterazione passata, si mantiene maggiore o uguale a epsilon,
 				// la condizione di terminazione non è soddisfata, continua a iterare
-				if(abs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
-					precision_achieved=0;	// continua a iterare
+				//if(abs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
+					//precision_achieved=0;	// continua a iterare
+				// VECCHIA CONDIZIONE DI TERMINAZIONE
 
 		}
 		}
@@ -453,10 +458,6 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 		for(int j = 0; j<num_states_subject_; ++j)
 			struct_sim[i][j]=node_similarity[i][j];
 
-
-	//Overall Dfas similarity
-	/*long *r = nullptr;
-    long *final_solution = nullptr;*/
 
     costs =(long *)malloc(num_states_*num_states_subject_*sizeof(long));
     for(int i=0; i<num_states_; i++)
@@ -477,7 +478,7 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 	struct_sim[num_states_][0]=similarity/no;
 
-
+	cout <<"N iter" <<iter<<endl;
 	return struct_sim;
 
 }

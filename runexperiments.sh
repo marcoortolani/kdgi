@@ -7,7 +7,7 @@ cd kdgi/py/tests
 
 
 
-expname="exp-abbadingo_struct_sim"
+expname="experiment_abbadingo_inter_n_struct_sim"
 
 echo "Experiment "$expname > exp_out/test.out
 date >> exp_out/test.out
@@ -23,7 +23,7 @@ outputfile=exp_out/${expname}.out
 
 source /home/kdgi/virtualenvs/kdgi-py2/bin/activate kdgi-py2
 
-python abbadingo_intra_n_struct_sim.py > ${outputfile} 2>> exp_out/error.out
+python abbadingo_inter_n_struct_sim.py > ${outputfile} 2>> exp_out/error.out
 
 echo "END" >> exp_out/test.out
 

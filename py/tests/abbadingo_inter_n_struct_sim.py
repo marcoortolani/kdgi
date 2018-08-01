@@ -13,7 +13,7 @@ for n_symbols in range(2, 3):
                 os.makedirs(inter_n_path)
 
     
-    for n_fisso in range(5, 26, 5):
+    for n_fisso in range(5, 31, 5):
 
         print('Processing N_fisso = ' + str(n_fisso) + ' with \n')
         

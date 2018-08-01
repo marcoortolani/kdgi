@@ -584,6 +584,8 @@ private:
 							// il loro punteggio all' ultima iterazione
 							if(!already_modified){
 
+								precision_achieved=0;
+
 								sim_to_add = tmp_similarity[graph_a->TerminatingNode(kaddr[k])][graph_b->TerminatingNode(laddr[solution[k]])];
 
 								#ifdef DEBUG2
@@ -714,6 +716,9 @@ private:
 							// il loro punteggio alla passata iterazione
 
 							if(!already_modified){
+
+								precision_achieved=0;
+
 								sim_to_add = tmp_similarity[graph_a->SourceNode(kaddr[k])][graph_b->SourceNode(laddr[solution[k]])];
 
 								#ifdef DEBUG2
@@ -812,8 +817,8 @@ private:
 				// sottratto in valore assoluto all'elemento corrispondente della matrice
 				// dell'iterazione passata, si mantiene maggiore o uguale a epsilon,
 				// la condizione di terminazione non è soddisfata, continua a iterare
-				if(abs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
-					precision_achieved=0;	// continua a iterare
+				//if(abs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
+					//precision_achieved=0;	// continua a iterare
 			}
 
 		vector<vector<double> > current_similarity(graph_a_n, vector<double>(graph_b_n));

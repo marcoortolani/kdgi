@@ -2163,7 +2163,7 @@ vector<vector<double>> ConcreteDfa::neighbour_matching_structural_similarity(Con
 	//Similarity between pair of states
 	//printf("\nNumber of iterations: %d\n", s->Iterate(eps,100000));
     //printf("\nSimilarity matrix:\n\n");
-	s->Iterate(eps,100000);
+	int iter = s->Iterate(eps,100000);
     similarity=0;
 	double sim=0;
     for(int i=0; i<ga->NodeCount(); i++)
@@ -2208,6 +2208,8 @@ vector<vector<double>> ConcreteDfa::neighbour_matching_structural_similarity(Con
 			sim_v[i][j]=similarity_matrix[i][j];
 
 	sim_v[this->get_num_states()][0]=similarity/no;
+
+	cout<< endl << "N iter: "<<iter<<endl;
 
 	return sim_v;
 }

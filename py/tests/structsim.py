@@ -1,7 +1,7 @@
 from gi_gipy import *
 
-dfa_file1 = '../data/automata/ortolani1.txt'
-dfa_file2 = '../data/automata/ortolani2.txt'
+dfa_file1 = '../data/automata/_ab_aaaa.txt'
+dfa_file2 = '../data/automata/_2_instance_of_aab.txt'
 
 dfa1 = Dfa.read_dfa_file(dfa_file1)
 dfa2 = Dfa.read_dfa_file(dfa_file2)

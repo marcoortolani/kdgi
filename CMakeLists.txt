@@ -75,7 +75,7 @@ if (test)
   # Unit Tests
   ##############
   #dare chmod 777 su ogni file
-  add_executable(runUnitTests unit_testing/base_dfa_test.cc unit_testing/linguistic_similarity_test.cc unit_testing/structural_similarity_test.cc)
+  add_executable(runUnitTests unit_testing/base_dfa_test.cc unit_testing/linguistic_similarity_test.cc unit_testing/structural_similarity_test.cc unit_testing/base_dfastate_test.cc)
 
   # Standard linking to gtest stuff.
   target_link_libraries(runUnitTests gtest gtest_main)

@@ -13,9 +13,9 @@ int main() {
 
 	vector<string> file_names = {	"tomita9",
 									"tomita15",
-									//"_2_instance_of_aab",
-									//"_ab_aaaa",
-									//"_all_except_abab",
+									"_2_instance_of_aab",
+									"_ab_aaaa",
+									"_all_except_abab",
 									"_no_repetitions",
 									"_odd_a_odd_b",
 									"dfa_test"
@@ -47,14 +47,19 @@ int main() {
 	}*/
 
 
+	//int i = 0;
 	cout << endl;
 	for(auto dfa1 : Dfas){
+		int j = 0;
 		for(auto dfa2 : Dfas){
+			//cout << "global_sim " << file_names[i] << " " << file_names[j] << endl;
 			vector<vector<double>> sim = dfa1.neighbour_matching(&dfa2);
 			double global_sim = (sim.back()).front();
 			cout << global_sim << "          ";
+			//++j;
 		}
 		cout << endl;
+		//++i;
 	}
 
 	cout << endl;

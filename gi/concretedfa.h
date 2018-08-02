@@ -399,38 +399,19 @@ public:
    */
   void print_w_method(vector<long double> statistics) const;
 
-<<<<<<< HEAD
-   /**
-    * Gives the structural similarity score matrix between every pair of states of two DFAs
-    * based on the Mladen Nikolic's paper "Measuring Similarity of Graph Nodes by Neighbor Matching"
-    * @param subject_dfa
-    * @param eps precision of the termination condition, a by default is eps=0.0001
-    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
-    * @return similarity_matrix contains the similarity score of reference_dfa's state i
-    * with subject_dfa's state j. The last row, so similarity_matrix[reference_dfa->num_states][1]
-    * contains the overall structural similarity score between the two Dfas.      
-    */
-   vector<vector<double>> neighbour_matching_structural_similarity(ConcreteDfa* subject_dfa, double eps=0.0001, bool color=false) const;
+  pair<double, unsigned int> struct_sim(ConcreteDfa* subject_dfa, bool isomorphism=false, bool color=false, double eps=0.0001);
 
-  pair<double, unsigned long long int> struct_sim(ConcreteDfa* subject_dfa, double eps=0.0001, bool color=false) const;
-  /**
-   * Print the matrix containing the similarity score between pair of nodes.
-   * @param similarity_matrix 
-   * @param num_states_target_dfa
-   */
-   void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
-=======
->>>>>>> origin/master
 
   /**
    * Print the similarity score between dfas, taking into account both linguistical
    * and structural sides.
    * @param target_dfa
    * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
-   * @param eps precision of the termination condition, a by default is eps=0.0001
+   * @param isomorphism if TRUE it divides global similarity for min(num_states_, num_states_subject_), searching for a subgraph matching
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
+   * @param eps precision of costs matrix for hungarian algorithm, by default is eps=0.0001
    */
-  void print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false);
+  void print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma=true, bool isomorphism=false, bool color=false, double eps=0.0001);
 
   /**
    * Returns a DfaSim object which contains all the similarity score between dfas,
@@ -438,10 +419,11 @@ public:
    * @param target_dfa
    * @param print a boolean that if true permits to display the results.
    * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
-   * @param eps precision of the termination condition, a by default is eps=0.0001
+   * @param isomorphism if TRUE it divides global similarity for min(num_states_, num_states_subject_), searching for a subgraph matching
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
+   * @param eps precision of costs matrix for hungarian algorithm, by default is eps=0.0001
    */
-  DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false);
+  DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, bool isomorphism=false, bool color=false, double eps=0.0001);
 
 
   /**

@@ -4,7 +4,7 @@ import xlsxwriter
 from xlsxwriter.utility import xl_range
 
 # range(min_included, max_NOT_included, incremento)
-for n_symbols in range(6, 7):
+for n_symbols in range(2, 3):
 
     # print('\nProcessing n_symbols = ' + str(n_symbols) + '\n\n')
 
@@ -13,7 +13,7 @@ for n_symbols in range(6, 7):
                 os.makedirs(inter_n_path)
 
     
-    for n_fisso in range(5, 6):
+    for n_fisso in range(3, 4):
 
         print('Processing N_fisso = ' + str(n_fisso) + ' with \n')
         
@@ -40,11 +40,12 @@ for n_symbols in range(6, 7):
         worksheet.write(row_final_results, col_final_results, 'N_mobile')
         worksheet.write(row_final_results, col_final_results + 1, 'Average')
         worksheet.write(row_final_results, col_final_results + 2, 'Variance')
+        worksheet.write()
         row_final_results += 1
 
         # ogni automa del livello n fisso, deve essere confrontato con ogni automa dei livelli da 2 a 30
         # producendo 100 confronti per ogni n mobile
-        for n_mobile in range(2,31):
+        for n_mobile in range(2,4):
 
             print('Processing N_mobile = ' + str(n_mobile) + '\n')
 

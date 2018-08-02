@@ -301,10 +301,11 @@ static inline int hungarian(long **mtx, int m, int n, long *solution, long heur)
     long *tmtx;
     long transposed;
 
-    register long k;
-    register long l;
-    register long j;
-    register long s;
+    long k;
+    long l;
+    long j;
+    long s;
+
 
     assert(*mtx);
     assert(m);
@@ -397,7 +398,7 @@ static inline int hungarian(long **mtx, int m, int n, long *solution, long heur)
 		     s = row_dec[k];
 		    for (l = 0; l < n; l++)
 			if ( slack[l]) {
-			    register long del;
+			    long del;
 			     del = (*mtx)[k*n+l] - s + col_inc[l];
 			    if (del < slack[l]) {
 				if (del == 0) {

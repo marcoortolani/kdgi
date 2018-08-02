@@ -1,6 +1,6 @@
 from gi_gipy import *
 
-x=Dfa(Dfa.read_dfa_file('../data/tomita15.txt'))
+x=Dfa(Dfa.read_dfa_file('./struct_sim_experiments/2_symbols/automata/n5/n5_1.txt'))
 h=x.get_dim_alphabet()
 print ('Dimensione dell\'alfabeto del Tomita15 letto da file: ')
 print (h)

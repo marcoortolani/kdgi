@@ -2082,18 +2082,18 @@ void ConcreteDfa::print_w_method(vector<long double> statistics)const{
 	cout<<"============================"<<endl;
 }
 
-void ConcreteDfa::print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma, double eps, bool color){
+void ConcreteDfa::print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma, bool isomorphism, bool color, double eps){
 	vector<vector<symbol_>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
 	print_w_method(stats);
-	vector<vector<double>> sim_matrix = neighbour_matching(subject_dfa,eps,color);
+	vector<vector<double>> sim_matrix = neighbour_matching(subject_dfa,isomorphism,color,eps);
 	print_structural_similarity(sim_matrix);
 	long double similarity = (stats[6]+sim_matrix[num_states_][0])/2;
 	cout<<"***** GLOBAL SIMILARITY *****"<<endl;
 	cout<<"The global similarity score between the two dfas is: "<<similarity<<endl;
 }
 
-DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool sigma, double eps, bool color){
+DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool sigma, bool isomorphism, bool color, double eps){
 	long double exec_time=0;
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
@@ -2194,4 +2194,9 @@ void ConcreteDfa::print_state_table(){
 	for(auto state : *this){
 		state.print();
 	}
+}
+
+pair<double, unsigned int> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, bool isomorphism, bool color, double eps) {
+	vector<vector<double> > sim = neighbour_matching(subject_dfa, isomorphism, color, eps);
+	return std::make_pair(sim[num_states_][0], sim[num_states_][1]);
 }

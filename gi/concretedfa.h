@@ -390,6 +390,9 @@ public:
    */
    vector<long double> get_w_method_statistics(vector<vector<symbol_>> test_set, ConcreteDfa* subject_dfa) const;
 
+
+  pair<double, unsigned int> struct_sim(ConcreteDfa* subject_dfa, bool isomorphism=false, bool color=false, double eps=0.0001);
+
   /**
    * Print the w-method statistics
    * @param statistics
@@ -402,10 +405,11 @@ public:
    * and structural sides.
    * @param target_dfa
    * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
-   * @param eps precision of the termination condition, a by default is eps=0.0001
+   * @param isomorphism if TRUE it divides global similarity for min(num_states_, num_states_subject_), searching for a subgraph matching
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
+   * @param eps precision of costs matrix for hungarian algorithm, by default is eps=0.0001
    */
-  void print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma=true, double eps=0.0001, bool color=false);
+  void print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma=true, bool isomorphism=false, bool color=false, double eps=0.0001);
 
   /**
    * Returns a DfaSim object which contains all the similarity score between dfas,
@@ -413,10 +417,11 @@ public:
    * @param target_dfa
    * @param print a boolean that if true permits to display the results.
    * @param sigma a boolean that if true, it tells the algoithm to include the central term sigma^k , in general sigma is true, it false for debugging purposes
-   * @param eps precision of the termination condition, a by default is eps=0.0001
+   * @param isomorphism if TRUE it divides global similarity for min(num_states_, num_states_subject_), searching for a subgraph matching
    * @param color if TRUE it gives label 1 to accepting states and 0 to rejecting ones.
+   * @param eps precision of costs matrix for hungarian algorithm, by default is eps=0.0001
    */
-  DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, double eps=0.0001, bool color=false);
+  DfaSim dfa_similarity(ConcreteDfa* subject_dfa, bool print=false, bool sigma=true, bool isomorphism=false, bool color=false, double eps=0.0001);
 
 
 

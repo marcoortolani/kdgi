@@ -214,9 +214,10 @@ DfaState* Dfa<I>::operator[](SymIter phrase){
 }
 
 template <class I>
-vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, bool color){
+vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, bool isomorphism, bool color, double eps){
 
-	int max_iter = 100000;
+	int max_iter = 10000;
+
 
 	int num_states_subject_ = subject_dfa -> get_num_states();
 
@@ -229,7 +230,7 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 	// INIT
 	node_similarity=new double*[num_states_];
-	tmp_similarity=new double*[num_states_subject_];
+	tmp_similarity=new double*[num_states_];
 
 	for(DfaState state_reference : *this)
 	{
@@ -285,6 +286,7 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 				//vector<int>::iterator kaddr,laddr;
 				vector<DfaState*> vicinato_uscente_reference = state_reference.get_outcoming_states();
 
+				
 				int cardinalita_vicinato_uscente_reference = vicinato_uscente_reference.size();
 
 				vector<DfaState*> vicinato_uscente_subject = state_subject.get_outcoming_states();
@@ -299,9 +301,12 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 					// che contiene i pesi, cioe i punteggi di similarità internodo,
 					// è in sostanza la matrice su cui risolvere l'assignment problem per
 					// trovare il matching ottimo
+
 					costs=(long *)malloc(cardinalita_vicinato_uscente_reference*cardinalita_vicinato_uscente_subject*sizeof(long));
 
 					solution=new long[cardinalita_vicinato_uscente_reference];
+
+
 
 					for(int k=0; k<cardinalita_vicinato_uscente_reference; k++)
 						for(int l=0; l<cardinalita_vicinato_uscente_subject; l++)
@@ -335,6 +340,12 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 									sim_to_add = get<2>(*it);
 
+									#ifdef DEBUG
+										cout<<endl<<"Confronto nodi ("<<i<<", "<<j<<"): "<<endl;
+										cout<<"La coppia del vicinato uscente ("<<vicinato_uscente_reference[k]->get_index()<<", "<<vicinato_uscente_subject[solution[k]]->get_index()<<"):"<<endl;
+										cout<<"è già stata considerata all'iterazione precedente."<<endl<<"Considero il punteggio della iterazione STORICA precedente a quella in cui la coppia è stata aggiunta: "<<sim_to_add<<endl;
+									#endif
+
 									already_modified = true;
 									break;
 								}
@@ -343,12 +354,26 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 							// il loro punteggio all' ultima iterazione
 							if(!already_modified){
 
-								precision_achieved = 0;
-
 								sim_to_add = tmp_similarity[vicinato_uscente_reference[k]->get_index()][vicinato_uscente_subject[solution[k]]->get_index()];
 
-								if(iter >=1 && tmp_similarity[vicinato_uscente_reference[k]->get_index()][vicinato_uscente_subject[solution[k]]->get_index()] < 1)
+								#ifdef DEBUG2
+									if(iter==18){
+										cout<<endl<<"Confronto nodi ("<<i<<", "<<j<<"): "<<endl;
+										cout<<"La coppia del vicinato uscente ("<<vicinato_uscente_reference[k]->get_index()<<", "<<vicinato_uscente_subject[solution[k]]->get_index()<<"):"<<endl;
+										cout<<"NON è stata considerata all'iterazione precedente."<<endl<<"Considero il punteggio della PRECEDENTE iterazione: "<<sim_to_add<<endl<<tmp_similarity[vicinato_uscente_reference[k]->get_index()][vicinato_uscente_subject[solution[k]]->get_index()]<<endl;
+									}
+								#endif
+
+								if(iter >=1 && tmp_similarity[vicinato_uscente_reference[k]->get_index()][vicinato_uscente_subject[solution[k]]->get_index()] < 1){
 									last_modified_by_out[i][j].push_back(std::make_tuple(vicinato_uscente_reference[k]->get_index(), vicinato_uscente_subject[solution[k]]->get_index(), sim_to_add));
+									precision_achieved = 0;	//continua a iterare
+									
+									#ifdef DEBUG
+										cout<<endl<<"La coppia del vicinato uscente: ("<<vicinato_uscente_reference[k]->get_index()<<", "<<vicinato_uscente_subject[solution[k]]->get_index()<<")"<<endl;
+										cout<<"ha un punteggio di similarità < 1. Dunque aggiungila"<<endl;
+										cout<<"al vettore delle coppie modificanti per lo stato "<<i<<endl;
+									#endif
+								}
 
 							}
 
@@ -404,6 +429,12 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 
 									sim_to_add = get<2>(*it);
 
+									#ifdef DEBUG
+										cout<<endl<<"Confronto nodi ("<<i<<", "<<j<<"): "<<endl;
+										cout<<"La coppia del vicinato entrante ("<<vicinato_entrante_reference[k]->get_index()<<", "<<vicinato_entrante_subject[solution[k]]->get_index()<<"):"<<endl;
+										cout<<"è già stata considerata all'iterazione precedente."<<endl<<"Considero il punteggio della iterazione STORICA precedente a quella in cui la coppia è stata aggiunta: "<<sim_to_add<<endl;
+									#endif
+
 									already_modified = true;
 									break;
 								}
@@ -412,16 +443,51 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 							// il loro punteggio all' ultima iterazione
 							if(!already_modified){
 
-								precision_achieved = 0;
-
 								sim_to_add = tmp_similarity[vicinato_entrante_reference[k]->get_index()][vicinato_entrante_subject[solution[k]]->get_index()];
 
-								if(iter >=1 && tmp_similarity[vicinato_entrante_reference[k]->get_index()][vicinato_entrante_subject[solution[k]]->get_index()] < 1)
+								#ifdef DEBUG2
+									if(iter==18){
+									cout<<endl<<"Confronto nodi ("<<i<<", "<<j<<"): "<<endl;
+									cout<<"La coppia del vicinato entrante ("<<vicinato_entrante_reference[k]->get_index()<<", "<<vicinato_entrante_subject[solution[k]]->get_index()<<"):"<<endl;
+									cout<<"NON è stata considerata all'iterazione precedente."<<endl<<"Considero il punteggio della PRECEDENTE iterazione: "<<sim_to_add<<endl<<tmp_similarity[vicinato_entrante_reference[k]->get_index()][vicinato_entrante_subject[solution[k]]->get_index()]<<endl;
+									}
+								#endif
+
+								if(iter >=1 && tmp_similarity[vicinato_entrante_reference[k]->get_index()][vicinato_entrante_subject[solution[k]]->get_index()] < 1){
 									last_modified_by_in[i][j].push_back(std::make_tuple(vicinato_entrante_reference[k]->get_index(), vicinato_entrante_subject[solution[k]]->get_index(), sim_to_add));
+									precision_achieved = 0;	// continua a iterare
+									
+									#ifdef DEBUG
+										cout<<endl<<"La coppia del vicinato entrante: ("<<vicinato_entrante_reference[k]->get_index()<<", "<<vicinato_entrante_subject[solution[k]]<<")"<<endl;
+										cout<<"ha un punteggio di similarità < 1. Dunque aggiungila"<<endl;
+										cout<<"al vettore delle coppie modificanti per lo stato "<<i<<endl;
+									#endif
+										
+								}
 
 							}
 
 							in_similarity+=sim_to_add;
+
+							if(iter==0)
+								precision_achieved=0;
+
+
+							#ifdef DEBUG
+								cout<<endl<<"Coppia ("<<i<<","<<j<<"):"<<endl;
+								cout<<"modified_by_out["<<i<<"]["<<j<<"] = {";
+								for(int w = 0; w < last_modified_by_out[i][j].size(); w++)
+								{
+									cout <<"(" << get<0>(last_modified_by_out[i][j][w]) << ", " << get<1>(last_modified_by_out[i][j][w]) << "), ";
+								}
+								cout<<"}"<<endl;
+								cout<<"modified_by_in["<<i<<"]["<<j<<"] = {";
+								for(int z = 0; z < last_modified_by_in[i][j].size(); z++)
+								{
+									cout <<"(" << get<0>(last_modified_by_in[i][j][z]) << ", " << get<1>(last_modified_by_in[i][j][z]) << "), ";
+								}
+								cout<<"}"<<endl;
+							#endif
 
 						}
 					}	//end for
@@ -435,19 +501,51 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 				else
 					in_similarity=1;
 
+				#ifdef DEBUG
+					cout << "Aggiorno sim(" << i << "," << j << "): " << node_similarity[i][j] << " -> ";
+				#endif
 
 				node_similarity[i][j]=(in_similarity+out_similarity)/2;
+
+				#ifdef DEBUG
+					cout << node_similarity[i][j] << endl;
+				#endif
+				
 
 				// se uno qualunque tra gli elementi della matrice di similarità corrente
 				// sottratto in valore assoluto all'elemento corrispondente della matrice
 				// dell'iterazione passata, si mantiene maggiore o uguale a epsilon,
 				// la condizione di terminazione non è soddisfata, continua a iterare
-				//if(abs(tmp_similarity[i][j]-node_similarity[i][j])>=eps)
-					//precision_achieved=0;	// continua a iterare
-				// VECCHIA CONDIZIONE DI TERMINAZIONE
+				/* if(abs(tmp_similarity[i][j]-node_similarity[i][j])>=eps){
+					precision_achieved=0;	// continua a iterare
+					if(iter > 1)
+						cout << "tmp_similarity["<<i<<"]["<<j<<"]=" << tmp_similarity[i][j] << endl << "node_similarity["<<i<<"]["<<j<<"]=" << node_similarity[i][j] <<endl;
+				} */
 
 		}
 		}
+
+		#ifdef MATRICES_DEBUG
+			if(iter > 1){
+			std::cout<<std::endl<<"****************************************************"<<std::endl<<"Iterazione: "<<iter<<std::endl<<std::endl;
+			printf("Matrice similarità corrente:\n\n");
+			for(int i=0; i<num_states_; i++)
+			{
+				printf(" [ ");
+				for(int j=0; j<num_states_subject_; j++)
+					printf("%lf ", node_similarity[i][j]);
+				printf("]\n");
+			}
+			printf("\n\nMatrice similarità precedente iterazione:\n\n");
+			for(int i=0; i<num_states_; i++)
+			{
+				printf(" [ ");
+				for(int j=0; j<num_states_subject_; j++)
+					printf("%lf ", tmp_similarity[i][j]);
+				printf("]\n");
+			}
+			}
+		#endif
 
 		iter++;
 	}
@@ -458,6 +556,10 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 		for(int j = 0; j<num_states_subject_; ++j)
 			struct_sim[i][j]=node_similarity[i][j];
 
+
+	//Overall Dfas similarity
+	/*long *r = nullptr;
+    long *final_solution = nullptr;*/
 
     costs =(long *)malloc(num_states_*num_states_subject_*sizeof(long));
     for(int i=0; i<num_states_; i++)
@@ -476,9 +578,14 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, double eps, 
 	    no++;
       }
 
-	struct_sim[num_states_][0]=similarity/no;
+	if(isomorphism)
+		struct_sim[num_states_][0]=similarity/no;
+	else
+		struct_sim[num_states_][0]=similarity/(max(num_states_, num_states_subject_));
 
-	cout <<"N iter" <<iter<<endl;
+	struct_sim[num_states_][1]=iter;
+
+
 	return struct_sim;
 
 }

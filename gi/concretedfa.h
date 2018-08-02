@@ -51,6 +51,7 @@ protected:
    * @param s_state	Start state.
    */
   ConcreteDfa(const int n_state, const vector<symbol_> alf, const int s_state);
+
   /**
    * Make an instance of new dfa.
    * Set tra transistion table making a copy of "tt_copy" passed as argument.
@@ -393,13 +394,14 @@ public:
    */
    vector<long double> get_w_method_statistics(vector<vector<symbol_>> test_set, ConcreteDfa* subject_dfa) const;
 
+
+  pair<double, unsigned int> struct_sim(ConcreteDfa* subject_dfa, bool isomorphism=false, bool color=false, double eps=0.0001);
+
   /**
    * Print the w-method statistics
    * @param statistics
    */
   void print_w_method(vector<long double> statistics) const;
-
-  pair<double, unsigned int> struct_sim(ConcreteDfa* subject_dfa, bool isomorphism=false, bool color=false, double eps=0.0001);
 
 
   /**
@@ -439,6 +441,8 @@ public:
    */
   static void  random_dfa_abbadingo(int n, int seed, int n_symbols, string file_path);
 
+  void remove_unreachable();
+
   /* Code related to the "dfa common interface" */
 
 protected:
@@ -448,7 +452,7 @@ protected:
   /**
    * It sorts the states of the ConcreteDfa in a depth-first and lexicographical order
    */
-  vector<int> sort_states(vector<vector<symbol_>>& sorted_phrases);
+  vector<int> sort_states(vector<vector<symbol_>>& sorted_phrases, bool strict = true);
 
 public:
 
@@ -456,7 +460,7 @@ public:
    * Read the tables of the ConcreteDfa and update the state_table member, a vector of DfaStates.
    * The ConcreteDfa can act as a container only after this function is called.
    */
-  void update_state_table();
+  void update_state_table(bool strict = false);
 
   /**
   	* Prints all the infos about the DfaState of the Dfa in the correct order.

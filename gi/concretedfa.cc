@@ -163,6 +163,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 	char calfabeto[30];
 	int ctransizione = 0;
 	int current_line = 0;
+	int header_line = 0;
 	int start_state_ = 0;
 
 	symbol_ n;
@@ -205,6 +206,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 		cout << "Error in first line of file" << endl;
 		throw invalidFormat();
 	}
+	header_line += 1;
 
 
 	// read the alphabet_
@@ -232,6 +234,8 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 		throw wrongAlphabetSize();
 	}
 
+	header_line += 1;
+
 
 	// Set alphabet_ for the current dfa
 	res.set_alphabet(alphabet_file);
@@ -239,12 +243,18 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 	// Third line contains the index of the start node
 	read.getline(line,BUFFER_SIZE);
 	counter = sscanf(line, "%d", &(res.start_state_));
+	if(res.start_state_ >= res.num_states_){
+		cerr << "ERROR in third line of file: start_state is not a state of dfa. i.e. start_state >= num_states"<<endl;
+	}
+	header_line += 1;
 
 	// Fourth line contains the symbol to denote the accepting state
 	read.getline(line,BUFFER_SIZE);
 	istringstream iss1(line);
 	iss1 >> n;
 	accepting_symbol = n;
+
+	header_line += 1;
 	
 	//if(alphabet_file)
 	//	alphabet_file.clear();
@@ -309,6 +319,10 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 			res.accepting_states_[cstato]=ctransizione;
 			//res.set_accepting_state(cstato);
 
+	}
+
+	if(read.eof() && (current_line+header_line)!=(num_total_line+4)){
+		cerr << "ERROR in current Dfa file"<<endl<<endl << "Correct encoding is:"<<endl <<"*********************"<<endl<<endl<<"dim_alphabet	num_states	dfa"<<endl<<"alphabet_symbols"<<endl<<"start_state"<<endl<<"accepting/rejecting_state_marker"<<endl<<"<list_of_transitions written like dfa[state][symbol]=arrive_state>"<<endl<<endl<<"*********************"<<endl<<endl;
 	}
 
 	// Close connection
@@ -711,6 +725,9 @@ void ConcreteDfa::print_dfa_in_text_file(const symbol_ file_path)
 	for(symbol_ sym : get_alphabet())
 		myfile << sym << " ";
 	myfile << "\n";
+
+	// Write start_state
+	myfile << start_state_ << "\n";
 
 	// Write accepting symbol
 	myfile << "@" << "\n";
@@ -2110,7 +2127,7 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 
 /* Methods related to the "common dfa interface" */
 
-vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
+vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases, bool strict){
 
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
@@ -2132,7 +2149,9 @@ vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
 			--remaining_states;
 		}
 		else{
-			current_phrase = get_next_phrase(current_phrase);
+			current_phrase = get_next_phrase(current_phrase, strict);
+			if(current_phrase.empty())
+				remaining_states = 0;
 		}
 	}
 	while(remaining_states > 0);
@@ -2140,13 +2159,13 @@ vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
 	return sorted_states;
 }
 
-void ConcreteDfa::update_state_table(){
+void ConcreteDfa::update_state_table(bool strict){
 
 	state_table_.clear();
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
 	vector<vector<symbol_>> sorted_phrases;
-	vector <int> sorted_states = sort_states(sorted_phrases);
+	vector <int> sorted_states = sort_states(sorted_phrases, strict);
 
 	int i = 0;
 	for(int state : sorted_states){
@@ -2238,7 +2257,7 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 	uniform_int_distribution<unsigned> accettante(0, 1);
 	uniform_int_distribution<unsigned> nodo_arrivo(0, (nodes_number-1));
 
-	ofstream myfile;
+	/* ofstream myfile;
 	myfile.open(file_path.c_str());
 
 
@@ -2260,16 +2279,45 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 	myfile << start_node <<"\n";
 
 	// Write accepting symbol
-	myfile << "@" << "\n";
+	myfile << "@" << "\n"; */
+
+	vector<map<symbol_,int>> ttable = vector<map<symbol_,int>>();
+	vector<int> accepting_states = vector<int>();
+	
+	for(int i = 0; i < nodes_number; ++i){
+		map<symbol_,int> tmp=map<symbol_,int>();
+		for(symbol_ sym : alphabet){
+			tmp[sym] = nodo_arrivo(e);
+		}
+		ttable.push_back(tmp);
+		if(accettante(e))
+			accepting_states.push_back(1);
+		else
+			accepting_states.push_back(0);
+	}
+
+	ConcreteDfa temp(nodes_number, alphabet, start_node, ttable, accepting_states);
+
+	temp.update_state_table(false);
+
+	temp.remove_unreachable();
+
+	//while(nodes_number - temp.get_num_states() > 0){
+		
+	//}
+
+	temp.print_dfa_in_text_file(file_path.c_str());
 
 
-	// Write transition table
+
+
+	/* // Write transition table
 	for(int i=0; i<nodes_number; ++i){
 		for(symbol_ sym : alphabet)
 		{
 			myfile << "dfa[" <<std::to_string(i)<<"][";
 			
-			myfile << sym << "]="<< nodo_arrivo(e) <<";\n";
+			myfile << sym << "]="<< ttable[i][sym] <<";\n";
 		}
 		myfile << "dfa["<<std::to_string(i)<<"][";
 		myfile << "@" << "]=";
@@ -2281,7 +2329,20 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 		myfile <<";\n";
 	}
 
-	myfile.close();
+	myfile.close(); */
+}
+
+void ConcreteDfa::remove_unreachable(){
+	start_state_ = 0;
+	num_states_ = state_table_.size();
+	ttable_.clear();
+	for(DfaState state : *this){
+		map<symbol_, int> tmp;
+		for(symbol_ sym : alphabet_){
+			tmp[sym] = state.next(sym)->get_index();
+		}
+		ttable_.push_back(tmp);
+	}
 }
 
 pair<double, unsigned int> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, bool isomorphism, bool color, double eps) {

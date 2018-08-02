@@ -3,9 +3,9 @@ import os
 import random
 
 # alphabet size
-n_symbols = 6
+n_symbols = 2
 
-symbol_path = './struct_sim_experiments/' + str(n_symbols) + '_symbols'
+symbol_path = './struct_sim_experiments_test/' + str(n_symbols) + '_symbols'
 
 if not os.path.exists(symbol_path):
     os.makedirs(symbol_path)

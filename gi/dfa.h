@@ -136,7 +136,7 @@ public:
   /**
    * Return the next phrase in lexicographical order with the same length of the argument phrase or shorter.
    */
-  vector<symbol_> get_next_phrase(vector<symbol_> phrase);
+  vector<symbol_> get_next_phrase(vector<symbol_> phrase, bool strict = true);
 
   /**
    * Returns the DfaState related to the phrase passed regardless of the type of container of symbol_.

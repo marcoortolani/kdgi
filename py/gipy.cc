@@ -15,10 +15,15 @@
 
 namespace py = pybind11;
 
+// tenere d'occhio questo vector
+using abstr = Dfa<std::__1::vector<DfaState, std::__1::allocator<DfaState> >*>;
+
 PYBIND11_MODULE(gi_gipy, m) {
     m.doc() = "pybind11 plugin for the kdgi library";
 
-    py::class_<ConcreteDfa>(m, "Dfa")
+    py::class_<abstr>(m, "AbstractDfa");
+
+    py::class_<ConcreteDfa, abstr>(m, "Dfa")
 
       //*** Constructors ***
       .def(py::init(),"Make an instance of null dfa.")

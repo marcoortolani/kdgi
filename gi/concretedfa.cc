@@ -2200,3 +2200,4 @@ pair<double, unsigned int> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, boo
 	vector<vector<double> > sim = neighbour_matching(subject_dfa, isomorphism, color, eps);
 	return std::make_pair(sim[num_states_][0], sim[num_states_][1]);
 }
+

@@ -175,6 +175,7 @@ public:
    void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
 
 
+
 };
 
 #include "dfa.tcc"

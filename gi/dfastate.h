@@ -40,7 +40,9 @@ public:
 
 	void set_incoming_transictions(pair<DfaState*, symbol_> in_trans);
 
-	vector<pair<DfaState*, symbol_> > get_incoming_transictions() const;
+	vector<pair<DfaState*, symbol_> > get_incoming_transictions();
+
+	vector<pair<DfaState*, symbol_> > get_removable_incoming_transictions();
 
 	vector<DfaState*> get_incoming_states() const;
 

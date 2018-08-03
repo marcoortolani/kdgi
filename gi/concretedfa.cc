@@ -2173,7 +2173,7 @@ void ConcreteDfa::update_state_table(){
 			for(int j = 0; j < sorted_states.size() && !state_found; j++){
 				if(sorted_states[j] == next_state){
 					state_table_[i].set_transiction(sym, &state_table_[j]);
-					state_table_[j].set_incoming_transictions(std::make_pair(&state_table_[i], sym));
+					state_table_[j].set_incoming_transiction(std::make_pair(&state_table_[i], sym));
 					state_found = true;
 				}
 			}

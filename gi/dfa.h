@@ -56,7 +56,7 @@ protected:
   void 	set_num_state(int n);
 
 //TO-DO eliminare questo "public" messo per motivi di debug
-public:
+//public:
   /**
    * Set the alphabet of dfa to alphabet in input of size "d_alf".
    * @param alf.
@@ -65,7 +65,6 @@ public:
 
 public:
   friend class BlueFringe;
-  friend class OldAngluinDfa;
   friend class SillyOracle;
   //******** CONSTRUCTORS: ********
 
@@ -173,6 +172,7 @@ public:
    * @param num_states_target_dfa
    */
    void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
+
 
 
 };

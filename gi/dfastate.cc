@@ -59,11 +59,11 @@ int DfaState::get_index() const{
 	return index_;
 }
 
-void DfaState::set_incoming_transictions(pair<DfaState*, symbol_> in_trans){
+void DfaState::set_incoming_transiction(pair<DfaState*, symbol_> in_trans){
 	incoming_transictions_.push_back(in_trans);
 }
 
-vector<pair<DfaState*, symbol_> > DfaState::get_incoming_transictions() const{
+vector<pair<DfaState*, symbol_> > DfaState::get_incoming_transictions(){
 	return incoming_transictions_;
 }
 
@@ -83,4 +83,38 @@ vector<DfaState*> DfaState::get_outcoming_states() const{
 	vector<DfaState*> v;
 	v.insert(v.end(), accumulatore.begin(), accumulatore.end());
 	return v;
+}
+
+vector<pair<DfaState*, symbol_> > DfaState::get_removable_incoming_transictions(){
+	// per lo stato iniziale possiamo rimuovere una qualunque delle sue transizioni entranti
+	if(this->get_depth_phrase().empty())
+		return incoming_transictions_;
+
+	//Dividiamo le transizioni entranti in quelle da se stessi e da altri stati
+	vector<pair<DfaState*, symbol_> > from_self;
+	vector<pair<DfaState*, symbol_> > from_others;
+	for(auto coppia : incoming_transictions_)
+		if(coppia.first->get_depth_phrase() == this->get_depth_phrase())
+			from_self.push_back(coppia);
+		else
+			from_others.push_back(coppia);
+
+	if(from_others.size() == 0){
+		cerr << "Error in DfaState::get_removable_incoming_transictions" <<endl;
+		cerr << "DfaState " << this->get_index() << endl;
+		cerr << "is neither reachable nor first" << endl;
+	}
+	
+	//Se abbiamo una sola transizione entrante da altri stati e non siamo lo stato iniziale
+	//quella transizione non può essere rimossa
+	if(from_others.size() == 1)
+		return from_self;
+
+	//Se abbiamo almeno 2 transizioni entranti se ne può rimuovere una qualunque.
+	if(from_others.size() > 1){
+		from_others.insert(from_others.end(), from_self.begin(), from_self.end());
+		return from_others;
+	}
+
+	
 }

@@ -1061,7 +1061,7 @@ void AngluinDfa::update_state_table(){
 			DFA_STATE_ j = get_index_from_transition(s, sym, states);
 			//state_to_state_table_[i][j].push_back(sym);
 			state_table_[i].set_transiction(sym, &state_table_[j]);
-			state_table_[j].set_incoming_transictions(std::make_pair(&state_table_[i], sym));
+			state_table_[j].set_incoming_transiction(std::make_pair(&state_table_[i], sym));
 		}
 		++i;
 	}

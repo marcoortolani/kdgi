@@ -323,7 +323,6 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const symbol_ file_name)
 
 	if(read.eof() && (current_line+header_line)!=(num_total_line+4)){
 		cerr << "ERROR in current Dfa file"<<endl<<endl << "Correct encoding is:"<<endl <<"*********************"<<endl<<endl<<"dim_alphabet	num_states	dfa"<<endl<<"alphabet_symbols"<<endl<<"start_state"<<endl<<"accepting/rejecting_state_marker"<<endl<<"<list_of_transitions written like dfa[state][symbol]=arrive_state>"<<endl<<endl<<"*********************"<<endl<<endl;
-		throw 0;
 	}
 
 	// Close connection
@@ -2083,18 +2082,18 @@ void ConcreteDfa::print_w_method(vector<long double> statistics)const{
 	cout<<"============================"<<endl;
 }
 
-void ConcreteDfa::print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma, double eps, bool color){
+void ConcreteDfa::print_dfa_similarity(ConcreteDfa* subject_dfa, bool sigma, bool isomorphism, bool color, double eps){
 	vector<vector<symbol_>> test_set = get_w_method_test_set(subject_dfa,sigma);
 	vector<long double> stats = get_w_method_statistics(test_set,subject_dfa);
 	print_w_method(stats);
-	vector<vector<double>> sim_matrix = neighbour_matching(subject_dfa,eps,color);
+	vector<vector<double>> sim_matrix = neighbour_matching(subject_dfa,isomorphism,color,eps);
 	print_structural_similarity(sim_matrix);
 	long double similarity = (stats[6]+sim_matrix[num_states_][0])/2;
 	cout<<"***** GLOBAL SIMILARITY *****"<<endl;
 	cout<<"The global similarity score between the two dfas is: "<<similarity<<endl;
 }
 
-DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool sigma, double eps, bool color){
+DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool sigma, bool isomorphism, bool color, double eps){
 	long double exec_time=0;
 	std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
@@ -2174,7 +2173,7 @@ void ConcreteDfa::update_state_table(){
 			for(int j = 0; j < sorted_states.size() && !state_found; j++){
 				if(sorted_states[j] == next_state){
 					state_table_[i].set_transiction(sym, &state_table_[j]);
-					state_table_[j].set_incoming_transictions(std::make_pair(&state_table_[i], sym));
+					state_table_[j].set_incoming_transiction(std::make_pair(&state_table_[i], sym));
 					state_found = true;
 				}
 			}
@@ -2196,3 +2195,9 @@ void ConcreteDfa::print_state_table(){
 		state.print();
 	}
 }
+
+pair<double, unsigned int> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, bool isomorphism, bool color, double eps) {
+	vector<vector<double> > sim = neighbour_matching(subject_dfa, isomorphism, color, eps);
+	return std::make_pair(sim[num_states_][0], sim[num_states_][1]);
+}
+

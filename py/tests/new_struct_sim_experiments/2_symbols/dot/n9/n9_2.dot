@@ -1,0 +1,41 @@
+digraph n9_2 {
+__start0 [label="" shape="none"];
+
+rankdir=LR;
+size="8,5";
+
+s0 [style="filled", color="black", fillcolor="white" shape="circle", label="0"];
+s1 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="1"];
+s2 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="2"];
+s3 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="3"];
+s4 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="4"];
+s5 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="5"];
+s6 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="6"];
+s7 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="7"];
+s8 [style="filled", color="black", fillcolor="white" shape="circle", label="8"];
+s9 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="9"];
+s10 [style="filled", color="black", fillcolor="white" shape="circle", label="10"];
+s0 -> s1 [label="a"];
+s0 -> s10 [label="b"];
+s1 -> s2 [label="a"];
+s1 -> s9 [label="b"];
+s2 -> s3 [label="a"];
+s2 -> s4 [label="b"];
+s3 -> s4 [label="a"];
+s3 -> s8 [label="b"];
+s4 -> s0 [label="a"];
+s4 -> s5 [label="b"];
+s5 -> s6 [label="a"];
+s5 -> s1 [label="b"];
+s6 -> s7 [label="a"];
+s6 -> s3 [label="b"];
+s7 -> s5 [label="a"];
+s7 -> s1 [label="b"];
+s8 -> s7 [label="a"];
+s8 -> s5 [label="b"];
+s9 -> s8 [label="a"];
+s9 -> s3 [label="b"];
+s10 -> s2 [label="a"];
+s10 -> s9 [label="b"];
+
+}

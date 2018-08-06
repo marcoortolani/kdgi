@@ -1,0 +1,68 @@
+digraph n10_1 {
+__start0 [label="" shape="none"];
+
+rankdir=LR;
+size="8,5";
+
+s0 [style="filled", color="black", fillcolor="white" shape="circle", label="0"];
+s1 [style="filled", color="black", fillcolor="white" shape="circle", label="1"];
+s2 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="2"];
+s3 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="3"];
+s4 [style="filled", color="black", fillcolor="white" shape="circle", label="4"];
+s5 [style="filled", color="black", fillcolor="white" shape="circle", label="5"];
+s6 [style="filled", color="black", fillcolor="white" shape="circle", label="6"];
+s7 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="7"];
+s8 [style="filled", color="black", fillcolor="white" shape="circle", label="8"];
+s9 [style="filled", color="black", fillcolor="white" shape="circle", label="9"];
+s10 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="10"];
+s11 [style="rounded,filled", color="black", fillcolor="white" shape="doublecircle", label="11"];
+s0 -> s1 [label="a"];
+s0 -> s8 [label="b"];
+s0 -> s6 [label="c"];
+s0 -> s8 [label="d"];
+s1 -> s2 [label="a"];
+s1 -> s1 [label="b"];
+s1 -> s10 [label="c"];
+s1 -> s2 [label="d"];
+s2 -> s3 [label="a"];
+s2 -> s9 [label="b"];
+s2 -> s6 [label="c"];
+s2 -> s1 [label="d"];
+s3 -> s0 [label="a"];
+s3 -> s4 [label="b"];
+s3 -> s4 [label="c"];
+s3 -> s11 [label="d"];
+s4 -> s5 [label="a"];
+s4 -> s4 [label="b"];
+s4 -> s5 [label="c"];
+s4 -> s6 [label="d"];
+s5 -> s5 [label="a"];
+s5 -> s6 [label="b"];
+s5 -> s10 [label="c"];
+s5 -> s10 [label="d"];
+s6 -> s6 [label="a"];
+s6 -> s1 [label="b"];
+s6 -> s7 [label="c"];
+s6 -> s8 [label="d"];
+s7 -> s8 [label="a"];
+s7 -> s6 [label="b"];
+s7 -> s9 [label="c"];
+s7 -> s5 [label="d"];
+s8 -> s7 [label="a"];
+s8 -> s4 [label="b"];
+s8 -> s1 [label="c"];
+s8 -> s6 [label="d"];
+s9 -> s5 [label="a"];
+s9 -> s2 [label="b"];
+s9 -> s9 [label="c"];
+s9 -> s5 [label="d"];
+s10 -> s8 [label="a"];
+s10 -> s10 [label="b"];
+s10 -> s9 [label="c"];
+s10 -> s4 [label="d"];
+s11 -> s2 [label="a"];
+s11 -> s4 [label="b"];
+s11 -> s7 [label="c"];
+s11 -> s10 [label="d"];
+
+}

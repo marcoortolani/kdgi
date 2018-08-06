@@ -1,9 +1,17 @@
 from gi_gipy import *
 
-x=Dfa(Dfa.read_dfa_file('./struct_sim_experiments/2_symbols/automata/n5/n5_1.txt'))
-h=x.get_dim_alphabet()
-print ('Dimensione dell\'alfabeto del Tomita15 letto da file: ')
-print (h)
-x.print_dfa_ttable("Tomita15")
-print (x.membership_query(["a"]))
-print (x.is_accepting(3))
+for n_symbols in range(8, 9):
+
+    symbol_path = './new_struct_sim_experiments/' + str(n_symbols) + '_symbols'
+
+    for n in range(2, 50):
+        
+        for automata_number in range(1, 11):
+
+            dfa_name = 'n' + str(n) + '_' + str(automata_number)
+
+            dir_path = symbol_path + '/automata/n' + str(n)
+
+            file_path = dir_path + '/' + dfa_name + '.txt'
+
+            x=Dfa(Dfa.read_dfa_file(file_path))

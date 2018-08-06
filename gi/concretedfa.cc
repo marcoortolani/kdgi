@@ -2127,7 +2127,7 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 
 /* Methods related to the "common dfa interface" */
 
-vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases, bool strict){
+vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
 
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
@@ -2149,7 +2149,7 @@ vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases, bo
 			--remaining_states;
 		}
 		else{
-			current_phrase = get_next_phrase(current_phrase, strict);
+			current_phrase = get_next_phrase(current_phrase);
 			if(current_phrase.empty())
 				remaining_states = 0;
 		}
@@ -2159,13 +2159,13 @@ vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases, bo
 	return sorted_states;
 }
 
-void ConcreteDfa::update_state_table(bool strict){
+void ConcreteDfa::update_state_table(){
 
 	state_table_.clear();
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
 	vector<vector<symbol_>> sorted_phrases;
-	vector <int> sorted_states = sort_states(sorted_phrases, strict);
+	vector <int> sorted_states = sort_states(sorted_phrases);
 
 	int i = 0;
 	for(int state : sorted_states){
@@ -2188,6 +2188,8 @@ void ConcreteDfa::update_state_table(bool strict){
 		}
 		++i;
 	}
+
+	num_states_ = state_table_.size();
 }
 
 vector<DfaState>::iterator ConcreteDfa::begin(){
@@ -2251,35 +2253,12 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 	int alphabet_size = alphabet.size();
 
 	int start_node = (rand() * seed) % (nodes_number-1);
+	//int start_node = 1;
 
 	default_random_engine e;
 	e.seed((rand() * 383 * seed));
 	uniform_int_distribution<unsigned> accettante(0, 1);
 	uniform_int_distribution<unsigned> nodo_arrivo(0, (nodes_number-1));
-
-	/* ofstream myfile;
-	myfile.open(file_path.c_str());
-
-
-	// Write alphabet_ size
-	myfile << std::to_string(alphabet_size) << " ";
-
-	// Write num of states
-	myfile << std::to_string(nodes_number) << " ";
-
-	// Write dfa name
-	myfile << "dfa" << "\n";
-
-	// Write alphabet_ symbols
-	for(symbol_ sym : alphabet)
-		myfile << sym << " ";
-	myfile << "\n";
-
-	// Write start state
-	myfile << start_node <<"\n";
-
-	// Write accepting symbol
-	myfile << "@" << "\n"; */
 
 	vector<map<symbol_,int>> ttable = vector<map<symbol_,int>>();
 	vector<int> accepting_states = vector<int>();
@@ -2298,45 +2277,77 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 
 	ConcreteDfa temp(nodes_number, alphabet, start_node, ttable, accepting_states);
 
-	temp.update_state_table(false);
+	temp.strict_ = false;
+
+	temp.update_state_table();
 
 	temp.remove_unreachable();
 
-	//while(nodes_number - temp.get_num_states() > 0){
+	//temp.print_dfa_ttable("After remove unreachable");
+
+	while(nodes_number - temp.get_num_states() > 0){
+		int tmp_states = temp.get_num_states();
 		
-	//}
+		for(DfaState state : temp){
+			// possiamo cambiare una transizione da uno stato che ne ha in ingresso almeno 2
+			// e ridirigerla su un nuovo stato
+			vector<pair<DfaState*, symbol_> > removable = state.get_removable_incoming_transictions();
+
+			int rem_size = removable.size();
+
+			//cout <<"Stato: " <<state.get_index()<< " dim removable = " << rem_size <<endl;
+
+			if(rem_size > 0){
+
+				uniform_int_distribution<unsigned> transizione_rand(0, rem_size-1);
+
+				int cas = transizione_rand(e);
+				
+				int index = removable[cas].first->get_index();
+
+				symbol_ symbol = removable[cas].second;
+				
+				temp.ttable_[index][symbol] = tmp_states;
+
+				map<symbol_, int> new_trans=map<symbol_,int>();
+				
+				for(symbol_ sym : alphabet){
+					uniform_int_distribution<unsigned> new_tr(0, tmp_states);
+					new_trans[sym] = new_tr(e);
+				}
+
+				int accept = accettante(e);
+
+				if(accept)
+					temp.accepting_states_.push_back(tmp_states);
+				
+				temp.ttable_.push_back(new_trans);
+				temp.num_states_ = tmp_states + 1;
+
+				temp.update_state_table();
+
+				temp.remove_unreachable();
+
+				
+				break;
+
+			}
+		}
+
+	}
 
 	temp.print_dfa_in_text_file(file_path.c_str());
 
-
-
-
-	/* // Write transition table
-	for(int i=0; i<nodes_number; ++i){
-		for(symbol_ sym : alphabet)
-		{
-			myfile << "dfa[" <<std::to_string(i)<<"][";
-			
-			myfile << sym << "]="<< ttable[i][sym] <<";\n";
-		}
-		myfile << "dfa["<<std::to_string(i)<<"][";
-		myfile << "@" << "]=";
-		if(accettante(e))
-			myfile << "1";
-		else 
-			myfile << "0";
-
-		myfile <<";\n";
-	}
-
-	myfile.close(); */
 }
 
 void ConcreteDfa::remove_unreachable(){
 	start_state_ = 0;
 	num_states_ = state_table_.size();
 	ttable_.clear();
+	accepting_states_.clear();
 	for(DfaState state : *this){
+		if(state.is_accepting())
+			accepting_states_.push_back(state.get_index());
 		map<symbol_, int> tmp;
 		for(symbol_ sym : alphabet_){
 			tmp[sym] = state.next(sym)->get_index();

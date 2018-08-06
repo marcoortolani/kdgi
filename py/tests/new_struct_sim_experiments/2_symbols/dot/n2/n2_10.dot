@@ -1,0 +1,14 @@
+digraph n2_10 {
+__start0 [label="" shape="none"];
+
+rankdir=LR;
+size="8,5";
+
+s0 [style="filled", color="black", fillcolor="white" shape="circle", label="0"];
+s1 [style="filled", color="black", fillcolor="white" shape="circle", label="1"];
+s0 -> s0 [label="a"];
+s0 -> s1 [label="b"];
+s1 -> s1 [label="a"];
+s1 -> s0 [label="b"];
+
+}

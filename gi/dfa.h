@@ -30,7 +30,8 @@ protected:
   //******** DATA MEMBERS: ********
   int	  num_states_;									/*!< Number of dfa states */
   int	  start_state_;									/*!< Index of start state */
-  vector<symbol_> alphabet_;						/*!< Alphabet symbols */
+  vector<symbol_> alphabet_;					/*!< Alphabet symbols */
+  bool strict_ = true;                /*!< If true, dfa constraints must be satisfied */
 
   //******** CONSTRUCTORS: ********
   /**
@@ -136,7 +137,7 @@ public:
   /**
    * Return the next phrase in lexicographical order with the same length of the argument phrase or shorter.
    */
-  vector<symbol_> get_next_phrase(vector<symbol_> phrase, bool strict = true);
+  vector<symbol_> get_next_phrase(vector<symbol_> phrase);
 
   /**
    * Returns the DfaState related to the phrase passed regardless of the type of container of symbol_.

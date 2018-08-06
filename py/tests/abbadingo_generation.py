@@ -2,56 +2,56 @@ from gi_gipy import *
 import os
 import random
 
-# alphabet size
-n_symbols = 2
 
-symbol_path = './struct_sim_experiments_test/' + str(n_symbols) + '_symbols'
+for n_symbols in range(8, 9):
 
-if not os.path.exists(symbol_path):
-    os.makedirs(symbol_path)
+    symbol_path = './new_struct_sim_experiments/' + str(n_symbols) + '_symbols'
 
-results_path = symbol_path + '/results'
+    if not os.path.exists(symbol_path):
+        os.makedirs(symbol_path)
 
-if not os.path.exists(results_path):
-    os.makedirs(results_path)
+    results_path = symbol_path + '/results'
 
-intra_n_path = results_path + '/intra_n'
+    if not os.path.exists(results_path):
+        os.makedirs(results_path)
 
-for n in range(2, 51):
-    
-    for automata_number in range(1, 11):
+    intra_n_path = results_path + '/intra_n'
 
-        dfa_name = 'n' + str(n) + '_' + str(automata_number)
+    for n in range(2, 51):
+        
+        for automata_number in range(1, 11):
 
-        dir_path = symbol_path + '/automata/n' + str(n)
+            dfa_name = 'n' + str(n) + '_' + str(automata_number)
 
-        if not os.path.exists(dir_path):
-            os.makedirs(dir_path)
+            dir_path = symbol_path + '/automata/n' + str(n)
 
-        file_path = dir_path + '/' + dfa_name + '.txt'
+            if not os.path.exists(dir_path):
+                os.makedirs(dir_path)
 
-        seed = n * automata_number * random.randint(1,101)
+            file_path = dir_path + '/' + dfa_name + '.txt'
 
-        Dfa.abbadingo_rand(n, seed, n_symbols, file_path)
+            seed = n * automata_number * n_symbols * random.randint(1,101)
 
-        x=Dfa(Dfa.read_dfa_file(file_path))
+            Dfa.abbadingo_rand(n, seed, n_symbols, file_path)
 
-        dir_path2 = symbol_path + '/dot/n' + str(n)
+            x=Dfa(Dfa.read_dfa_file(file_path))
 
-        if not os.path.exists(dir_path2):
-            os.makedirs(dir_path2)
+            dir_path2 = symbol_path + '/dot/n' + str(n)
 
-        dot_path = dir_path2 + '/' + dfa_name + '.dot'
+            if not os.path.exists(dir_path2):
+                os.makedirs(dir_path2)
 
-        x.print_dfa_dot(dfa_name, dot_path)
+            dot_path = dir_path2 + '/' + dfa_name + '.dot'
 
-        dir_path3 = symbol_path + '/automata_pics/n' + str(n)
+            x.print_dfa_dot(dfa_name, dot_path)
 
-        if not os.path.exists(dir_path3):
-            os.makedirs(dir_path3)
+            dir_path3 = symbol_path + '/automata_pics/n' + str(n)
 
-        pdf_path = dir_path3 + '/' + dfa_name + '.pdf'
+            if not os.path.exists(dir_path3):
+                os.makedirs(dir_path3)
 
-        bashCommand = 'dot -Tpdf '+ dot_path + ' > ' + pdf_path
+            pdf_path = dir_path3 + '/' + dfa_name + '.pdf'
 
-        os.system(bashCommand)
+            bashCommand = 'dot -Tpdf '+ dot_path + ' > ' + pdf_path
+
+            os.system(bashCommand)

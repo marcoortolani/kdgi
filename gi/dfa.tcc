@@ -173,11 +173,11 @@ bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
 };
 
 template <class I>
-vector<symbol_> Dfa<I>::get_next_phrase(vector<symbol_> phrase, bool strict){
+vector<symbol_> Dfa<I>::get_next_phrase(vector<symbol_> phrase){
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 	
 	if(phrase.empty()){
-		if(strict == false)
+		if(strict_ == false)
 			return phrase;
 		cerr << "Error in Dfa :: next_phrase: argument has length 0" << endl;
 		throw 0;
@@ -186,10 +186,12 @@ vector<symbol_> Dfa<I>::get_next_phrase(vector<symbol_> phrase, bool strict){
 	if(phrase.back() == sorted_alphabet.back()){
 		while(phrase.back() == sorted_alphabet.back()){
 			phrase.pop_back();
+			if(strict_ == false && phrase.empty())
+				return phrase;
 		}
 		
 		if(phrase.empty()){
-			if(strict == false)
+			if(strict_ == false)
 				return phrase;
 			cerr << "Error in Dfa :: next_phrase: phrase is now empty" << endl;
 			throw 0;

@@ -452,7 +452,7 @@ protected:
   /**
    * It sorts the states of the ConcreteDfa in a depth-first and lexicographical order
    */
-  vector<int> sort_states(vector<vector<symbol_>>& sorted_phrases, bool strict = true);
+  vector<int> sort_states(vector<vector<symbol_>>& sorted_phrases);
 
 public:
 
@@ -460,7 +460,7 @@ public:
    * Read the tables of the ConcreteDfa and update the state_table member, a vector of DfaStates.
    * The ConcreteDfa can act as a container only after this function is called.
    */
-  void update_state_table(bool strict = false);
+  void update_state_table();
 
   /**
   	* Prints all the infos about the DfaState of the Dfa in the correct order.

@@ -89,6 +89,8 @@ PYBIND11_MODULE(gi_gipy, m) {
       
       //*** Overall similarity ***
       .def("dfa_similarity", &ConcreteDfa::dfa_similarity, "Returns and print the similarity score between dfas, taking into account both linguistical and structural sides.",py::arg("target_dfa"),py::arg("print") = 0, py::arg("sigma") = 1, py::arg("isomorphism") = 0, py::arg("color") = 0, py::arg("eps") = 0.0001)
+
+      .def("print_state_table", &ConcreteDfa::print_state_table)
     ;
 
 

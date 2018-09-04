@@ -31,6 +31,9 @@ protected:
         reference->update_state_table();
         
         ang = l.learn();
+        
+        subject->set_ttable_from_sequence(sequence2);
+        subject->update_state_table();
 	}
 
 	virtual void TearDown() {
@@ -48,6 +51,9 @@ protected:
 	SillyOracle o = SillyOracle(concrete_reference);
 	AngluinLearner l = AngluinLearner(&o, alph);
 	AngluinDfa* ang;
+	
+	vector<int> sequence2 = {1, 2, 4, 0, 3, 4, 1, 0, 4, 3, 2, 0, 4, 4, 3, 1, 4, 4, 4, 0};
+	TestDfa* subject = new TestDfa(5,alph);
 };
 
 
@@ -56,25 +62,41 @@ TEST_F(BaseAngTest, getDimAlphabet){
 }
 
 TEST_F(BaseAngTest, isIdentical){
-		vector<symbol_> phrase;
-		EXPECT_EQ(1, ang->is_identical(concrete_reference, phrase));
+	vector<symbol_> phrase;
+	EXPECT_EQ(1, ang->is_identical(concrete_reference, phrase));
 }
 
 TEST_F(BaseAngTest, structuralSimilarity){
-		bool t = true;
-		vector<vector<double>> v;
-		
-		v = ang->neighbour_matching(ang);
-		t = t && static_cast<bool>((v.back()).front());
-		
-		v = ang->neighbour_matching(concrete_reference);
-		t = t && static_cast<bool>((v.back()).front());
-		
-		v = concrete_reference->neighbour_matching(ang);
-		t = t && static_cast<bool>((v.back()).front());
-		
-		v = concrete_reference->neighbour_matching(concrete_reference);
-		t = t && static_cast<bool>((v.back()).front());
-		
-		EXPECT_EQ(1, t);
+	bool t = true;
+	vector<vector<double>> v;
+	
+	v = ang->neighbour_matching(ang);
+	t = t && static_cast<bool>((v.back()).front());
+	
+	v = ang->neighbour_matching(concrete_reference);
+	t = t && static_cast<bool>((v.back()).front());
+	
+	v = concrete_reference->neighbour_matching(ang);
+	t = t && static_cast<bool>((v.back()).front());
+	
+	v = concrete_reference->neighbour_matching(concrete_reference);
+	t = t && static_cast<bool>((v.back()).front());
+	
+	EXPECT_EQ(1, t);
+}
+
+TEST_F(BaseAngTest, equivalence_query){
+	bool t = true;
+	
+	vector <symbol_> counterexample;
+	t = t && ang->equivalence_query(reference, counterexample);
+	t = t && (*reference).Dfa::equivalence_query(ang, counterexample);
+	
+	bool equivalent = ang->equivalence_query(subject, counterexample);
+	t = t && ! equivalent;
+	
+	equivalent = equivalent == ((*ang)[counterexample]->is_accepting() == (*subject)[counterexample]->is_accepting());
+	t = t && equivalent;
+	
+	EXPECT_EQ(1, t);
 }

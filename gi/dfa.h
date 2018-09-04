@@ -108,6 +108,7 @@ public:
    */
   virtual bool   membership_query(vector<symbol_> phrase) const = 0;
 
+  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling(Dfa* first, Dfa* second);
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -115,9 +116,11 @@ public:
    * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
    * @return A table saved in a linear array, with a list of equivalent/different states.
    */
-  vector<symbol_>	table_filling1(Dfa* subject_dfa);
+  vector<symbol_>	table_filling1();
 
+  vector<symbol_> find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa* subject_dfa);
 
+  bool equivalence_query(Dfa* other_dfa, vector<symbol_>& counterexample);
 
   /* Code related to the "dfa common interface" */
 
@@ -149,8 +152,6 @@ public:
    */
   template <class SymIter>
   DfaState* operator[](SymIter phrase);
-
-  bool find_counterexample(Dfa* other_dfa, vector<symbol_> counter_example);
 
   /**
     * Gives the structural similarity score matrix between every pair of states of two DFAs

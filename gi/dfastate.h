@@ -66,14 +66,14 @@ public:
 	vector <symbol_> get_depth_phrase();
 
 	/**
-	 * Set a particoular transiction starting from this state
+	 * Set a particular transiction starting from this state
 	 * @param sym			The symbol_ of the transiction
 	 * @param arrive_state	A pointer to the reached DfaState
 	 */
 	void set_transiction(symbol_ sym, DfaState* arrive_state);
 
 	/**
-	 * Set a particoular transiction arriving to this state
+	 * Set a particular transiction arriving to this state
 	 * @param in_trans		The (pair starting_state,symbol_) of the transiction
 	 */
 	void set_incoming_transiction(pair<DfaState*, symbol_> in_trans);

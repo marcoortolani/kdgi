@@ -11,8 +11,9 @@
 
 int main() {
 
-	vector<string> file_names = {	"tomita9",
-									"tomita15",
+	vector<string> file_names = {	//"tomita9",
+									//"tomita15",
+									"_all",
 									"_2_instance_of_aab",
 									"_ab_aaaa",
 									"_all_except_abab",
@@ -32,75 +33,23 @@ int main() {
 		AngDfas.push_back(l.learn());
 	}
 
-	/*int m, n;
-	while(true){
-		cout << "Inserisci m" << endl;
-		cin >> m;
-		cout << "Inserisci n" << endl;
-		cin >> n;
-
-		cout << "prova " << file_names[m] << " && " << file_names[n] << endl;
-		vector<vector<double>> sim = Dfas[m].neighbour_matching(&Dfas[n]);
-		double global_sim = (sim.back()).front();
-		cout << global_sim << endl;
-		cout << file_names[m] << " " << file_names[n] << " ok." << endl;
-	}*/
-
-
-	//int i = 0;
-	cout << endl;
-	for(auto dfa1 : Dfas){
+	int i = 0;
+	for(ConcreteDfa d : Dfas){
 		int j = 0;
-		for(auto dfa2 : Dfas){
-			//cout << "global_sim " << file_names[i] << " " << file_names[j] << endl;
-			vector<vector<double>> sim = dfa1.neighbour_matching(&dfa2);
-			double global_sim = (sim.back()).front();
-			cout << global_sim << "          ";
-			//++j;
+		for(AngluinDfa* a : AngDfas){
+			vector<symbol_> vec;
+			if(! d.Dfa::equivalence_query(a, vec)){
+				cout << file_names[i] << " " << file_names[j] << endl;
+				cout << "\t" << vec << endl;
+				if(d[vec]->is_accepting() == (*a)[vec]->is_accepting()){
+					cout << "\terrore qui" << endl;
+				}
+				cout << "\td:" << d[vec]->is_accepting() << " a:" << (*a)[vec]->is_accepting() << endl;
+			}
+			++j;
 		}
-		cout << endl;
-		//++i;
+		++i;
 	}
-
-	cout << endl;
-	for(auto dfa1 : AngDfas){
-		for(auto dfa2 : AngDfas){
-			vector<vector<double>> sim = dfa1->neighbour_matching(dfa2);
-			double global_sim = (sim.back()).front();
-			cout << global_sim << "          ";
-		}
-		cout << endl;
-	}
-
-	cout << endl;
-	for(auto dfa1 : Dfas){
-		for(auto dfa2 : AngDfas){
-			vector<vector<double>> sim = dfa1.neighbour_matching(dfa2);
-			double global_sim = (sim.back()).front();
-			cout << global_sim << "          ";
-		}
-		cout << endl;
-	}
-
-	cout << endl;
-	for(auto dfa1 : AngDfas){
-		for(auto dfa2 : Dfas){
-			vector<vector<double>> sim = dfa1->neighbour_matching(&dfa2);
-			double global_sim = (sim.back()).front();
-			cout << global_sim << "          ";
-		}
-		cout << endl;
-	}
-
-	DfaState ds = *(Dfas.front().begin());
-
-	deque<symbol_>{"a", "b", "a"};
-	ds[vector<symbol_>{"a", "b", "a"}];								//compila
-	ds[list<symbol_>{"a", "b", "a"}];								//compila
-	ds[deque<symbol_>{"a", "b", "a"}];								//compila
-
-	//ds[vector<int>{1,2,3}];										//non compila
-
 
 	return 0;
 }

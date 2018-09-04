@@ -68,36 +68,188 @@ int Dfa<I>::get_start_state() const{
 	return start_state_;
 }
 
-/*
 template <class I>
-vector<symbol_> Dfa<I>::table_filling1(Dfa* subject_dfa) {
-	
-	int total_states = num_states_ + subject_dfa->get_num_states();
-
-	map<int, DfaState> indexes;
-
-	int i = 0;
-	for(auto state : *this){
-		indexes[i] = state;
-		++i;
+map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I> :: init_table_filling(Dfa* first, Dfa* second){
+	map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> res;
+	if(second != NULL){
+		for(auto s1 = first->begin(); s1 != first->end(); ++s1){
+			map<vector<symbol_>, vector<symbol_>> tmp;
+			//cout << "s1: " << s1->get_depth_phrase() << endl;
+			for(auto s2 = second->begin(); s2 != second->end(); ++s2){
+				if(s1->is_accepting() != s2->is_accepting()){
+					tmp[s2->get_depth_phrase()] = vector<symbol_>();
+					//cout << "\ts2: " << s2->get_depth_phrase() << endl;
+				}
+			}
+			res[s1->get_depth_phrase()] = tmp;
+		}
 	}
-	for(auto state : subject_dfa){
-		indexes[i] = state;
-		++i;
+	else{
+		for(auto s1 = first->begin(); s1 != first->end(); ++s1){
+			auto s2 = s1;
+			if(++s2 != first->end()){
+				//cout << "s1: " << s1->get_depth_phrase() << endl;
+				map<vector<symbol_>, vector<symbol_>> tmp;
+				for(; s2 != first->end(); ++s2){
+					if(s1->is_accepting() != s2->is_accepting()){
+						tmp[s2->get_depth_phrase()] = vector<symbol_>();
+						//cout << "\ts2: " << s2->get_depth_phrase() << endl;
+					}
+				}
+				res[s1->get_depth_phrase()] = tmp;
+			}
+		}
 	}
-
-	for(auto state : *this){
-		cout<<*(indexes.find(state));
-	}
-	for(auto state : subject_dfa){
-		cout<<*(indexes.find(state));
-	}
-	
-
+	return res;
 }
-*/
+
+template <class I>
+vector<symbol_> Dfa<I>::table_filling1() {
+	
+	//passo di inizializzazione: segno come diversi stati accettanti e non accettanti:
+	map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table = init_table_filling(this, NULL);
+	
+	bool finished = false;
+	while(!finished){
+		finished = true;
+		for(auto s1 = this->begin(); s1 != this->end(); ++s1){
+			auto s2 = s1;
+			if(++s2 != this->end()){
+				auto map = table.find(s1->get_depth_phrase())->second;
+				for(; s2!= this->end(); ++s2){
+					if(map.find(s2->get_depth_phrase()) == map.end()){
+						//cout << "TROVATA COPPIA NON VERIFICATA:" << s1->get_depth_phrase() << " : " << s2->get_depth_phrase() << endl; 
+						for(symbol_ s : get_alphabet()){
+							//cout << "TENTATIVO PER SIMBOLO: " << s << endl;
+							DfaState* next_s1 = s1->next(s);
+							DfaState* next_s2 = s2->next(s);
+							
+							if(next_s1->get_depth_phrase() == next_s2->get_depth_phrase())
+								continue;
+							
+							if(next_s1->get_index() > next_s2->get_index()){
+								DfaState* temp = next_s1;
+								next_s1 = next_s2;
+								next_s2 = temp;
+							}
+							
+							//cout << "SUCCESSORI: " << next_s1->get_depth_phrase() << " : " << next_s2->get_depth_phrase() << endl;
+							
+							auto next_map = this.find(next_s1->get_depth_phrase())->second;
+							if(next_map.find(next_s2->get_depth_phrase()) != next_map.end()){
+								//cout << "SUCCESSORI DIVERSI -> STATI DIVERSI" << endl;
+								finished = false;
+								table[s1->get_depth_phrase()][s2->get_depth_phrase()] = vector<symbol_>(1, s);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
 
 
+template <class I>
+vector<symbol_> Dfa<I> :: find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa* subject_dfa){
+	vector<symbol_> counterexample;
+	DfaState* s1 = (*this)[vector<symbol_>()];
+	DfaState* s2 = (*subject_dfa)[vector<symbol_>()];
+	
+	while(true){
+		//Questa funzione si aspetta di ricevere una tabella iniziallizata 
+		//abbastanza da poter trovare un controesempio.
+		//A partire dagli stati iniziali deve trovare una serie di transizioni fino a due stati,
+		//dei quali uno accettante e l'altro no.
+		auto map = table.find(s1->get_depth_phrase())->second;
+		auto itt = map.find(s2->get_depth_phrase());
+		if(itt == map.end())
+		{
+			cerr << "dfa.tcc find_counterexample_from_table arrived to a pair of non-distinct states!" << endl;
+			throw 0;
+		}
+		vector<symbol_> sym = itt->second;
+		if(sym.size() > 1){
+			cerr << "dfa.tcc find_counterexample_from_table found an element of length > 1" << endl;
+			throw 0;
+		}
+		
+		if(sym.empty()){
+			return counterexample;
+		}
+		
+		counterexample.push_back(sym[0]);
+		s1 = s1->next(sym[0]);
+		s2 = s2->next(sym[0]);
+	}
+}
+
+template <class I>
+bool Dfa<I> :: equivalence_query(Dfa* subject_dfa, vector<symbol_>& counterexample){
+	
+	if(this->sort_alphabet() != subject_dfa->sort_alphabet()){
+		cerr << "dfa.tcc : equivalence_query : Cannot compare 2 Dfas with different alphabets" << endl;
+		throw 0;
+	}
+	
+	if((*this)[vector<symbol_>()]->is_accepting() != (*subject_dfa)[vector<symbol_>()]->is_accepting()){
+		counterexample.clear();
+		return false;
+	}
+	
+	auto table = init_table_filling(this, subject_dfa);
+	
+	bool finished = false;
+	while(!finished){
+		finished = true;
+		for(auto s1 = this->begin(); s1 != this->end(); ++s1){
+			for(auto s2 = subject_dfa->begin(); s2 != subject_dfa->end(); ++s2){
+				auto map = table.find(s1->get_depth_phrase())->second;
+				if(map.find(s2->get_depth_phrase()) == map.end()){
+					//cout << "TROVATA COPPIA NON VERIFICATA:" << s1->get_depth_phrase() << " : " << s2->get_depth_phrase() << endl;
+					for(symbol_ s : get_alphabet()){
+						//cout << "TENTATIVO PER SIMBOLO: " << s << endl;
+						DfaState* next_s1 = s1->next(s);
+						DfaState* next_s2 = s2->next(s);
+						
+						//cout << "SUCCESSORI: " << next_s1->get_depth_phrase() << " : " << next_s2->get_depth_phrase() << endl;
+						auto next_map = table.find(next_s1->get_depth_phrase())->second;
+						if(next_map.find(next_s2->get_depth_phrase()) != next_map.end()){
+							//cout << "SUCCESSORI DIVERSI -> STATI DIVERSI" << endl;
+							finished = false;
+							table[s1->get_depth_phrase()][s2->get_depth_phrase()] = vector<symbol_>(1, s);
+							
+							if(s1->get_depth_phrase().empty() && s2->get_depth_phrase().empty()){
+								counterexample = find_counterexample_from_table(table, subject_dfa);
+								return false;
+							}
+							
+							break;
+						}
+					}				
+				}
+			}
+		}
+	}
+	
+	/*cout << endl << "TABELLA IBRIDA: " << endl;
+	for(auto map : table){
+		cout << map.first << endl;
+		for(auto mapmap : map.second){
+			cout << "\t" << mapmap.first << " " << mapmap.second << endl;
+		}
+	}*/
+	auto map = table.find(vector<symbol_>())->second;
+	auto itt = map.find(vector<symbol_>());
+	if(itt == map.end())
+	{
+		return true;
+	}
+	
+	counterexample = find_counterexample_from_table(table, subject_dfa);
+	return false;
+}
 
 /* Methods related to the "dfa common interface" */
 

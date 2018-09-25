@@ -6,7 +6,7 @@
 
 DfaState::DfaState(bool final, vector<symbol_> dep_ph, int ind){
 	accepting_state = final;
-	depth_phrase = dep_ph;
+	char_phrase = dep_ph;
 	index_ = ind;
 }
 
@@ -14,12 +14,19 @@ DfaState::DfaState(bool final, vector<symbol_> dep_ph, map<symbol_, DfaState*> t
 	transictions = tr;
 }
 
-DfaState* DfaState::next(symbol_ sym){
+DfaState* DfaState::next(symbol_ sym, bool strict){
 	auto it = transictions.find(sym);
 
 	if(it == transictions.end()){
-		cerr << "Error in DfaState::next, symbol " << sym << " not found" << endl;
-		throw 0;
+		if(strict){
+			cerr << "Error in DfaState::next, symbol " << sym << " not found" << endl;
+			cerr << "you may want to set the parameter 'strict' to false" << endl;
+			cerr << "and manage the return value" << endl;
+			throw 0;
+		}
+		else{
+			return NULL;
+		}
 	}
 
 	return it->second;
@@ -29,21 +36,21 @@ bool DfaState::is_accepting(){
 	return accepting_state;
 }
 
-vector <symbol_> DfaState::get_depth_phrase(){
-	return depth_phrase;
+vector <symbol_> DfaState::get_charact_phrase(){
+	return char_phrase;
 }
 
 void DfaState::print(){
 	cout << "+-----------------------+" << endl;
 	cout << " depth phrase: \"";
-	for(auto sym : depth_phrase){
+	for(auto sym : char_phrase){
 		cout << sym;
 	}
 	cout << "\"" << endl;
 	cout << " is accepting: " << accepting_state << endl;
 	for(auto pair : transictions){
 		cout << "\t" << pair.first << "\t";
-		for(auto sym : pair.second->depth_phrase){
+		for(auto sym : pair.second->char_phrase){
 			cout << sym;
 		}
 		cout << endl;
@@ -51,7 +58,7 @@ void DfaState::print(){
 	cout << "+-----------------------+" << endl;
 }
 
-void DfaState::set_transiction(symbol_ sym, DfaState* arrive_state){
+void DfaState::set_transition(symbol_ sym, DfaState* arrive_state){
 	transictions[sym] = arrive_state;
 }
 
@@ -87,14 +94,14 @@ vector<DfaState*> DfaState::get_outcoming_states() const{
 
 vector<pair<DfaState*, symbol_> > DfaState::get_removable_incoming_transictions(){
 	// per lo stato iniziale possiamo rimuovere una qualunque delle sue transizioni entranti
-	if(this->get_depth_phrase().empty())
+	if(this->get_charact_phrase().empty())
 		return incoming_transictions_;
 
 	//Dividiamo le transizioni entranti in quelle da se stessi e da altri stati
 	vector<pair<DfaState*, symbol_> > from_self;
 	vector<pair<DfaState*, symbol_> > from_others;
 	for(auto coppia : incoming_transictions_)
-		if(coppia.first->get_depth_phrase() == this->get_depth_phrase())
+		if(coppia.first->get_charact_phrase() == this->get_charact_phrase())
 			from_self.push_back(coppia);
 		else
 			from_others.push_back(coppia);

@@ -44,12 +44,13 @@ TEST_F(BaseDfaStateTest, get_index){
 	
 	symbol_ zero = "0";
 	symbol_ uno = "1";
-	vector<vector<symbol_>> phrases = {vector<symbol_>(), vector<symbol_>{zero}, vector<symbol_>{zero,zero}, vector<symbol_>{zero,zero,zero}, vector<symbol_>{uno}};
+	symbol_ due = "2";
+	vector<vector<symbol_>> phrases = {vector<symbol_>(), vector<symbol_>{zero}, vector<symbol_>{uno}, vector<symbol_>{due}, vector<symbol_>{zero,zero}};
 	bool t = true;
 	
 	int i = 0;
 	for(DfaState s : *reference){
-		t = t && s.get_index() == i && s.get_depth_phrase() == phrases[i];
+		t = t && s.get_index() == i && s.get_charact_phrase() == phrases[i];
 		++i;
 	}
 	
@@ -73,11 +74,11 @@ TEST_F(BaseDfaStateTest, get_incoming_states){
 	vector<DfaState*> incoming_states = s->get_incoming_states();
 	
 	for(DfaState* s1 : incoming_states){
-		all_states.insert(s1->get_depth_phrase());
+		all_states.insert(s1->get_charact_phrase());
 	}
 	
 	for(DfaState s1 : *reference){
-		vector<symbol_> a = s1.get_depth_phrase();
+		vector<symbol_> a = s1.get_charact_phrase();
 		if(all_states.find(a) == all_states.end()){
 			cout << a;
 			t = false;

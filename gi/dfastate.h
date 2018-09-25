@@ -20,7 +20,7 @@ class DfaState {
 private:
 	//******** DATA MEMBERS: ********
 	bool accepting_state;
-	vector<symbol_> depth_phrase;
+	vector<symbol_> char_phrase;
 	map<symbol_, DfaState*> transictions;
 	vector<pair<DfaState*, symbol_> > incoming_transictions_;
 	
@@ -31,20 +31,20 @@ public:
 	//******** CONSTRUCTORS: ********
 	/**
 	 * @param accepting		True if the state must be accepting, false otherwise
-	 * @param dep_ph		Depth phrase, ie the first sequence in lexicographical order to reach this state
+	 * @param char_ph		Characterizing phrase, ie the first sequence in Breadth first order to reach this state
 	 * @param int			A counter increasing for each new state we encounter exploring the dfa depth first
 	 */
-	DfaState(bool accepting, vector<symbol_> dep_ph, int ind);
+	DfaState(bool accepting, vector<symbol_> char_ph, int ind);
 
 	/**
 	 * This constructor is now unused, and probably always will be, due to the necessity to have the references to
 	 * other DfaStates of the Dfa.
 	 * @param accepting		True if the state must be accepting, false otherwise
-	 * @param dep_ph		Depth phrase, ie the first sequence in lexicographical order to reach this state
+	 * @param char_ph		Characterizing phrase, ie the first sequence in Breadth first order to reach this state
 	 * @param tr			The map of transictions to other DfaStates for each symbol_
 	 * @param int			A counter increasing for each new state we encounter exploring the dfa depth first 
 	 */
-	DfaState(bool accepting, vector<symbol_> dep_ph, map<symbol_, DfaState*> tr, int ind);
+	DfaState(bool accepting, vector<symbol_> char_ph, map<symbol_, DfaState*> tr, int ind);
 
 	//******** METHODS: ********
 	/**
@@ -53,7 +53,7 @@ public:
 	 * @param sym	The symbol_ of the transiction
 	 * @return		A pointer to the arriving DfaState of the transiction
 	 */
-	DfaState* next(symbol_ sym);
+	DfaState* next(symbol_ sym, bool strict = true);
 
 	/**
 	 * Returns whether or not this is an accepting state
@@ -61,16 +61,17 @@ public:
 	bool is_accepting();
 
 	/**
-	 * Returns the depth_phrase ie the first sequence in lexicographical order to reach this state
+	 * Returns the charaterizing phrase ie a sequence of symbols that identify uniquely (in his Dfa) the state.
+	 * (The sequence must lead to this state obviously)
 	 */
-	vector <symbol_> get_depth_phrase();
+	vector <symbol_> get_charact_phrase();
 
 	/**
 	 * Set a particular transiction starting from this state
 	 * @param sym			The symbol_ of the transiction
 	 * @param arrive_state	A pointer to the reached DfaState
 	 */
-	void set_transiction(symbol_ sym, DfaState* arrive_state);
+	void set_transition(symbol_ sym, DfaState* arrive_state);
 
 	/**
 	 * Set a particular transiction arriving to this state

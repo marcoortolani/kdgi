@@ -136,7 +136,7 @@ public:
   /**
    * Returns the alphabet in lexicographical order.
    */
-  vector<symbol_> sort_alphabet();
+  vector<symbol_> sort_alphabet() const;
 
   /**
    * Return the next phrase in lexicographical order with the same length of the argument phrase or shorter.

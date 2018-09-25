@@ -74,29 +74,29 @@ map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I> :: init_table
 	if(second != NULL){
 		for(auto s1 = first->begin(); s1 != first->end(); ++s1){
 			map<vector<symbol_>, vector<symbol_>> tmp;
-			//cout << "s1: " << s1->get_depth_phrase() << endl;
+			//cout << "s1: " << s1->get_charact_phrase() << endl;
 			for(auto s2 = second->begin(); s2 != second->end(); ++s2){
 				if(s1->is_accepting() != s2->is_accepting()){
-					tmp[s2->get_depth_phrase()] = vector<symbol_>();
-					//cout << "\ts2: " << s2->get_depth_phrase() << endl;
+					tmp[s2->get_charact_phrase()] = vector<symbol_>();
+					//cout << "\ts2: " << s2->get_charact_phrase() << endl;
 				}
 			}
-			res[s1->get_depth_phrase()] = tmp;
+			res[s1->get_charact_phrase()] = tmp;
 		}
 	}
 	else{
 		for(auto s1 = first->begin(); s1 != first->end(); ++s1){
 			auto s2 = s1;
 			if(++s2 != first->end()){
-				//cout << "s1: " << s1->get_depth_phrase() << endl;
+				//cout << "s1: " << s1->get_charact_phrase() << endl;
 				map<vector<symbol_>, vector<symbol_>> tmp;
 				for(; s2 != first->end(); ++s2){
 					if(s1->is_accepting() != s2->is_accepting()){
-						tmp[s2->get_depth_phrase()] = vector<symbol_>();
-						//cout << "\ts2: " << s2->get_depth_phrase() << endl;
+						tmp[s2->get_charact_phrase()] = vector<symbol_>();
+						//cout << "\ts2: " << s2->get_charact_phrase() << endl;
 					}
 				}
-				res[s1->get_depth_phrase()] = tmp;
+				res[s1->get_charact_phrase()] = tmp;
 			}
 		}
 	}
@@ -115,16 +115,16 @@ vector<symbol_> Dfa<I>::table_filling1() {
 		for(auto s1 = this->begin(); s1 != this->end(); ++s1){
 			auto s2 = s1;
 			if(++s2 != this->end()){
-				auto map = table.find(s1->get_depth_phrase())->second;
+				auto map = table.find(s1->get_charact_phrase())->second;
 				for(; s2!= this->end(); ++s2){
-					if(map.find(s2->get_depth_phrase()) == map.end()){
-						//cout << "TROVATA COPPIA NON VERIFICATA:" << s1->get_depth_phrase() << " : " << s2->get_depth_phrase() << endl; 
+					if(map.find(s2->get_charact_phrase()) == map.end()){
+						//cout << "TROVATA COPPIA NON VERIFICATA:" << s1->get_charact_phrase() << " : " << s2->get_charact_phrase() << endl; 
 						for(symbol_ s : get_alphabet()){
 							//cout << "TENTATIVO PER SIMBOLO: " << s << endl;
 							DfaState* next_s1 = s1->next(s);
 							DfaState* next_s2 = s2->next(s);
 							
-							if(next_s1->get_depth_phrase() == next_s2->get_depth_phrase())
+							if(next_s1->get_charact_phrase() == next_s2->get_charact_phrase())
 								continue;
 							
 							if(next_s1->get_index() > next_s2->get_index()){
@@ -133,13 +133,13 @@ vector<symbol_> Dfa<I>::table_filling1() {
 								next_s2 = temp;
 							}
 							
-							//cout << "SUCCESSORI: " << next_s1->get_depth_phrase() << " : " << next_s2->get_depth_phrase() << endl;
+							//cout << "SUCCESSORI: " << next_s1->get_charact_phrase() << " : " << next_s2->get_charact_phrase() << endl;
 							
-							auto next_map = this.find(next_s1->get_depth_phrase())->second;
-							if(next_map.find(next_s2->get_depth_phrase()) != next_map.end()){
+							auto next_map = this.find(next_s1->get_charact_phrase())->second;
+							if(next_map.find(next_s2->get_charact_phrase()) != next_map.end()){
 								//cout << "SUCCESSORI DIVERSI -> STATI DIVERSI" << endl;
 								finished = false;
-								table[s1->get_depth_phrase()][s2->get_depth_phrase()] = vector<symbol_>(1, s);
+								table[s1->get_charact_phrase()][s2->get_charact_phrase()] = vector<symbol_>(1, s);
 								break;
 							}
 						}
@@ -162,8 +162,8 @@ vector<symbol_> Dfa<I> :: find_counterexample_from_table(map<vector<symbol_>, ma
 		//abbastanza da poter trovare un controesempio.
 		//A partire dagli stati iniziali deve trovare una serie di transizioni fino a due stati,
 		//dei quali uno accettante e l'altro no.
-		auto map = table.find(s1->get_depth_phrase())->second;
-		auto itt = map.find(s2->get_depth_phrase());
+		auto map = table.find(s1->get_charact_phrase())->second;
+		auto itt = map.find(s2->get_charact_phrase());
 		if(itt == map.end())
 		{
 			cerr << "dfa.tcc find_counterexample_from_table arrived to a pair of non-distinct states!" << endl;
@@ -205,22 +205,22 @@ bool Dfa<I> :: equivalence_query(Dfa* subject_dfa, vector<symbol_>& counterexamp
 		finished = true;
 		for(auto s1 = this->begin(); s1 != this->end(); ++s1){
 			for(auto s2 = subject_dfa->begin(); s2 != subject_dfa->end(); ++s2){
-				auto map = table.find(s1->get_depth_phrase())->second;
-				if(map.find(s2->get_depth_phrase()) == map.end()){
-					//cout << "TROVATA COPPIA NON VERIFICATA:" << s1->get_depth_phrase() << " : " << s2->get_depth_phrase() << endl;
+				auto map = table.find(s1->get_charact_phrase())->second;
+				if(map.find(s2->get_charact_phrase()) == map.end()){
+					//cout << "TROVATA COPPIA NON VERIFICATA:" << s1->get_charact_phrase() << " : " << s2->get_charact_phrase() << endl;
 					for(symbol_ s : get_alphabet()){
 						//cout << "TENTATIVO PER SIMBOLO: " << s << endl;
 						DfaState* next_s1 = s1->next(s);
 						DfaState* next_s2 = s2->next(s);
 						
-						//cout << "SUCCESSORI: " << next_s1->get_depth_phrase() << " : " << next_s2->get_depth_phrase() << endl;
-						auto next_map = table.find(next_s1->get_depth_phrase())->second;
-						if(next_map.find(next_s2->get_depth_phrase()) != next_map.end()){
+						//cout << "SUCCESSORI: " << next_s1->get_charact_phrase() << " : " << next_s2->get_charact_phrase() << endl;
+						auto next_map = table.find(next_s1->get_charact_phrase())->second;
+						if(next_map.find(next_s2->get_charact_phrase()) != next_map.end()){
 							//cout << "SUCCESSORI DIVERSI -> STATI DIVERSI" << endl;
 							finished = false;
-							table[s1->get_depth_phrase()][s2->get_depth_phrase()] = vector<symbol_>(1, s);
+							table[s1->get_charact_phrase()][s2->get_charact_phrase()] = vector<symbol_>(1, s);
 							
-							if(s1->get_depth_phrase().empty() && s2->get_depth_phrase().empty()){
+							if(s1->get_charact_phrase().empty() && s2->get_charact_phrase().empty()){
 								counterexample = find_counterexample_from_table(table, subject_dfa);
 								return false;
 							}
@@ -254,7 +254,7 @@ bool Dfa<I> :: equivalence_query(Dfa* subject_dfa, vector<symbol_>& counterexamp
 /* Methods related to the "dfa common interface" */
 
 template <class I>
-vector<symbol_> Dfa<I>::sort_alphabet(){
+vector<symbol_> Dfa<I> :: sort_alphabet() const{
 	//bubblesort
 	vector<symbol_> sorted_alphabet = get_alphabet();
 	bool sorted = false;
@@ -284,13 +284,13 @@ bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
 		DfaState state = *state_it;
 		DfaState other_state = *other_state_it;
 			  
-		if(state.get_depth_phrase() != other_state.get_depth_phrase() || state.is_accepting() != other_state.is_accepting()){
+		if(state.get_charact_phrase() != other_state.get_charact_phrase() || state.is_accepting() != other_state.is_accepting()){
 			
-			if(state.get_depth_phrase() == other_state.get_depth_phrase()){
-				phrase = state.get_depth_phrase();
+			if(state.get_charact_phrase() == other_state.get_charact_phrase()){
+				phrase = state.get_charact_phrase();
 			}
 			else{
-				phrase = lexicographical_compare(state.get_depth_phrase().begin(), state.get_depth_phrase().end(), other_state.get_depth_phrase().begin(), other_state.get_depth_phrase().end()) ? state.get_depth_phrase() : other_state.get_depth_phrase();
+				phrase = lexicographical_compare(state.get_charact_phrase().begin(), state.get_charact_phrase().end(), other_state.get_charact_phrase().begin(), other_state.get_charact_phrase().end()) ? state.get_charact_phrase() : other_state.get_charact_phrase();
 			}
 			
 			return false;
@@ -300,9 +300,9 @@ bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
 			DfaState* next_state = state.next(sym);
 			DfaState* other_next_state = other_state.next(sym);
 			
-			if(next_state->get_depth_phrase() != other_next_state->get_depth_phrase() || next_state->is_accepting() != other_next_state->is_accepting()){
+			if(next_state->get_charact_phrase() != other_next_state->get_charact_phrase() || next_state->is_accepting() != other_next_state->is_accepting()){
 				
-				phrase = state.get_depth_phrase();
+				phrase = state.get_charact_phrase();
 				phrase.push_back(sym);
 				
 				return false;
@@ -313,10 +313,10 @@ bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
 	}
 	if(state_it != this->end() || other_state_it != other_dfa->end()){
 		if(state_it != this->end()){
-			phrase = state_it->get_depth_phrase();
+			phrase = state_it->get_charact_phrase();
 		}
 		else{
-			phrase = other_state_it->get_depth_phrase();
+			phrase = other_state_it->get_charact_phrase();
 		}
 		return false;
 	}
@@ -362,6 +362,10 @@ vector<symbol_> Dfa<I>::get_next_phrase(vector<symbol_> phrase){
 template <class I>
 template <class SymIter>
 DfaState* Dfa<I>::operator[](SymIter phrase){
+	if(begin() == end()){
+		cerr << "This Dfa hasn't any state!" << endl;
+		throw 0;
+	}
 	return (*begin())[phrase];
 }
 

@@ -944,6 +944,47 @@ vector<set<list<symbol_>>> AngluinDfa::group_phrases_into_states() const{
 }
 
 vector<set<list<symbol_>>> AngluinDfa::sort_states(vector<set<list<symbol_>>> states, vector<vector<symbol_>>& sorted_phrases){
+	vector<symbol_> sorted_alphabet = sort_alphabet();
+
+	set<set<list<symbol_>>> visited_states;
+	vector<set<list<symbol_>>> sorted_states;
+	list<set<list<symbol_>>> reached_states;
+	list<vector<symbol_>> reached_phrases;
+
+	reached_states.push_back(states[get_start_index(states)]);
+	reached_phrases.push_back(vector<symbol_>());
+
+	int remaining_states = states.size();
+	while(remaining_states > 0){
+		set<list<symbol_>> state = reached_states.back();
+		vector<symbol_> phrase = reached_phrases.back();
+
+		reached_states.pop_back();
+		reached_phrases.pop_back();
+
+		if(visited_states.find(state) == visited_states.end()){
+			--remaining_states;
+
+			visited_states.insert(state);
+			sorted_states.push_back(state);
+			sorted_phrases.push_back(phrase);
+
+			for(symbol_ s : sorted_alphabet){
+				vector<symbol_> next_phrase = phrase;
+				next_phrase.push_back(s);
+				set<list<symbol_>> next_state = states[get_index_from_transition(state, s, states)];
+				if(visited_states.find(next_state) == visited_states.end()){
+					reached_states.push_front(next_state);
+					reached_phrases.push_front(next_phrase);
+				}
+			}
+		}
+	}
+
+	return sorted_states;
+}
+
+/*vector<set<list<symbol_>>> AngluinDfa::sort_states(vector<set<list<symbol_>>> states, vector<vector<symbol_>>& sorted_phrases){
 
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
@@ -981,7 +1022,7 @@ vector<set<list<symbol_>>> AngluinDfa::sort_states(vector<set<list<symbol_>>> st
 	while(remaining_states > 0);
 
 	return sorted_states;
-}
+}*/
 
 int AngluinDfa::get_start_index(vector<set<list<symbol_>>> states){
 	int i = 0;
@@ -1060,7 +1101,7 @@ void AngluinDfa::update_state_table(){
 		for(symbol_ sym : sorted_alphabet){
 			DFA_STATE_ j = get_index_from_transition(s, sym, states);
 			//state_to_state_table_[i][j].push_back(sym);
-			state_table_[i].set_transiction(sym, &state_table_[j]);
+			state_table_[i].set_transition(sym, &state_table_[j]);
 			state_table_[j].set_incoming_transiction(std::make_pair(&state_table_[i], sym));
 		}
 		++i;

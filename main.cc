@@ -1,54 +1,168 @@
 #include <iostream>
 
-#include <map>
-#include <deque>
-
-#include "angluindfa.h"
-#include "angluinlearner.h"
+#include "tttdfa.h"
 #include "concretedfa.h"
-#include "sillyoracle.h"
-#include "dfastate.h"
 
-int main() {
+using namespace std;
 
-	vector<string> file_names = {	//"tomita9",
-									//"tomita15",
-									"_all",
-									"_2_instance_of_aab",
-									"_ab_aaaa",
-									"_all_except_abab",
-									"_no_repetitions",
-									"_odd_a_odd_b",
-									"dfa_test"
-									};
+void close_transitions(TTTDfa& t, ConcreteDfa& c, bool hard_sift){
+	vector <bool> queries;
+	//auto vec = t.get_transitions_to_sift(hard_sift);
 
-	vector<ConcreteDfa> Dfas;
-	vector<AngluinDfa*> AngDfas;
-	for(auto name : file_names){
-		ConcreteDfa d1 = d1.read_dfa_file("../gi/data/" + name + ".txt");
-		Dfas.push_back(d1);
+	for(auto vec = t.get_transitions_to_sift(hard_sift); !vec.empty();){
+		for (auto pair : vec){
+			vector<symbol_> prefix = std :: get<0>(pair);
+			prefix.push_back(std :: get<1>(pair));
 
-		SillyOracle o(&d1);
-		AngluinLearner l(&o, d1.sort_alphabet());
-		AngDfas.push_back(l.learn());
+			queries.clear();
+			vector<symbol_> suffix;
+
+			queries.push_back(c.membership_query(prefix));
+			//cout << "il prefisso " << prefix << " ha valore " << queries.back() << endl;
+			if(t.init_sifting(std :: get<0>(pair), std :: get<1>(pair), suffix, queries.back(), std :: get<2>(pair))){
+				do{
+					vector <symbol_> phrase = prefix;
+					phrase.insert(phrase.end(), suffix.begin(), suffix.end());
+					queries.push_back(c.membership_query(phrase));
+					//cout << phrase << " ha valore " << queries.back() << endl;
+
+					vector<symbol_> test = {"b", "c", "a"};
+				}
+				while(t.sift_step(suffix, queries.back(), std :: get<2>(pair)));
+			}
+
+			t.close_transition(std :: get<0>(pair), std :: get<1>(pair), queries.back());
+		}
+		vec = t.get_transitions_to_sift(hard_sift);
+	}
+	return ;
+}
+
+TTTDfa OPACKlearn(ConcreteDfa c){
+	c.update_state_table();
+
+	vector<bool> queries;
+	for(symbol_ s : c.get_alphabet()){
+		queries.push_back(c.membership_query(vector<symbol_>(1, s)));
+	}
+	queries.push_back(c.membership_query(vector<symbol_>()));
+
+	TTTDfa t(c.get_alphabet(), queries);
+	close_transitions(t, c, true);
+
+	t.make_hypotesis();
+	////t.print();
+
+	vector<symbol_> counterexample;
+	while(!t.equivalence_query(&c, counterexample)){
+		bool truth = c.membership_query(counterexample);
+		//cout << "counterexample " << counterexample << " is " << truth << endl;
+
+		while(t.membership_query(counterexample) != truth){
+			t.handle_counterexample(counterexample);
+			////t.print();
+
+			close_transitions(t,c, true);
+
+			////t.print();
+			t.make_hypotesis();
+		}
 	}
 
-	int i = 0;
-	for(ConcreteDfa d : Dfas){
-		int j = 0;
-		for(AngluinDfa* a : AngDfas){
-			vector<symbol_> vec;
-			if(! d.Dfa::equivalence_query(a, vec)){
-				cout << file_names[i] << " " << file_names[j] << endl;
-				cout << "\t" << vec << endl;
-				if(d[vec]->is_accepting() == (*a)[vec]->is_accepting()){
-					cout << "\terrore qui" << endl;
+	return t;
+}
+
+
+TTTDfa* TTTlearn(ConcreteDfa c){
+	c.update_state_table();
+
+	vector<bool> queries;
+	for(symbol_ s : c.get_alphabet()){
+		queries.push_back(c.membership_query(vector<symbol_>(1, s)));
+	}
+	queries.push_back(c.membership_query(vector<symbol_>()));
+
+	TTTDfa* t = new TTTDfa(c.get_alphabet(), queries);
+	close_transitions(*t, c, false);
+
+	t->make_hypotesis();
+	//t.print();
+
+	vector<symbol_> counterexample;
+	while(!t->equivalence_query(&c, counterexample)){
+		bool truth = c.membership_query(counterexample);
+		//cout << "counterexample " << counterexample << " is " << truth << endl;
+
+		while(t->membership_query(counterexample) != truth){
+			//cout << "gestione controesempio" << endl;
+			t->handle_counterexample(counterexample);
+			//t.print();
+
+			//cout << "soft sifting" << endl;
+			close_transitions(*t,c, false);
+
+			//t.print();
+
+			vector<vector<symbol_>> prefixes;
+			vector<symbol_> suffix;
+
+			while(!t->is_deterministic() && t->try_single_finalization(prefixes, suffix)){
+				vector<pair<vector<symbol_>, bool>> leaf_queries;
+				for(vector<symbol_> prefix : prefixes){
+					vector <symbol_> phrase = prefix;
+					phrase.insert(phrase.end(), suffix.begin(), suffix.end());
+
+					leaf_queries.push_back(std :: make_pair(prefix, c.membership_query(phrase)));
 				}
-				cout << "\td:" << d[vec]->is_accepting() << " a:" << (*a)[vec]->is_accepting() << endl;
+				t->split_block(leaf_queries, suffix);
+				close_transitions(*t,c,false);
+				//cout << "finalization" << endl;
+				//t.print();
 			}
-			++j;
+
+			if(!t->is_deterministic()){
+				//cout << "hard sifting" << endl;
+				close_transitions(*t,c, true);
+				////t.print();
+			}
+
+
+			//t.print();
+			t->make_hypotesis();
 		}
-		++i;
+	}
+
+	return t;
+}
+
+int main() {
+	vector<string> files = {"_2_instance_of_aab",
+							"_ab_aaaa",
+							"_all",
+							"_no_repetitions",
+							"_odd_a_odd_b",
+							"_only_a",
+							"dfa_test",
+							"_all_except_abab",
+							"tomita15",
+							"tomita9"
+							};
+
+	for(string name : files){
+		string path = "../gi/data/" + name + ".txt";
+		cout << name << endl;
+		ConcreteDfa c = c.read_dfa_file(path);
+		c.update_state_table();
+		TTTDfa op = OPACKlearn(c);
+		TTTDfa* t = TTTlearn(c);
+
+		vector<symbol_> counterexample;
+		if(!op.equivalence_query(&c, counterexample)){
+			cout << "OPack non corrisponde, controesempio trovato: " << counterexample << endl;
+		}
+		if(!t->equivalence_query(&c, counterexample)){
+			cout << "TTTDfa non corrisponde, controesempio trovato: " << counterexample << endl;
+		}
 	}
 
 	return 0;

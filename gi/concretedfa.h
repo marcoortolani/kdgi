@@ -108,7 +108,7 @@ protected:
    * @param witness_results 	A vector<symbol_> in which save the witness.if miss is NULL for default,it means that the client isn't interested in witness but in ceck equivalence alone.
    * @return true if the two dfas are equivalents, false otherwise.
    */
-  bool	 equivalence_query(ConcreteDfa* dfa_hp, vector<symbol_> *witness_results=NULL);
+  //bool	 equivalence_query(ConcreteDfa* dfa_hp, vector<symbol_> *witness_results=NULL);
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -174,7 +174,6 @@ protected:
 public:
   friend class BlueFringe;
   friend class AngluinDfa;
-  friend class SillyOracle;
   //******** CONSTRUCTORS: ********
 
   /**
@@ -445,18 +444,18 @@ public:
   void update_state_table();
 
   /**
-  	* Prints all the infos about the DfaState of the Dfa in the correct order.
+  	* Prints all the infos about the DfaStates of the Dfa in the correct order.
   	*/
   void print_state_table();
 
   /**
-   * Implements the Dfa's container-like behavior.
+   * Implements the Dfa's container-like behaviour.
    * @return an iterator to the first DfaState.
    */
   vector<DfaState> :: iterator begin();
 
   /**
-   * Implements the Dfa's container-like behavior.
+   * Implements the Dfa's container-like behaviour.
    * @return an iterator to the end of the Dfa.
    */
   vector<DfaState> :: iterator end();

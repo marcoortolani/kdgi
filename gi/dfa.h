@@ -57,7 +57,7 @@ protected:
   void 	set_num_state(int n);
 
 //TO-DO eliminare questo "public" messo per motivi di debug
-public:
+//public:
   /**
    * Set the alphabet of dfa to alphabet in input of size "d_alf".
    * @param alf.
@@ -65,6 +65,7 @@ public:
   void 	set_alphabet(const vector<symbol_> alf);
 
 public:
+  friend class BlueFringe;
   //******** CONSTRUCTORS: ********
 
   /**
@@ -107,6 +108,7 @@ public:
    */
   virtual bool   membership_query(vector<symbol_> phrase) const = 0;
 
+  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling(Dfa* first, Dfa* second);
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -114,9 +116,11 @@ public:
    * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
    * @return A table saved in a linear array, with a list of equivalent/different states.
    */
-  vector<symbol_>	table_filling1(Dfa* subject_dfa);
+  vector<symbol_>	table_filling1();
 
+  vector<symbol_> find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa* subject_dfa);
 
+  bool equivalence_query(Dfa* other_dfa, vector<symbol_>& counterexample);
 
   /* Code related to the "dfa common interface" */
 
@@ -132,7 +136,7 @@ public:
   /**
    * Returns the alphabet in lexicographical order.
    */
-  vector<symbol_> sort_alphabet();
+  vector<symbol_> sort_alphabet() const;
 
   /**
    * Return the next phrase in lexicographical order with the same length of the argument phrase or shorter.
@@ -148,8 +152,6 @@ public:
    */
   template <class SymIter>
   DfaState* operator[](SymIter phrase);
-
-  bool find_counterexample(Dfa* other_dfa, vector<symbol_> counter_example);
 
   /**
     * Gives the structural similarity score matrix between every pair of states of two DFAs
@@ -170,6 +172,7 @@ public:
    * @param num_states_target_dfa
    */
    void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
+
 
 
 };

@@ -175,7 +175,6 @@ protected:
 
 public:
   friend class BlueFringe;
-  friend class OldAngluinDfa;
   friend class AngluinDfa;
   friend class Rpni;
   friend class Edsm;
@@ -338,7 +337,7 @@ public:
    */
   map< vector<symbol_>, int>	generate_pos_neg_samples_without_weights(int n_pos_samples,int n_neg_samples) const;
 
-  /*
+  /**
    * It returns a set of weigths paired to the samples generated yet.
    * @param samples Generated samples.
    * @param upper_bound_for_weights Upper bound for weights.

@@ -177,7 +177,6 @@ TEST_F(BaseDfaTest, unionDfa){
     test->update_state_table();
 
     ConcreteDfa* uni=reference->unionDFA(test);
-    cout<<"qui"<<endl;
 
     TestDfa* uni_ref = new TestDfa(8,alph,0);
     const vector<int> sequence3 = {1, 2, 4, 0, 3, 4, 1, 0, 4, 3, 2, 0, 4, 4, 4, 1, 4, 4, 4, 0, 5, 6, 7, 0, 5, 6, 7, 1, 5, 6, 7, 0};

@@ -18,6 +18,7 @@
 
 namespace py = pybind11;
 
+// tenere d'occhio questo vector
 using abstr = Dfa<std::__1::vector<DfaState, std::__1::allocator<DfaState> >*>;
 
 PYBIND11_MODULE(gi_gipy, m) {

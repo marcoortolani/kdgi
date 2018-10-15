@@ -7,6 +7,8 @@ class TestDfa : public ConcreteDfa{
   friend class BaseDfaTest;
   friend class LinguisticSimilarityTest;
   friend class StructuralSimilarityTest;
+  friend class BaseAngTest;
+  friend class BaseDfaStateTest;
 
   FRIEND_TEST(BaseDfaTest, equivalenceQuerySelfTest);
   FRIEND_TEST(BaseDfaTest, setAcceptingState);

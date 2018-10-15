@@ -2131,6 +2131,47 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 /* Methods related to the "common dfa interface" */
 
 vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
+	vector<symbol_> sorted_alphabet = sort_alphabet();
+
+	set<int> visited_states;
+	vector<int> sorted_states;
+	list<int> reached_states;
+	list<vector<symbol_>> reached_phrases;
+
+	reached_states.push_back(get_start_state());
+	reached_phrases.push_back(vector<symbol_>());
+
+	int remaining_states = get_num_states();
+	while(remaining_states > 0){
+		int state = reached_states.back();
+		vector<symbol_> phrase = reached_phrases.back();
+
+		reached_states.pop_back();
+		reached_phrases.pop_back();
+
+		if(visited_states.find(state) == visited_states.end()){
+			--remaining_states;
+
+			visited_states.insert(state);
+			sorted_states.push_back(state);
+			sorted_phrases.push_back(phrase);
+
+			for(symbol_ s : sorted_alphabet){
+				vector<symbol_> next_phrase = phrase;
+				next_phrase.push_back(s);
+				int next_state = get_ttable(state, s);
+				if(visited_states.find(next_state) == visited_states.end()){
+					reached_states.push_front(next_state);
+					reached_phrases.push_front(next_phrase);
+				}
+			}
+		}
+	}
+
+	return sorted_states;
+}
+
+/*vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
 
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
@@ -2160,7 +2201,7 @@ vector<int> ConcreteDfa::sort_states(vector<vector<symbol_>>& sorted_phrases){
 	while(remaining_states > 0);
 
 	return sorted_states;
-}
+}*/
 
 void ConcreteDfa::update_state_table(){
 
@@ -2183,8 +2224,8 @@ void ConcreteDfa::update_state_table(){
 			bool state_found = false;
 			for(int j = 0; j < sorted_states.size() && !state_found; j++){
 				if(sorted_states[j] == next_state){
-					state_table_[i].set_transiction(sym, &state_table_[j]);
-					state_table_[j].set_incoming_transictions(std::make_pair(&state_table_[i], sym));
+					state_table_[i].set_transition(sym, &state_table_[j]);
+					state_table_[j].set_incoming_transiction(std::make_pair(&state_table_[i], sym));
 					state_found = true;
 				}
 			}
@@ -2363,3 +2404,4 @@ pair<double, unsigned int> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, boo
 	vector<vector<double> > sim = neighbour_matching(subject_dfa, isomorphism, color, eps);
 	return std::make_pair(sim[num_states_][0], sim[num_states_][1]);
 }
+

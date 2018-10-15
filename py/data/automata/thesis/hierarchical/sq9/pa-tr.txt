@@ -1,0 +1,34 @@
+9 3 dfa
+r x q w m t k s p
+0
+@
+dfa[0][r]=1;
+dfa[0][x]=2;
+dfa[0][q]=2;
+dfa[0][w]=2;
+dfa[0][m]=2;
+dfa[0][t]=2;
+dfa[0][k]=2;
+dfa[0][s]=2;
+dfa[0][p]=0;
+dfa[0][@]=1;
+dfa[1][r]=1;
+dfa[1][x]=2;
+dfa[1][q]=2;
+dfa[1][w]=2;
+dfa[1][m]=2;
+dfa[1][t]=2;
+dfa[1][k]=2;
+dfa[1][s]=2;
+dfa[1][p]=0;
+dfa[1][@]=0;
+dfa[2][r]=2;
+dfa[2][x]=2;
+dfa[2][q]=2;
+dfa[2][w]=2;
+dfa[2][m]=2;
+dfa[2][t]=2;
+dfa[2][k]=2;
+dfa[2][s]=2;
+dfa[2][p]=2;
+dfa[2][@]=0;

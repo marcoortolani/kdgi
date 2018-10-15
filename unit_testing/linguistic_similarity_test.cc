@@ -85,6 +85,8 @@ TEST_F(LinguisticSimilarityTest, characterizationSet){
 TEST_F(LinguisticSimilarityTest, reflectiveTestSet) {
 	vector<vector<string>> test_set=reference->get_w_method_test_set(subject);
   vector<long double> stat=reference->get_w_method_statistics(test_set,subject);
+	cout<<"wmethod"<<endl<<stat[6]<<endl;
+	cout<<"precision"<<endl<<stat[4]<<endl<<"recall"<<stat[5]<<endl;
 	EXPECT_EQ(1,stat[6]); //stat[6] is f_measure
 }
 

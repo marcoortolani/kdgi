@@ -4,7 +4,7 @@ import xlsxwriter
 from xlsxwriter.utility import xl_range
 
 # range(min_included, max_NOT_included, incremento)
-for n_symbols in range(6, 8):
+for n_symbols in range(8, 9):
 
     print('\nProcessing n_symbols = ' + str(n_symbols) + '\n\n')
 

@@ -1721,7 +1721,7 @@ vector<vector<symbol_> > ConcreteDfa::get_characterization_set() const{
 	// every vector contain a list of equivalent states for the state that correspond to the vector.
 	// vector<int>* equivalent_states_list = this->equivalent_states_list_from_table(distincts_table);
 
-		#ifndef DEBUG_OBPA //not exec this control for OBP APPROXIMATED
+	#ifndef DEBUG_OBPA //not exec this control for OBP APPROXIMATED
 	// Check if the curret automaton is minimal
 	ConcreteDfa* tmp_minimized_dfa = this->minimize_TF();
 	if(tmp_minimized_dfa->get_num_states() != num_states_){
@@ -1730,7 +1730,7 @@ vector<vector<symbol_> > ConcreteDfa::get_characterization_set() const{
 		throw mandatoryMinimalDFA();
 	}
 	delete tmp_minimized_dfa;
-		#endif
+	#endif
 
 	// Track pairs of states already checked
 	map<int, vector<int>> state_pairs;
@@ -1795,7 +1795,7 @@ vector<vector<symbol_> > ConcreteDfa::get_characterization_set() const{
 
 
 				wit.push_back(read_symbols);
-
+				//cout<<"read_symbol = "<<read_symbols<<endl;
 				//cout<<endl<<"da "<<i_pair<<" con "<<read_symbols;
 				i_pair = get_ttable(i_pair,read_symbols);
 				//cout<<" vado in "<<i_pair<<endl;
@@ -2053,9 +2053,12 @@ vector<long double> ConcreteDfa::get_w_method_statistics(vector<vector<symbol_>>
     }
   }
 
-  long double precision= (long double)tp/((long double)tp+(long double)fp);
-  long double recall= (long double)tp/((long double)tp+(long double)fn);
-  long double f_measure= (2*precision*recall)/(precision+recall);
+  long double precision=0;
+  if((tp+fp)>0) precision=(long double)tp/((long double)tp+(long double)fp);
+  long double recall=0;
+  if((tp+fn)>0) recall=(long double)tp/((long double)tp+(long double)fn);
+  long double f_measure=0;
+  if((precision+recall)>0) f_measure=(2*precision*recall)/(precision+recall);
   long double specifity= (long double)tn/((long double)tn+(long double)fp);
   long double balanced_classification_rate=(recall+specifity)/2;
 
@@ -2077,8 +2080,8 @@ void ConcreteDfa::print_w_method(vector<long double> statistics)const{
 	cout<<"***** W-METHOD RESULTS *****"<<endl;
 	cout<<"True Positives = "<<statistics[0]<<endl;
 	cout<<"True Negatives = "<<statistics[2]<<endl;
-	cout<<"False Positives = "<<statistics[1]<<endl;
-	cout<<"False Negatives = "<<statistics[3]<<endl;
+	cout<<"False Positives = "<<statistics[3]<<endl;
+	cout<<"False Negatives = "<<statistics[1]<<endl;
 	cout<<"----------------------------"<<endl;
 	cout<<"Precision = "<<statistics[4]<<endl;
 	cout<<"Recall = "<<statistics[5]<<endl;

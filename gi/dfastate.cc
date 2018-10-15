@@ -10,10 +10,6 @@ DfaState::DfaState(bool final, vector<symbol_> dep_ph, int ind){
 	index_ = ind;
 }
 
-DfaState::DfaState(bool final, vector<symbol_> dep_ph, map<symbol_, DfaState*> tr, int ind):DfaState(final, dep_ph, ind){
-	transictions = tr;
-}
-
 DfaState* DfaState::next(symbol_ sym, bool strict){
 	auto it = transictions.find(sym);
 
@@ -40,30 +36,12 @@ vector <symbol_> DfaState::get_charact_phrase(){
 	return char_phrase;
 }
 
-void DfaState::print(){
-	cout << "+-----------------------+" << endl;
-	cout << " depth phrase: \"";
-	for(auto sym : char_phrase){
-		cout << sym;
-	}
-	cout << "\"" << endl;
-	cout << " is accepting: " << accepting_state << endl;
-	for(auto pair : transictions){
-		cout << "\t" << pair.first << "\t";
-		for(auto sym : pair.second->char_phrase){
-			cout << sym;
-		}
-		cout << endl;
-	}
-	cout << "+-----------------------+" << endl;
+int DfaState::get_index() const{
+	return index_;
 }
 
 void DfaState::set_transition(symbol_ sym, DfaState* arrive_state){
 	transictions[sym] = arrive_state;
-}
-
-int DfaState::get_index() const{
-	return index_;
 }
 
 void DfaState::set_incoming_transiction(pair<DfaState*, symbol_> in_trans){
@@ -72,51 +50,6 @@ void DfaState::set_incoming_transiction(pair<DfaState*, symbol_> in_trans){
 
 vector<pair<DfaState*, symbol_> > DfaState::get_incoming_transictions(){
 	return incoming_transictions_;
-}
-
-vector<pair<DfaState*, symbol_> > DfaState::get_removable_incoming_transictions(){
-	// per lo stato iniziale possiamo rimuovere una qualunque delle sue transizioni entranti
-	if(this->get_depth_phrase().empty())
-		return incoming_transictions_;
-
-	vector<pair<DfaState*, symbol_> > from_self;
-	vector<pair<DfaState*, symbol_> > from_others;
-	for(auto coppia : incoming_transictions_)
-		if(coppia.first->get_depth_phrase() == this->get_depth_phrase())
-			from_self.push_back(coppia);
-		else
-			from_others.push_back(coppia);
-
-	if(from_others.size() == 0)
-		cerr << "Lo stato " << this->get_index()<< " non è lo stato iniziale, ma non ha transizoni entranti." <<endl;
-	
-	if(from_others.size() == 1)
-		return from_self;
-
-	if(from_others.size() > 1){
-		from_others.insert(from_others.end(), from_self.begin(), from_self.end());
-		return from_others;
-	}
-
-	
-}
-
-vector<DfaState*> DfaState::get_incoming_states() const{
-	set<DfaState*> accumulatore;
-	for(pair<DfaState*,symbol_> coppia : incoming_transictions_)
-		accumulatore.insert(coppia.first);
-	vector<DfaState*> v;
-	v.insert(v.end(), accumulatore.begin(), accumulatore.end());
-	return v;
-}
-
-vector<DfaState*> DfaState::get_outcoming_states() const{
-	set<DfaState*> accumulatore;
-	for(auto coppia : transictions)
-		accumulatore.insert(coppia.second);
-	vector<DfaState*> v;
-	v.insert(v.end(), accumulatore.begin(), accumulatore.end());
-	return v;
 }
 
 vector<pair<DfaState*, symbol_> > DfaState::get_removable_incoming_transictions(){
@@ -150,5 +83,43 @@ vector<pair<DfaState*, symbol_> > DfaState::get_removable_incoming_transictions(
 		return from_others;
 	}
 
-	
+	cerr << "Error in DfaState::get_removable_incoming_transictions" << endl;
+	throw 0;
+}
+
+
+vector<DfaState*> DfaState::get_incoming_states() const{
+	set<DfaState*> accumulatore;
+	for(pair<DfaState*,symbol_> coppia : incoming_transictions_)
+		accumulatore.insert(coppia.first);
+	vector<DfaState*> v;
+	v.insert(v.end(), accumulatore.begin(), accumulatore.end());
+	return v;
+}
+
+vector<DfaState*> DfaState::get_outcoming_states() const{
+	set<DfaState*> accumulatore;
+	for(auto coppia : transictions)
+		accumulatore.insert(coppia.second);
+	vector<DfaState*> v;
+	v.insert(v.end(), accumulatore.begin(), accumulatore.end());
+	return v;
+}
+
+void DfaState::print(){
+	cout << "+-----------------------+" << endl;
+	cout << " char phrase: \"";
+	for(auto sym : char_phrase){
+		cout << sym;
+	}
+	cout << "\"" << endl;
+	cout << " is accepting: " << accepting_state << endl;
+	for(auto pair : transictions){
+		cout << "\t" << pair.first << "\t";
+		for(auto sym : pair.second->char_phrase){
+			cout << sym;
+		}
+		cout << endl;
+	}
+	cout << "+-----------------------+" << endl;
 }

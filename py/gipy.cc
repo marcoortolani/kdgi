@@ -81,7 +81,7 @@ PYBIND11_MODULE(gi_gipy, m) {
       //===========================================================================================
 
       //*** Structural similarity ***
-      .def("neighbour_matching", &ConcreteDfa::neighbour_matching, "Gives the structural similarity score matrix between every pair of states of two DFAs",py::arg("target_dfa"), py::arg("isomorphism") = 0, py::arg("color") = 0, py::arg("eps") = 0.0001)
+//      .def("neighbour_matching", &Dfa<vector<DfaState>*>::neighbour_matching, "Gives the structural similarity score matrix between every pair of states of two DFAs",py::arg("target_dfa"), py::arg("isomorphism") = 0, py::arg("color") = 0, py::arg("eps") = 0.0001)
 
       .def("print_structural_similarity", &ConcreteDfa::print_structural_similarity, "Print the matrix containing the similarity score between pair of nodes.")
       

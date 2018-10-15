@@ -103,7 +103,7 @@ map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I> :: init_table
 	return res;
 }
 
-template <class I>
+/* template <class I>
 vector<symbol_> Dfa<I>::table_filling1() {
 	
 	//passo di inizializzazione: segno come diversi stati accettanti e non accettanti:
@@ -135,7 +135,7 @@ vector<symbol_> Dfa<I>::table_filling1() {
 							
 							//cout << "SUCCESSORI: " << next_s1->get_charact_phrase() << " : " << next_s2->get_charact_phrase() << endl;
 							
-							auto next_map = this.find(next_s1->get_charact_phrase())->second;
+							auto next_map = this->find(next_s1->get_charact_phrase())->second;
 							if(next_map.find(next_s2->get_charact_phrase()) != next_map.end()){
 								//cout << "SUCCESSORI DIVERSI -> STATI DIVERSI" << endl;
 								finished = false;
@@ -148,7 +148,7 @@ vector<symbol_> Dfa<I>::table_filling1() {
 			}
 		}
 	}
-}
+} */
 
 
 template <class I>

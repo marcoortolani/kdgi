@@ -211,8 +211,10 @@ TEST_F(BaseDfaTest, unionDfa){
 TEST_F(BaseDfaTest, equivalenceQuerySelfTest){
     bool flag=true;
     ConcreteDfa* test=nullptr; 
-    test=new ConcreteDfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
-    flag=reference->equivalence_query(test);
+    test = new ConcreteDfa(test->read_dfa_file("../unit_testing/data/tomita15.txt"));
+    test->update_state_table();
+    vector<symbol_>counterexample;
+    flag = reference->equivalence_query(test, counterexample);
     EXPECT_EQ(1,flag);
 }
 

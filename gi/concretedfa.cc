@@ -631,7 +631,7 @@ void ConcreteDfa::print_dfa_ttable(symbol_ title) const
 	cout << "--------------------------" << endl;
 }
 
-void ConcreteDfa::print_dfa_dot(symbol_ title, const char *file_path)
+void ConcreteDfa::print_dfa_dot(string title, const char *file_path)
 {
 	ofstream myfile;
 	myfile.open(file_path);
@@ -1322,7 +1322,7 @@ bool ConcreteDfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samp
 	return exit_status;
 }
 
-bool ConcreteDfa::equivalence_query(ConcreteDfa* dfa_hp,vector<symbol_> *witness_results) {
+/*bool ConcreteDfa::equivalence_query(ConcreteDfa* dfa_hp,vector<symbol_> *witness_results) {
 
     bool areEquivalent;
 
@@ -1372,10 +1372,10 @@ bool ConcreteDfa::equivalence_query(ConcreteDfa* dfa_hp,vector<symbol_> *witness
 	delete [] equivalent_states_list;
 	*/
 
-	delete dfa_union;
+	//delete dfa_union;
 
-	return areEquivalent;
-}
+	//return areEquivalent;
+//}
 
 // It returns a table saved in a linear array, with a list of equivalent/different states; if it is needed it returns also a counterexample symbol_
 vector<symbol_> ConcreteDfa::table_filling() const{

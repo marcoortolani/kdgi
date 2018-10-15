@@ -90,8 +90,32 @@ int AngluinDfa::contain_phrase(list<string> str){
 	auto it = S.begin();
 
 	while(it != S.end()){
+		list <string> str_concat = *it;
+		str_concat.remove("");
+
+		if(str_concat.size() > str.size()){
+			++it;
+			++it_look_up;
+			continue;
+		}
+
+		auto it_tmp = str.begin();
+		bool valid_prefix = true;
+		for(symbol_ sym : str_concat){
+			if(sym != *it_tmp){
+				valid_prefix = false;
+			}
+			++it_tmp;
+		}
+
+		if(!valid_prefix){
+			++it;
+			++it_look_up;
+			continue;
+		}
+
 		for(unsigned int j=0; j < E.size(); j++){
-			list <string> str_concat = *it;
+			str_concat = *it;
 			str_concat.insert(str_concat.end(), E[j].begin(), E[j].end());
 			str_concat.remove("");
 			if(equal_lists(str,str_concat)){
@@ -106,18 +130,41 @@ int AngluinDfa::contain_phrase(list<string> str){
 	it = Sa.begin();
 
 	while(it != Sa.end()){
-			for(unsigned int j=0; j < E.size(); j++){
+		list <string> str_concat = *it;
+		str_concat.remove("");
 
-				list <string> str_concat = (*it);
-				str_concat.insert(str_concat.end(), E[j].begin(), E[j].end());
-				str_concat.remove("");
-				if(equal_lists(str,str_concat)){
-					return (*it_look_up)[j];
-				}
-			}
+		if(str_concat.size() > str.size()){
 			++it;
 			++it_look_up;
+			continue;
 		}
+
+		auto it_tmp = str.begin();
+		bool valid_prefix = true;
+		for(symbol_ sym : str_concat){
+			if(sym != *it_tmp){
+				valid_prefix = false;
+			}
+			++it_tmp;
+		}
+
+		if(!valid_prefix){
+			++it;
+			++it_look_up;
+			continue;
+		}
+
+		for(unsigned int j=0; j < E.size(); j++){
+			str_concat = (*it);
+			str_concat.insert(str_concat.end(), E[j].begin(), E[j].end());
+			str_concat.remove("");
+			if(equal_lists(str,str_concat)){
+				return (*it_look_up)[j];
+			}
+		}
+		++it;
+		++it_look_up;
+	}
 
 	return -1;
 }
@@ -865,17 +912,19 @@ void AngluinDfa::print_new_tables(){
 }
 
 bool AngluinDfa::membership_query(vector<string> phrase) const {
-	Dfa* concrete_dfa = gen_concrete_dfa();
-	bool result = concrete_dfa->membership_query(phrase);
-	free(concrete_dfa);
-	return result;
+	DfaState state = (state_table_[0]);
+	DfaState* state_p = &state;
+	for(symbol_ sym : phrase){
+		state_p = state_p->next(sym);
+	}
+	return state_p->is_accepting();
 }
 
 AngluinDfa::AngluinDfa(vector <string> ab, map <list<string>, bool>* first_queries) : Dfa(){
 
 	if(first_queries->size() != ab.size()+1){
-		cerr << "Error in NewAngluinDfa Constructor" << endl;
-		cerr << "mem_query_res size must be equal to ab size + 1" << endl;
+		cerr << "Error in AngluinDfa Constructor" << endl;
+		cerr << "mem_query_res size must be equal to alphabet size + 1" << endl;
 		throw 0;
 	}
 
@@ -885,21 +934,36 @@ AngluinDfa::AngluinDfa(vector <string> ab, map <list<string>, bool>* first_queri
 	S.clear();
 	S.push_back(epsilon);
 
+	bool accepting_epsilon = first_queries->find(epsilon)->second;
+	accepting_epsilon ? look_up_s = list <vector<int>>(1, vector<int>(1,1)) : look_up_s = list <vector<int>>(1, vector<int>(1,0));
+
 	Sa.clear();
-	for(unsigned int i=0; i<ab.size(); i++){
-		Sa.push_back(list<string>(1,ab[i]));
+	for(symbol_ sym : ab){
+		auto it = first_queries->find(list<string>(1,sym));
+		if(it != first_queries->end()){
+			if(it->second){
+				Sa.push_back(list<string>(1,sym));
+				look_up_sa.push_back(vector<int>(1,1));
+			}
+			else{
+				Sa.push_front(list<string>(1,sym));
+				look_up_sa.push_front(vector<int>(1,0));
+			}
+		}
+		else{
+			cerr << "Error in AngluinDfa Constructor" << endl;
+			cerr << "couldn't find any query for symbol " << sym << endl;
+			throw 0;
+		}
 	}
 
 	E.clear();
 	E.push_back(epsilon);
 
-	bool accepting_epsilon = first_queries->find(epsilon)->second;
-	accepting_epsilon ? look_up_s = list <vector<int>>(1, vector<int>(1,1)) : look_up_s = list <vector<int>>(1, vector<int>(1,0));
-
-	for(unsigned int i=0; i<ab.size(); i++){
+	/*for(unsigned int i=0; i<ab.size(); i++){
 		bool accepting_ith_element = first_queries->find(list<string>(1, ab[i]))->second;
 		accepting_ith_element ? look_up_sa.push_back(vector<int>(1,1)) : look_up_sa.push_back(vector<int>(1,0));
-	}
+	}*/
 }
 
 
@@ -936,7 +1000,7 @@ vector<set<list<symbol_>>> AngluinDfa::group_phrases_into_states() const{
 	}
 
 	if(it != S.end() || it_look_up != look_up_s.end() || it_sa != Sa.end() || it_look_up_sa != look_up_sa.end()){
-		cerr << "Error in AngluinDfa::group_symbols" << endl;
+		cerr << "Error in AngluinDfa :: group_phrases_into_states" << endl;
 		throw 0;
 	}
 
@@ -1052,7 +1116,7 @@ int AngluinDfa::get_index_from_transition(set<list<symbol_>> current_state, symb
 		++i;
 	}
 
-	cerr << "Error in AngluinDfa::get_state_from_transiction" << endl;
+	cerr << "Error in AngluinDfa::get_state_from_transition" << endl;
 	throw 0;
 }
 

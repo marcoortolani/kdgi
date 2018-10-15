@@ -7,6 +7,8 @@
 
 #include "tttdfa.h"
 
+bool DEBUG = false;
+
 bool TTTDfa::membership_query(vector<symbol_> phrase) const {
 	DfaState* state = span_tree_;
 	for(symbol_ sym : phrase){
@@ -15,16 +17,15 @@ bool TTTDfa::membership_query(vector<symbol_> phrase) const {
 	return state->is_accepting();
 }
 
-vector<DfaState>::iterator TTTDfa::begin(){
+list<DfaState>::iterator TTTDfa::begin(){
 	return states_.begin();
 }
 
-vector<DfaState>::iterator TTTDfa::end(){
+list<DfaState>::iterator TTTDfa::end(){
 	return states_.end();
 }
 
 TTTDfa :: TTTDfa(vector<symbol_> alph, vector<bool> first_membership_queries){
-
 	if(alph.size() != first_membership_queries.size() - 1){
 		cerr << "Error in initialization of TTTDfa" << endl;
 		throw 0;
@@ -48,8 +49,6 @@ TTTDfa :: TTTDfa(vector<symbol_> alph, vector<bool> first_membership_queries){
 		}
 		else{
 			if(other_node == NULL){
-				//other_node = set_deterministic_transition(span_tree_, alph[i], vector<bool>(1, !first_membership_queries.back()));
-				utility_flag_ = !first_membership_queries.back();
 				other_node = set_final_transition(span_tree_, alph[i], discrim_tree_, !first_membership_queries.back());
 			}
 			else{
@@ -84,7 +83,15 @@ DfaState* TTTDfa :: set_final_transition(DfaState* start_state, symbol_ transiti
 	vector <symbol_> new_phrase = start_state->get_charact_phrase();
 	new_phrase.push_back(transition);
 
-	DfaState* arrive_state = new DfaState(utility_flag_, new_phrase, num_states_++);
+	bool accepting;
+	if(father->get_father() != NULL){
+		accepting = father->is_accepting();
+	}
+	else{
+		accepting = child;
+	}
+	DfaState* arrive_state = new DfaState(accepting, new_phrase, num_states_++);
+
 	start_state->set_transition(transition, arrive_state);
 	non_tree_transitions_.erase_non_tree_transition(start_state->get_charact_phrase(), transition);
 
@@ -110,7 +117,7 @@ pair<DfaState*, DiscrimNode*> TTTDfa :: get_state_leaf_link(vector<symbol_> phra
 	return it_pair->second;
 }
 
-DfaState* TTTDfa :: next_span_state(DfaState* start, symbol_ transition) const{
+DfaState* TTTDfa :: next_span_state(DfaState* start, symbol_ transition, bool strict) const{
 	DfaState* arrive_state = start->next(transition, false);
 	if(arrive_state == NULL){
 		cerr << "Error in TTTDfa :: next_span_state" << endl;
@@ -120,11 +127,17 @@ DfaState* TTTDfa :: next_span_state(DfaState* start, symbol_ transition) const{
 
 	if(arrive_state == &non_tree_transitions_){
 		DiscrimNode* arrive_node = non_tree_transitions_.get_non_tree_arrive_node(start->get_charact_phrase(), transition);
-		if(!arrive_node->is_leaf()){
+		bool leaf = arrive_node->is_leaf();
+		if(strict && !leaf){
 			cerr << "Error in TTTDfa :: next_state" << endl;
 			cerr << "the Dfa is still non deterministic, cannot reach any state for the phrase " << start->get_charact_phrase() << " " << transition << endl;
 			throw 0;
 		}
+
+		if(!leaf){
+			arrive_node = arrive_node->get_all_leaves().front();
+		}
+
 		arrive_state = get_state_leaf_link(arrive_node->get_phrase()).first;
 	}
 
@@ -155,20 +168,20 @@ DiscrimNode* TTTDfa :: next_disc_node(DiscrimNode* start, symbol_ transition) co
 	}
 }
 
-bool TTTDfa :: test_closedness(DfaState* start, list<symbol_> discriminator, bool expected_value){
+bool TTTDfa :: test_closure(DfaState* start, list<symbol_> discriminator, bool expected_value, bool strict){
 	for(symbol_ sym : discriminator){
-		start = next_span_state(start, sym);
+		start = next_span_state(start, sym, strict);
 	}
 	return expected_value == start->is_accepting();
 }
 
-void TTTDfa :: split_state(DfaState* start_state, symbol_ transition, vector<symbol_> discriminator, bool state_position){
+void TTTDfa :: split_state(DfaState* start_state, symbol_ transition, vector<symbol_> discriminator, bool state_position, bool strict){
 
-	vector<symbol_> old_state_phrase = next_span_state(start_state, transition)->get_charact_phrase();
+	vector<symbol_> old_state_phrase = next_span_state(start_state, transition, strict)->get_charact_phrase();
 	vector<symbol_> new_state_phrase = start_state->get_charact_phrase();
 	new_state_phrase.push_back(transition);
 
-	start_state->set_transition(transition, new DfaState(next_span_state(start_state,transition)->is_accepting(), new_state_phrase, num_states_++));
+	start_state->set_transition(transition, new DfaState(next_span_state(start_state,transition, strict)->is_accepting(), new_state_phrase, num_states_++));
 	non_tree_transitions_.erase_non_tree_transition(start_state->get_charact_phrase(), transition);
 
 	DiscrimNode* father = get_state_leaf_link(old_state_phrase).second;
@@ -204,15 +217,14 @@ void TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex){
 		transition = suffix.front();
 
 		DfaState* next_state = start_state->next(transition);
-		if(next_state == &non_tree_transitions_ && test_closedness(start_state, suffix, !cntr_truth)){
-			/*cout << "trovata suddivisione del controesempio:" << endl;
-			cout << prefix << endl;
-			cout << transition << endl;*/
+		if(next_state == &non_tree_transitions_ && test_closure(start_state, suffix, !cntr_truth)){
 			suffix.pop_front();
 
 			vector<symbol_> suff_vec;
 			suff_vec.insert(suff_vec.end(), suffix.begin(), suffix.end());
 			split_state(start_state, transition, suff_vec, !cntr_truth);
+
+			//cout << "trovata suddivisione del controesempio " << start_state->get_charact_phrase() << " : " << transition << " : " << suff_vec << endl;
 
 			return;
 		}
@@ -227,6 +239,47 @@ void TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex){
 	throw 0;
 }
 
+bool TTTDfa :: handle_counterexample_test(vector <symbol_> cntr_ex, bool cntr_truth, vector <symbol_>& prefix, symbol_& transition){
+	list<symbol_> suffix;
+
+	suffix.insert(suffix.end(), cntr_ex.begin(), cntr_ex.end());
+
+	DfaState* state = span_tree_;
+	for(symbol_ sym : cntr_ex){
+		state = next_span_state(state, sym, false);
+	}
+
+	if(cntr_truth == state->is_accepting())
+		return false;
+
+	state = span_tree_;
+	while(!suffix.empty()){
+		transition = suffix.front();
+
+		DfaState* next_state = state->next(transition);
+		if(next_state == &non_tree_transitions_ && test_closure(state, suffix, !cntr_truth, false)){
+			suffix.pop_front();
+
+			vector<symbol_> suff_vec;
+			suff_vec.insert(suff_vec.end(), suffix.begin(), suffix.end());
+			split_state(state, transition, suff_vec, !cntr_truth, false);
+
+			if(DEBUG)
+				cout << "trovata suddivisione del controesempio " << state->get_charact_phrase() << " : " << transition << " : " << suff_vec << endl;
+
+			return true;
+		}
+
+		suffix.pop_front();
+		prefix.push_back(transition);
+		state = next_state;
+	}
+
+	cerr << "Error in TTTDfa :: subdivide_counterexample:" << endl;
+	cerr <<"A subdivision of the counterexample (Rivest Schapire) couldn't be found" << endl;
+	throw 0;
+}
+
 vector<std::tuple<vector<symbol_>, symbol_, bool>> TTTDfa :: get_transitions_to_sift(bool hard_sift){
 	vector<std::tuple<vector<symbol_>, symbol_, bool>> res;
 	vector <symbol_> sorted_alphabet = sort_alphabet();
@@ -234,15 +287,10 @@ vector<std::tuple<vector<symbol_>, symbol_, bool>> TTTDfa :: get_transitions_to_
 		DfaState* state = pair.second.first;
 		for(symbol_ sym : sorted_alphabet){
 			DfaState* next_state = state->next(sym, false);
+
 			if(next_state == NULL){
 				res.push_back(std::make_tuple(state->get_charact_phrase(), sym, hard_sift));
 			}
-			/*else if(hard_sift && next_state == &non_tree_transitions_){
-				DiscrimNode* disc = non_tree_transitions_.get_non_tree_arrive_node(state->get_charact_phrase(), sym);
-				if(!disc->is_leaf()){
-					res.push_back(std::make_pair(state->get_charact_phrase(), sym));
-				}
-			}*/
 			else if(next_state == &non_tree_transitions_){
 				DiscrimNode* disc = non_tree_transitions_.get_non_tree_arrive_node(state->get_charact_phrase(), sym);
 				if(!disc->is_leaf()){
@@ -264,9 +312,7 @@ vector<std::tuple<vector<symbol_>, symbol_, bool>> TTTDfa :: get_transitions_to_
 	return res;
 }
 
-bool TTTDfa :: init_sifting(vector<symbol_> prefix, symbol_ transition, vector<symbol_>& suffix, bool child, bool hard_sift){
-	utility_flag_ = child;
-
+void TTTDfa :: init_sifting(vector<symbol_> prefix, symbol_ transition, vector<symbol_>& suffix, bool hard_sift){
 	DfaState* state = get_state_leaf_link(prefix).first;
 	state = state->next(transition, false);
 	if(state != NULL){
@@ -284,38 +330,24 @@ bool TTTDfa :: init_sifting(vector<symbol_> prefix, symbol_ transition, vector<s
 				throw 0;
 			}
 			else{
-				//cout << "ricomincio da " << disc->get_phrase() << endl;
 				utility_node_ = disc;
-				suffix = utility_node_->get_phrase();
-				return true;
+				//suffix = utility_node_->get_phrase();
 			}
 		}
 	}
 	else{
-		utility_node_ = discrim_tree_->get_child(child);
-		if(utility_node_ != NULL && (hard_sift || utility_node_->is_final())){
-			if(!utility_node_->is_leaf()){
-				//cout << "comincio dal nodo " << utility_node_->get_phrase() << endl;
-				suffix = utility_node_->get_phrase();
-				return true;
-			}
-			else{
-				//cout << "comincio dalla radice 2" << endl;
-				utility_node_ = discrim_tree_;
-				return false;
-			}
-		}
-		else{
-			//cout << "comincio dalla radice" << endl;
-			utility_node_ = discrim_tree_;
-			return false;
-		}
+		utility_node_ = discrim_tree_;
+		//suffix.clear();
 	}
+
+	suffix = utility_node_->get_phrase();
+	return;
 }
 
 bool TTTDfa :: sift_step(vector<symbol_>& suffix, bool child, bool hard_sift){
 	if(utility_node_ == NULL){
 		cerr << "Error in TTTDfa :: sift_step " << endl;
+		cerr << "utility_node_ was not set" << endl;
 		throw 0;
 	}
 
@@ -328,23 +360,19 @@ bool TTTDfa :: sift_step(vector<symbol_>& suffix, bool child, bool hard_sift){
 	DiscrimNode* next = utility_node_->get_child(child);
 	if(next != NULL){
 		if(next->is_leaf()){
-			//cout << "raggiunta foglia" << next->get_phrase() << " dopo discesa lungo " << child << endl;
 			return false;
 		}
 		else if(hard_sift || next->is_final()){
-			//cout << "scendo lungo " << child << endl;
 			utility_node_ = next;
 			suffix = utility_node_->get_phrase();
 			return true;
 		}
 		else{
-			//cout << "mi fermo al nodo " << next->get_phrase() << endl;
 			return false;
 		}
 	}
 	else{
-		cerr << "Error in TTTDfa :: sift_step" << endl;
-		throw 0;
+		return false;
 	}
 }
 
@@ -367,12 +395,79 @@ void TTTDfa :: close_transition(vector<symbol_> state_phrase, symbol_ transition
 	}
 }
 
-bool TTTDfa :: try_single_finalization(vector<vector<symbol_>>& prefixes, vector<symbol_>& suffix){
+bool is_prefix(vector<symbol_> prefix, vector<symbol_> word){
+	if(word.size() < prefix.size()){
+		return false;
+	}
+
+	for(int i = 0; i < prefix.size(); ++i){
+		if(prefix[i] != word[i]){
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool TTTDfa :: know_phrase_for_sure(vector<symbol_> phrase, bool& truth){
+	auto it = lost_queries_.find(phrase);
+	if(it != lost_queries_.end()){
+		truth = it->second;
+		return true;
+	}
+
+	DfaState* state = span_tree_;
+	DfaState* next = NULL;
+	for(int i = 0; i < phrase.size(); ++i){
+		DiscrimNode* leaf = get_state_leaf_link(state->get_charact_phrase()).second;
+		if(leaf->is_accepting(phrase, truth))
+			return true;
+
+		next = state->next(phrase[i], false);
+		if(next == NULL){
+			return false;
+		}
+		else if(next == &non_tree_transitions_){
+			vector<symbol_> prefix = state->get_charact_phrase();
+			DiscrimNode* disc = non_tree_transitions_.get_non_tree_arrive_node(prefix, phrase[i]);
+			prefix.push_back(phrase[i]);
+
+			if(disc->is_accepting(prefix, phrase, truth)){
+				return true;
+			}
+
+			return false;
+		}
+		else{
+			state = next;
+		}
+	}
+
+	truth = state->is_accepting();
+	return true;
+	/*next = state->next(phrase.back(), false);
+
+	if(next != NULL){
+		if(next == &non_tree_transitions_){
+			DiscrimNode* disc = non_tree_transitions_.get_non_tree_arrive_node(state->get_charact_phrase(), phrase.back());
+			truth = disc->is_accepting();
+		}
+		else{
+			truth = next->is_accepting();
+			}
+		return true;
+	}
+
+	return false;*/
+}
+
+bool TTTDfa :: try_single_finalization(vector<vector<symbol_>>& prefixes_to_verify, vector<vector<symbol_>>& prefixes0, vector<vector<symbol_>>& prefixes1, vector<symbol_>& suffix){
 	vector<vector<DiscrimNode*>> blocks = group_leaves_into_blocks();
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 
-	//TO-DO: modificare perchè venga scelto il suffisso discriminante più corto e non il primo trovato
+	vector<vector<symbol_>> temp_prefixes;
 
+	int length = 0;
 	for(auto block : blocks){
 		if(block.size() > 1){
 			for(symbol_ sym : sorted_alphabet){
@@ -383,23 +478,52 @@ bool TTTDfa :: try_single_finalization(vector<vector<symbol_>>& prefixes, vector
 					node = block[i];
 					DiscrimNode* other_transition_root = next_disc_node(node, sym)->get_block_root();
 					if(transition_root != other_transition_root){
-						prefixes.clear();
+						temp_prefixes.clear();
 						for(DiscrimNode* leaf : block){
-							prefixes.push_back(leaf->get_phrase());
+							temp_prefixes.push_back(leaf->get_phrase());
 						}
 
 						utility_node_ = node->get_block_root();
 						DiscrimNode* lcd = transition_root->get_lowest_common_discriminator(other_transition_root);
-						suffix.clear();
-						suffix.push_back(sym);
 						vector <symbol_> tmp = lcd->get_phrase();
-						suffix.insert(suffix.end(), tmp.begin(), tmp.end());
-						//cout << "possibile scomporre il blocco " << utility_node_->get_phrase() << " tramite suffisso " << suffix << endl;
-						return true;
+
+						if(length == 0 || length > tmp.size() + 1){
+							suffix.clear();
+							suffix.push_back(sym);
+							suffix.insert(suffix.end(), tmp.begin(), tmp.end());
+							length = suffix.size();
+						}
 					}
 				}
 			}
 		}
+		if(length > 0){
+			break;
+		}
+	}
+
+	if(length > 0){
+		prefixes_to_verify.clear();
+		prefixes0.clear();
+		prefixes1.clear();
+		for(vector<symbol_> prefix : temp_prefixes){
+			vector<symbol_> aaaAAA = prefix;
+			aaaAAA.insert(aaaAAA.end(), suffix.begin(), suffix.end());
+			bool x;
+			if(know_phrase_for_sure(aaaAAA, x)){
+				if(x){
+					prefixes1.push_back(prefix);
+				}
+				else{
+					prefixes0.push_back(prefix);
+				}
+			}
+			else{
+				prefixes_to_verify.push_back(prefix);
+			}
+		}
+
+		return true;
 	}
 
 	utility_node_ = NULL;
@@ -432,12 +556,13 @@ DiscrimNode* gen_block_tree(set<DiscrimNode*> nodes, DiscrimNode* old_root){
 	}
 
 	cerr << "Error in TTTDfa :: gen_block_tree" << endl;
+	for(DiscrimNode* node : nodes){
+		cerr << node->get_phrase() << " : " << node->is_accepting() << endl;
+	}
 	throw 0;
 }
 
 vector<DiscrimNode*> get_all_block_leaves(DiscrimNode* root){
-	vector<DiscrimNode*> block;
-
 	if(root == NULL){
 		cerr << "Error in TTTDfa :: get_all_block_leaves" << endl;
 		cerr << "root is NULL" << endl;
@@ -449,25 +574,7 @@ vector<DiscrimNode*> get_all_block_leaves(DiscrimNode* root){
 		throw 0;
 	}
 
-	list<DiscrimNode*> next_nodes = {root};
-	do{
-		DiscrimNode* disc = next_nodes.back();
-		next_nodes.pop_back();
-
-		if(disc->is_leaf()){
-			block.push_back(disc);
-		}
-		else{
-			if(disc->get_child(0) != NULL){
-				next_nodes.push_front(disc->get_child(0));
-			}
-			if(disc->get_child(1) != NULL){
-				next_nodes.push_front(disc->get_child(1));
-			}
-		}
-	}while(!next_nodes.empty());
-
-	return block;
+	return root->get_all_leaves();
 }
 
 void TTTDfa :: mark_nodes(vector<pair<vector<symbol_>, bool>> leaf_queries, set<DiscrimNode*>& mark_0, set<DiscrimNode*>& mark_1){
@@ -507,6 +614,72 @@ void TTTDfa :: mark_nodes(vector<pair<vector<symbol_>, bool>> leaf_queries, set<
 	}
 }
 
+void TTTDfa :: update_lost_queries(vector<pair<vector<symbol_>, bool>> leaf_queries, set<DiscrimNode*> mark_0, set<DiscrimNode*> mark_1){
+	vector<symbol_> old_suffix = utility_node_->get_phrase();
+	for(auto leaf_query : leaf_queries){
+		vector<symbol_> phrase = leaf_query.first;
+		DiscrimNode* disc = get_state_leaf_link(phrase).second;
+		phrase.insert(phrase.end(), old_suffix.begin(), old_suffix.end());
+
+		bool truth;
+		if(disc->is_accepting(phrase, truth))
+			lost_queries_[phrase] = truth;
+		else{
+			cerr << "Error in TTTDfa :: update_lost_queries" << endl;
+			cerr << "Couldn't find the phrase " << phrase << " as ancestor of " << disc->get_phrase() << " (prefix-suffix)" << endl;
+			throw 0;
+		}
+
+		if(mark_0.find(disc) != mark_0.end()){
+			truth = false;
+		}
+		else if(mark_1.find(disc) != mark_1.end()){
+			truth = true;
+		}
+		else{
+			cerr << "Error in TTTDfa :: update_lost_queries" << endl;
+			cerr << "Couldn't find the node " << phrase << " as in mark_0 or mark_1" << endl;
+			throw 0;
+		}
+
+		vector<symbol_> prefix = disc->get_phrase();
+
+		//while(disc != utility_node_){
+		bool test = true;
+		while(test){
+			if(disc == utility_node_)
+				test = false;
+
+			DiscrimNode* father = disc->get_father();
+			set<DiscrimNode*>* mark;
+			if(truth){
+				mark = &mark_0;
+			}
+			else{
+				mark = &mark_1;
+			}
+
+			if(mark->find(father) == mark->end()){
+				phrase = prefix;
+				vector<symbol_> suffix = father->get_phrase();
+				phrase.insert(phrase.end(), suffix.begin(), suffix.end());
+
+				if(disc == father->get_child(0)){
+					lost_queries_[phrase] = false;
+				}
+				else if(disc == father->get_child(1)){
+					lost_queries_[phrase] = true;
+				}
+				else{
+					cerr << "ERRORE QUI" << endl;
+					throw 0;
+				}
+			}
+			disc = father;
+		}
+	}
+}
+
 void TTTDfa :: split_block(vector<pair<vector<symbol_>, bool>> leaf_queries, vector<symbol_> suffix){
 	if(utility_node_ == NULL || !utility_node_->is_block_root()){
 		cerr << "Error in TTTDfa :: split_block" << endl;
@@ -518,19 +691,28 @@ void TTTDfa :: split_block(vector<pair<vector<symbol_>, bool>> leaf_queries, vec
 
 	mark_nodes(leaf_queries, mark_0, mark_1);
 
-	DiscrimNode* tree_0 = gen_block_tree(mark_0, utility_node_);
-	tree_0->set_father(utility_node_);
-	DiscrimNode* tree_1 = gen_block_tree(mark_1, utility_node_);
-	tree_1->set_father(utility_node_);
+	if(mark_0.empty() || mark_1.empty()){
+		cerr << "Error in TTTDfa :: split_block" << endl;
+		cerr << "Block cannot be split if there aren't 2 states with different outcome for suffix: " << suffix << endl;
+		throw 0;
+	}
 
-	utility_node_->get_child(false)->destroy_all_but_leaves();
-	utility_node_->get_child(true)->destroy_all_but_leaves();
-	utility_node_->set_child(tree_0, false);
-	utility_node_->set_child(tree_1, true);
+	if(utility_node_->get_phrase() != suffix){
+		update_lost_queries(leaf_queries, mark_0, mark_1);
 
-	utility_node_->set_phrase(suffix);
+		DiscrimNode* tree_0 = gen_block_tree(mark_0, utility_node_);
+		tree_0->set_father(utility_node_);
+		DiscrimNode* tree_1 = gen_block_tree(mark_1, utility_node_);
+		tree_1->set_father(utility_node_);
+
+		utility_node_->get_child(false)->destroy_all_but_leaves();
+		utility_node_->get_child(true)->destroy_all_but_leaves();
+		utility_node_->set_child(tree_0, false);
+		utility_node_->set_child(tree_1, true);
+		utility_node_->set_phrase(suffix);
+	}
+
 	utility_node_->set_final();
-
 	utility_node_ = NULL;
 }
 
@@ -593,7 +775,7 @@ void TTTDfa :: make_hypotesis(){
 			states_.emplace_back(state->is_accepting(), phrase, i++);
 			translator[state->get_charact_phrase()] = phrase;
 			for(symbol_ sym : sorted_alphabet){
-				DfaState* next_state = TTTDfa :: next_span_state(state, sym);
+				DfaState* next_state = TTTDfa :: next_span_state(state, sym, false);//here
 
 				if(states_found.find(next_state) == states_found.end()){
 					next_states.push_front(next_state);
@@ -716,4 +898,135 @@ bool TTTDfa :: is_deterministic(){
 	}
 
 	return deterministic;
+}
+
+void TTTDfa :: print_ttt_dot(string title, string path){
+	ofstream myfile;
+	myfile.open(path);
+
+	// Initialization of symbol_s with DOT code
+	string header = "digraph "+title+" {\n";
+	string start_state_ = "__start0 [label=\"\" shape=\"none\"];\n\n";
+
+	start_state_ = start_state_ + "\nsize=\"8,5\";\n\n";
+
+
+	//States
+	string states = "";
+	string ranks = "";
+	string transitions = "";
+
+	string shape = "";
+	string style= "";
+	string color= "white";
+
+	for(auto pair : span_disc_link_)
+	{
+		DfaState* state = pair.second.first;
+		if(state->is_accepting()){
+			shape = "doublecircle";
+			style = "rounded,filled";
+		}
+		else{
+			shape = "circle";
+			style = "filled";
+		}
+
+		string label = "";
+		for(symbol_ sym : state->get_charact_phrase())
+			label += sym;
+
+		states = states + "s" + label + " [style=\""+style+"\", color=\"black\", fillcolor=\""+color+"\" shape=\""+shape+"\", label=\""+label+"\"];\n";
+
+		shape = "square";
+		style = "filled";
+		states = states + "l" + label + " [style=\""+style+"\", color=\"black\", fillcolor=\""+color+"\" shape=\""+shape+"\", label=\""+label+"\"];\n";
+
+		for(symbol_ sym : get_alphabet()){
+			DfaState* next = state->next(sym, false);
+			if(next != NULL){
+				string next_label = "";
+				string id;
+				if(next != &non_tree_transitions_){
+					id = "s";
+					for(symbol_ sym : next->get_charact_phrase())
+						next_label += sym;
+				}
+				else{
+					DiscrimNode* disc = non_tree_transitions_.get_non_tree_arrive_node(state->get_charact_phrase(), sym);
+					id = "n";
+					if(disc->is_leaf())
+						id = "l";
+					for(symbol_ sym : disc->get_phrase())
+						next_label += sym;
+				}
+				transitions = transitions + "s"+ label +" -> "+ id + next_label +" [label=\""+ sym +"\"];\n";
+			}
+		}
+	}
+
+	list<pair<DiscrimNode*, int>> next_nodes = {std :: make_pair(discrim_tree_, 0)};
+	int current_depth = 0;
+	ranks += "{rank=same; ";
+	while(!next_nodes.empty()){
+		auto pair = next_nodes.back();
+		DiscrimNode* disc = pair.first;
+		if(current_depth != pair.second){
+			current_depth++;
+			ranks += " }\n{rank=same; ";
+		}
+
+		next_nodes.pop_back();
+
+		string type = "";
+		string label = "";
+		for(symbol_ sym : disc->get_phrase())
+			label += sym;
+
+		if(disc->is_leaf()){
+			shape = "rectangle";
+			style = "filled";
+			type = "l";
+		}
+		else{
+			shape = "ellipse";
+			type = "n";
+			if(disc->is_final()){
+				style = "filled";
+			}
+			else{
+				style = "dotted";
+			}
+
+		}
+		states = states + type + label + " [style=\""+style+"\", color=\"black\", fillcolor=\""+color+"\" shape=\""+shape+"\", label=\""+label+"\"];\n";
+		ranks += type + label + "; ";
+
+		for(int b = 0; b < 2; ++b){
+			DiscrimNode* child = disc->get_child(b);
+			if(child != NULL){
+				string child_label = "n";
+				if(child->is_leaf()){
+					child_label = "l";
+				}
+				for(symbol_ sym : child->get_phrase())
+					child_label += sym;
+
+				transitions = transitions + "n"+ label +" -> "+ child_label +" [label=\""+std :: to_string(b)+"\"];\n";
+				next_nodes.push_front(std :: make_pair(child, current_depth + 1));
+			}
+		}
+	}
+	ranks += "}\n";
+
+
+	symbol_ end = "__start0 -> 0;";
+	symbol_ footer ="\n}";
+
+
+	// Finally, it prints overall DOT code
+
+	myfile << header << start_state_ << states << ranks << transitions << footer;
+
+	myfile.close();
 }

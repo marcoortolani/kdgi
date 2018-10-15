@@ -1,141 +1,53 @@
 #include <iostream>
 
-#include "tttdfa.h"
+#include "sillyoracle.h"
+#include "randomoracle.h"
+#include "tttlearner.h"
+#include "angluinlearner.h"
 #include "concretedfa.h"
 
 using namespace std;
 
-void close_transitions(TTTDfa& t, ConcreteDfa& c, bool hard_sift){
-	vector <bool> queries;
-	//auto vec = t.get_transitions_to_sift(hard_sift);
+template <class Oracle>
+void print_results(Oracle* o, bool history = false){
+	/*tuple<int, int, int, int> costs = o->get_costs();
+	cout << "\tequivalence cost:" << std :: get<0>(costs);
+	cout << "\tmembership cost:" << std :: get<1>(costs);
+	cout << "\tsymbol cost:" << std :: get<2>(costs);
+	cout << "\tredundant queries:" << std :: get<3>(costs) << endl << endl;
 
-	for(auto vec = t.get_transitions_to_sift(hard_sift); !vec.empty();){
-		for (auto pair : vec){
-			vector<symbol_> prefix = std :: get<0>(pair);
-			prefix.push_back(std :: get<1>(pair));
+	if(history){
+		vector<pair<vector<symbol_>, bool>> query_history = o->get_query_history();
+		for(auto pair : query_history)
+			cout << "\t"<< pair.first << " : " << pair.second << endl;
 
-			queries.clear();
-			vector<symbol_> suffix;
-
-			queries.push_back(c.membership_query(prefix));
-			//cout << "il prefisso " << prefix << " ha valore " << queries.back() << endl;
-			if(t.init_sifting(std :: get<0>(pair), std :: get<1>(pair), suffix, queries.back(), std :: get<2>(pair))){
-				do{
-					vector <symbol_> phrase = prefix;
-					phrase.insert(phrase.end(), suffix.begin(), suffix.end());
-					queries.push_back(c.membership_query(phrase));
-					//cout << phrase << " ha valore " << queries.back() << endl;
-
-					vector<symbol_> test = {"b", "c", "a"};
-				}
-				while(t.sift_step(suffix, queries.back(), std :: get<2>(pair)));
-			}
-
-			t.close_transition(std :: get<0>(pair), std :: get<1>(pair), queries.back());
-		}
-		vec = t.get_transitions_to_sift(hard_sift);
-	}
-	return ;
+		cout << endl;
+	}*/
 }
 
-TTTDfa OPACKlearn(ConcreteDfa c){
-	c.update_state_table();
-
-	vector<bool> queries;
-	for(symbol_ s : c.get_alphabet()){
-		queries.push_back(c.membership_query(vector<symbol_>(1, s)));
-	}
-	queries.push_back(c.membership_query(vector<symbol_>()));
-
-	TTTDfa t(c.get_alphabet(), queries);
-	close_transitions(t, c, true);
-
-	t.make_hypotesis();
-	////t.print();
-
+template<class I1, class I2, class O>
+void compare(Dfa<I1>* d1, Dfa<I2>* d2, O* o, string name1, string name2){
 	vector<symbol_> counterexample;
-	while(!t.equivalence_query(&c, counterexample)){
-		bool truth = c.membership_query(counterexample);
-		//cout << "counterexample " << counterexample << " is " << truth << endl;
+	if(!d1->equivalence_query(d2, counterexample)){
+		cout << name1 << " != " << name2 << " because of " << counterexample << endl;
+		cout << "structural similarity between ttt and ang : ";
+		//cout << d1->neighbour_matching(d2, true, true)[d1->get_num_states()][0] << endl;
 
-		while(t.membership_query(counterexample) != truth){
-			t.handle_counterexample(counterexample);
-			////t.print();
-
-			close_transitions(t,c, true);
-
-			////t.print();
-			t.make_hypotesis();
-		}
+		cout << name1 << " : " << d1->membership_query(counterexample) << " ";
+		cout << name2 << " : " << d2->membership_query(counterexample) << " ";
+		cout << "oracle : " << o->membership_query(counterexample) << endl;
 	}
-
-	return t;
+	else{
+		cout << name1 << " is equivalent to " << name2;
+		if(!d1->equivalence_query(d2, counterexample)){
+			cout << " but not identical" << endl;
+		}
+		cout << endl;
+	}
+	cout << endl;
 }
 
-
-TTTDfa* TTTlearn(ConcreteDfa c){
-	c.update_state_table();
-
-	vector<bool> queries;
-	for(symbol_ s : c.get_alphabet()){
-		queries.push_back(c.membership_query(vector<symbol_>(1, s)));
-	}
-	queries.push_back(c.membership_query(vector<symbol_>()));
-
-	TTTDfa* t = new TTTDfa(c.get_alphabet(), queries);
-	close_transitions(*t, c, false);
-
-	t->make_hypotesis();
-	//t.print();
-
-	vector<symbol_> counterexample;
-	while(!t->equivalence_query(&c, counterexample)){
-		bool truth = c.membership_query(counterexample);
-		//cout << "counterexample " << counterexample << " is " << truth << endl;
-
-		while(t->membership_query(counterexample) != truth){
-			//cout << "gestione controesempio" << endl;
-			t->handle_counterexample(counterexample);
-			//t.print();
-
-			//cout << "soft sifting" << endl;
-			close_transitions(*t,c, false);
-
-			//t.print();
-
-			vector<vector<symbol_>> prefixes;
-			vector<symbol_> suffix;
-
-			while(!t->is_deterministic() && t->try_single_finalization(prefixes, suffix)){
-				vector<pair<vector<symbol_>, bool>> leaf_queries;
-				for(vector<symbol_> prefix : prefixes){
-					vector <symbol_> phrase = prefix;
-					phrase.insert(phrase.end(), suffix.begin(), suffix.end());
-
-					leaf_queries.push_back(std :: make_pair(prefix, c.membership_query(phrase)));
-				}
-				t->split_block(leaf_queries, suffix);
-				close_transitions(*t,c,false);
-				//cout << "finalization" << endl;
-				//t.print();
-			}
-
-			if(!t->is_deterministic()){
-				//cout << "hard sifting" << endl;
-				close_transitions(*t,c, true);
-				////t.print();
-			}
-
-
-			//t.print();
-			t->make_hypotesis();
-		}
-	}
-
-	return t;
-}
-
-int main() {
+void test1(){
 	vector<string> files = {"_2_instance_of_aab",
 							"_ab_aaaa",
 							"_all",
@@ -151,19 +63,131 @@ int main() {
 	for(string name : files){
 		string path = "../gi/data/" + name + ".txt";
 		cout << name << endl;
+
 		ConcreteDfa c = c.read_dfa_file(path);
 		c.update_state_table();
-		TTTDfa op = OPACKlearn(c);
-		TTTDfa* t = TTTlearn(c);
+
+		SillyOracle silly(&c);
+
 
 		vector<symbol_> counterexample;
-		if(!op.equivalence_query(&c, counterexample)){
-			cout << "OPack non corrisponde, controesempio trovato: " << counterexample << endl;
-		}
-		if(!t->equivalence_query(&c, counterexample)){
-			cout << "TTTDfa non corrisponde, controesempio trovato: " << counterexample << endl;
-		}
-	}
 
-	return 0;
+		TTTLearner<SillyOracle> tttl(&silly, c.get_alphabet(), true);
+		TTTDfa* op = tttl.learn();
+		if(!op->equivalence_query(&c, counterexample)){
+			cout << "\tOPack non corrisponde, controesempio trovato: " << counterexample << endl;
+		}
+		else{
+			cout << "\tOPack" << endl;
+			print_results(&silly);
+		}
+		//silly.reset();
+
+		tttl.set_opack(false);
+		TTTDfa* ttt = tttl.learn();
+		if(!ttt->equivalence_query(&c, counterexample)){
+			cout << "\tTTTDfa non corrisponde, controesempio trovato: " << counterexample << endl;
+		}
+		else{
+			cout << "\tTTTDfa" << endl;
+			print_results(&silly);
+		}
+		//silly.reset();
+
+		AngluinLearner<SillyOracle> al(&silly, c.get_alphabet());
+		AngluinDfa* ang = al.learn();
+		if(!ang->equivalence_query(&c, counterexample)){
+			cout << "\tAngluinDfa non corrisponde, controesempio trovato: " << counterexample << endl;
+		}
+		else{
+			cout << "\tAngluinDfa" << endl;
+			print_results(&silly);
+		}
+
+		compare(ttt, ang, &silly, "ttt", "ang");
+		compare(ang, ttt, &silly, "ang", "ttt");
+		compare(ang, ttt, &silly, "ang", "ttt");
+
+		//op->print_dfa_dot("", "dfas/dot/OPack" + name + ".dot");
+		//ttt->print_ttt_dot("", "dfas/dot/TTT" + name + ".dot");
+		//ang->print_dfa_dot("", "dfas/dot/ANG" + name + ".dot");
+
+		delete op;
+		delete ttt;
+		delete ang;
+	}
+}
+
+void test2(){
+	time_t start;
+	time_t end;
+
+
+	int max_length = 3;
+		vector<symbol_> alphabet = {"a", "b", "c", "d"};
+		RandomOracle rand(max_length, alphabet);
+
+		vector<symbol_> counterexample;
+
+		cout << "random language generated" << endl << endl;
+
+		TTTLearner<RandomOracle> tttl(&rand, alphabet, true);
+
+		TTTDfa* op = tttl.learn();
+		cout << "\tOPack" << endl;
+		cout << "\tnum states: " << op->get_num_states() << endl;
+		print_results(&rand);
+		//rand.reset();
+
+		//op->Dfa::print();
+
+		tttl.set_opack(false);
+		time(&start);
+		TTTDfa* ttt = tttl.learn();
+		time(&end);
+		cout << "ttt time:" << end - start << endl;
+
+		cout << "\tTTTDfa" << endl;
+		cout << "\t num states: " << ttt->get_num_states() << endl;
+		print_results(&rand);
+		//rand.reset();
+
+		//ttt->Dfa::print();
+
+		AngluinLearner<RandomOracle> al(&rand, alphabet);
+		time(&start);
+		AngluinDfa* ang = al.learn();
+		time(&end);
+		cout << "ang time:" << end - start << endl;
+
+		cout << "\tAngluinDfa" << endl;
+		cout << "\t num states: " << ang->get_num_states() << endl;
+		print_results(&rand);
+
+		//ang->Dfa::print();
+
+		compare(ttt, ang, &rand, "ttt", "ang");
+		compare(ang, op, &rand, "ang", "op");
+		compare(op, ttt, &rand, "op", "ttt");
+
+		string language = "";
+		for(symbol_ sym : alphabet)
+			language += sym + "_";
+
+		language += "max_length_" + max_length;
+
+		cout << language << endl;
+
+		//ttt->print_dfa_dot("ttt_" + language, "dfas/dot/ttt_" + language + ".dot");
+		//op->print_dfa_dot("opack_" + language, "dfas/dot/opack_" + language + ".dot");
+		//ang->print_dfa_dot("ang_" + language, "dfas/dot/ang_" + language + ".dot");
+
+		delete op;
+		delete ttt;
+		delete ang;
+}
+
+int main() {
+	test1();
+	test2();
 }

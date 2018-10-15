@@ -1,6 +1,12 @@
 /*
  * dfa.tcc
  */
+#include <vector>
+#include <string>
+#include <iostream>
+#include <fstream>
+
+#include "utilities.h"
 
 template <class I>
 Dfa<I>::Dfa(){
@@ -69,13 +75,14 @@ int Dfa<I>::get_start_state() const{
 }
 
 template <class I>
-map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I> :: init_table_filling(Dfa* first, Dfa* second){
+map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I> :: init_table_filling(){
 	map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> res;
-	if(second != NULL){
-		for(auto s1 = first->begin(); s1 != first->end(); ++s1){
-			map<vector<symbol_>, vector<symbol_>> tmp;
+	for(auto s1 = this->begin(); s1 != this->end(); ++s1){
+		auto s2 = s1;
+		if(++s2 != this->end()){
 			//cout << "s1: " << s1->get_charact_phrase() << endl;
-			for(auto s2 = second->begin(); s2 != second->end(); ++s2){
+			map<vector<symbol_>, vector<symbol_>> tmp;
+			for(; s2 != this->end(); ++s2){
 				if(s1->is_accepting() != s2->is_accepting()){
 					tmp[s2->get_charact_phrase()] = vector<symbol_>();
 					//cout << "\ts2: " << s2->get_charact_phrase() << endl;
@@ -84,30 +91,36 @@ map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I> :: init_table
 			res[s1->get_charact_phrase()] = tmp;
 		}
 	}
-	else{
-		for(auto s1 = first->begin(); s1 != first->end(); ++s1){
-			auto s2 = s1;
-			if(++s2 != first->end()){
-				//cout << "s1: " << s1->get_charact_phrase() << endl;
-				map<vector<symbol_>, vector<symbol_>> tmp;
-				for(; s2 != first->end(); ++s2){
-					if(s1->is_accepting() != s2->is_accepting()){
-						tmp[s2->get_charact_phrase()] = vector<symbol_>();
-						//cout << "\ts2: " << s2->get_charact_phrase() << endl;
-					}
-				}
-				res[s1->get_charact_phrase()] = tmp;
-			}
-		}
-	}
 	return res;
 }
 
 template <class I>
-vector<symbol_> Dfa<I>::table_filling1() {
+template <class O>
+map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I> :: init_table_filling(Dfa<O>* second){
+	map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> res;
+
+	//TO-DO: controllare che second punti a qualcosa
+
+	for(auto s1 = this->begin(); s1 != this->end(); ++s1){
+		map<vector<symbol_>, vector<symbol_>> tmp;
+		//cout << "s1: " << s1->get_charact_phrase() << endl;
+		for(auto s2 = second->begin(); s2 != second->end(); ++s2){
+			if(s1->is_accepting() != s2->is_accepting()){
+				tmp[s2->get_charact_phrase()] = vector<symbol_>();
+				//cout << "\ts2: " << s2->get_charact_phrase() << endl;
+			}
+		}
+		res[s1->get_charact_phrase()] = tmp;
+	}
+
+	return res;
+}
+
+template <class I>
+map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I>::table_filling1() {
 	
 	//passo di inizializzazione: segno come diversi stati accettanti e non accettanti:
-	map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table = init_table_filling(this, NULL);
+	map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table = init_table_filling();
 	
 	bool finished = false;
 	while(!finished){
@@ -135,7 +148,7 @@ vector<symbol_> Dfa<I>::table_filling1() {
 							
 							//cout << "SUCCESSORI: " << next_s1->get_charact_phrase() << " : " << next_s2->get_charact_phrase() << endl;
 							
-							auto next_map = this.find(next_s1->get_charact_phrase())->second;
+							auto next_map = table.find(next_s1->get_charact_phrase())->second;
 							if(next_map.find(next_s2->get_charact_phrase()) != next_map.end()){
 								//cout << "SUCCESSORI DIVERSI -> STATI DIVERSI" << endl;
 								finished = false;
@@ -148,17 +161,20 @@ vector<symbol_> Dfa<I>::table_filling1() {
 			}
 		}
 	}
-}
+
+	return table;
+};
 
 
 template <class I>
-vector<symbol_> Dfa<I> :: find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa* subject_dfa){
+template <class O>
+vector<symbol_> Dfa<I> :: find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa<O>* subject_dfa){
 	vector<symbol_> counterexample;
 	DfaState* s1 = (*this)[vector<symbol_>()];
 	DfaState* s2 = (*subject_dfa)[vector<symbol_>()];
 	
 	while(true){
-		//Questa funzione si aspetta di ricevere una tabella iniziallizata 
+		//Questa funzione si aspetta di ricevere una tabella inizializzata
 		//abbastanza da poter trovare un controesempio.
 		//A partire dagli stati iniziali deve trovare una serie di transizioni fino a due stati,
 		//dei quali uno accettante e l'altro no.
@@ -186,7 +202,8 @@ vector<symbol_> Dfa<I> :: find_counterexample_from_table(map<vector<symbol_>, ma
 }
 
 template <class I>
-bool Dfa<I> :: equivalence_query(Dfa* subject_dfa, vector<symbol_>& counterexample){
+template <class O>
+bool Dfa<I> :: equivalence_query(Dfa<O>* subject_dfa, vector<symbol_>& counterexample){
 	
 	if(this->sort_alphabet() != subject_dfa->sort_alphabet()){
 		cerr << "dfa.tcc : equivalence_query : Cannot compare 2 Dfas with different alphabets" << endl;
@@ -198,7 +215,7 @@ bool Dfa<I> :: equivalence_query(Dfa* subject_dfa, vector<symbol_>& counterexamp
 		return false;
 	}
 	
-	auto table = init_table_filling(this, subject_dfa);
+	auto table = init_table_filling(subject_dfa);
 	
 	bool finished = false;
 	while(!finished){
@@ -370,7 +387,8 @@ DfaState* Dfa<I>::operator[](SymIter phrase){
 }
 
 template <class I>
-vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, bool isomorphism, bool color, double eps){
+template <class O>
+vector<vector<double>> Dfa<I>::neighbour_matching(Dfa<O>* subject_dfa, bool isomorphism, bool color, double eps){
 
 	int max_iter = 10000;
 
@@ -405,8 +423,8 @@ vector<vector<double>> Dfa<I>::neighbour_matching(Dfa* subject_dfa, bool isomorp
 	vector<vector<vector<tuple<int, int, double> > > > last_modified_by_in;
 	vector<vector<vector<tuple<int, int, double> > > > last_modified_by_out;
 
-	last_modified_by_in = vector<vector<vector<tuple<int, int, double> > > > (num_states_, vector<vector<tuple<int,int,double> > >(subject_dfa->num_states_, vector<tuple<int, int, double> >()));
-	last_modified_by_out = vector<vector<vector<tuple<int, int, double> > > > (num_states_, vector<vector<tuple<int,int,double> > >(subject_dfa->num_states_, vector<tuple<int, int, double> >()));
+	last_modified_by_in = vector<vector<vector<tuple<int, int, double> > > > (num_states_, vector<vector<tuple<int,int,double> > >(subject_dfa->get_num_states(), vector<tuple<int, int, double> >()));
+	last_modified_by_out = vector<vector<vector<tuple<int, int, double> > > > (num_states_, vector<vector<tuple<int,int,double> > >(subject_dfa->get_num_states(), vector<tuple<int, int, double> >()));
 
 	long *solution;
     long *costs;
@@ -765,3 +783,72 @@ void Dfa<I>::print_structural_similarity(vector<vector<double>> similarity_matri
 	cout<<"======================================"<<endl;
 }
 
+template<class I>
+void Dfa<I>::print(){
+	for(DfaState state : *this){
+		state.print();
+	}
+}
+
+template <class I>
+void Dfa<I>::print_dfa_dot(string title, string file_path)
+{
+
+	ofstream myfile;
+	myfile.open(file_path);
+
+	// Initialization of symbol_s with DOT code
+	string header = "digraph "+title+" {\n";
+	string start_state_ = "__start0 [label=\"\" shape=\"none\"];\n\n";
+
+	start_state_ = start_state_ + "rankdir=LR;\nsize=\"8,5\";\n\n";
+
+
+	//States
+	string states = "";
+	string shape = "";
+	string style= "";
+	string color= "";
+	for(DfaState state : *this)
+	{
+		if(state.is_accepting()){
+			shape = "doublecircle";
+			style = "rounded,filled";
+		}
+		else{
+			shape = "circle";
+			style = "filled";
+		}
+		color="white";
+
+		string label = "";
+		for(symbol_ sym : state.get_charact_phrase())
+			label += sym;
+
+		states = states + "s" + std::to_string(state.get_index()) + " [style=\""+style+"\", color=\"black\", fillcolor=\""+color+"\" shape=\""+shape+"\", label=\""+label+"\"];\n";
+	}
+
+
+	// Transitions
+	symbol_ transitions = "";
+	for(DfaState state : *this){
+		for(symbol_ sym : get_alphabet()){
+			DfaState* arrive_state = state.next(sym, false);
+			if(arrive_state == NULL)
+				continue;
+
+			transitions = transitions + "s"+std::to_string(state.get_index())+" -> s"+std::to_string(arrive_state->get_index())+" [label=\""+sym+"\"];\n";
+		}
+	}
+
+
+	symbol_ end = "__start0 -> 0;";
+	symbol_ footer ="\n}";
+
+
+	// Finally, it prints overall DOT code
+
+	myfile << header << start_state_ << states << transitions << footer;
+
+	myfile.close();
+}

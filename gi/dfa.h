@@ -6,12 +6,7 @@
 #ifndef DFA_H_
 #define DFA_H_
 
-#include <vector>
-#include <string>
-#include <iostream>
-
 #include "dfastate.h"
-#include "utilities.h"
 
 #define symbol_ string
 #define DFA_STATE_ int
@@ -65,7 +60,7 @@ protected:
 
 public:
   friend class BlueFringe;
-  friend class SillyOracle;
+  //friend class SillyOracle;
   //******** CONSTRUCTORS: ********
 
   /**
@@ -103,12 +98,26 @@ public:
   /**
    * Make a membership query to dfa with the "phrase" symbol_ with alphabet symbol.
    * Return "true" if the arrive state for "phrase" is acceptor, else "false".
-   * @param phrase A phrase (i.e. vector<symbol_>) to make a membership query.
-   * @return "True" o "false" depending on the arrive state: "true" if acceptor, else if not.
+   * @param phrase The phrase on which a membership query mast be done.
+   * @return "true" o "false" depending on the arrive state: "true" if acceptor, else if not.
    */
   virtual bool   membership_query(vector<symbol_> phrase) const = 0;
 
-  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling(Dfa* first, Dfa* second);
+  /**
+   * Initialize a triangular upper matrix (realized by a map of map of phrases) for the table filling algorithm,
+   * used to find every couple of equivalent states.
+   * @return the triangular upper matrix; let's say the dfa has 3 states: "a", "b" and "aa" (ordered in this way).
+   * If we want to see the equivalence of "a" and "b" there is the pseudo-code:
+   * matrix = init_table_filling();
+   * row = matrix["a"]; (we search for "a" first based on the ordering);
+   * discriminator = row["b"];
+   * if discriminator is found the states are different because
+   * if the discriminator is used on theirs respective output functions it will produce 2 different outputs
+   */
+  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling();
+
+  template <class O>
+  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling(Dfa<O>* second);
 
   /**
    * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
@@ -116,11 +125,13 @@ public:
    * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
    * @return A table saved in a linear array, with a list of equivalent/different states.
    */
-  vector<symbol_>	table_filling1();
+  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>>	table_filling1();
 
-  vector<symbol_> find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa* subject_dfa);
+  template<class O>
+  vector<symbol_> find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa<O>* subject_dfa);
 
-  bool equivalence_query(Dfa* other_dfa, vector<symbol_>& counterexample);
+  template<class O>
+  bool equivalence_query(Dfa<O>* other_dfa, vector<symbol_>& counterexample);
 
   /* Code related to the "dfa common interface" */
 
@@ -164,7 +175,8 @@ public:
     * with subject_dfa's state j. The last row, so similarity_matrix[reference_dfa->num_states][1]
     * contains the overall structural similarity score between the two Dfas.      
     */
-   vector<vector<double>> neighbour_matching(Dfa* subject_dfa, bool isomorphism=false, bool color=false, double eps=0.0001);
+  template <class O>
+   vector<vector<double>> neighbour_matching(Dfa<O>* subject_dfa, bool isomorphism=false, bool color=false, double eps=0.0001);
 
 
     /**
@@ -174,7 +186,9 @@ public:
    */
    void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
 
+   void print();
 
+   void print_dfa_dot(string title, string file_path);
 
 };
 

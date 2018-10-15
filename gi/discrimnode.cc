@@ -66,6 +66,97 @@ void DiscrimNode :: set_final(){
 	final_ = true;
 };
 
+bool DiscrimNode :: is_accepting(){
+	DiscrimNode* father = get_father();
+	if(father == NULL){
+		cerr << "Error in DiscrimNode :: is accepting" << endl;
+		throw 0;
+	}
+
+	DiscrimNode* grand = father->get_father();
+	if(grand != NULL){
+		return father->is_accepting();
+	}
+
+	if(!father->get_phrase().empty()){
+		cerr << "Error in DiscrimNode :: is accepting" << endl;
+		cerr << "first ancestor has non empty phrase" << endl;
+		throw 0;
+	}
+
+	if(this == father->get_child(0)){
+		return false;
+	}
+
+	if(this == father->get_child(1)){
+		return true;
+	}
+
+	cerr << "Error in DiscrimNode :: is accepting" << endl;
+	cerr << "father and son linked uncorrectly" << endl;
+	throw 0;
+}
+
+bool DiscrimNode :: is_accepting(vector<symbol_> phrase, bool& truth){
+	if(!is_leaf()){
+		cerr << "Error in DiscrimNode :: is_accepting (vector<symbol_>, bool&)" << endl;
+		cerr << "the node is not a leaf" << endl;
+		throw 0;
+	}
+
+	vector<symbol_> prefix = get_phrase();
+	DiscrimNode* disc = this;
+	while(disc->get_father() != NULL){
+		DiscrimNode* father = disc->get_father();
+		vector<symbol_> other_phrase = prefix;
+		vector<symbol_> suffix = father->get_phrase();
+		other_phrase.insert(other_phrase.end(), suffix.begin(), suffix.end());
+		if(other_phrase == phrase){
+			if(disc == father->get_child(0)){
+				truth = false;
+			}
+			else if(disc == father->get_child(1)){
+				truth = true;
+			}
+			else{
+				cerr << "Error in DiscrimNode :: is_accepting (vector<symbol_>, bool&)" << endl;
+				throw 0;
+			}
+			return true;
+		}
+		disc = father;
+	}
+
+	return false;
+}
+
+bool DiscrimNode :: is_accepting(vector <symbol_> prefix, vector<symbol_> phrase, bool& truth){
+	DiscrimNode* disc = this;
+	DiscrimNode* father = get_father();
+	while(father != NULL){
+		vector<symbol_> other_phrase = prefix;
+		vector<symbol_> suffix = father->get_phrase();
+		other_phrase.insert(other_phrase.end(), suffix.begin(), suffix.end());
+		if(other_phrase == phrase){
+			if(disc == father->get_child(0)){
+				truth = false;
+			}
+			else if(disc == father->get_child(1)){
+				truth = true;
+			}
+			else{
+				cerr << "Error in DiscrimNode :: is_accepting (vector<symbol_>, vector<symbol_>, bool&)" << endl;
+				throw 0;
+			}
+			return true;
+		}
+		disc = father;
+		father = disc->get_father();
+	}
+
+	return false;
+}
+
 void DiscrimNode :: set_phrase(vector <symbol_> ph){
 	phrase_ = ph;
 };
@@ -164,6 +255,31 @@ DiscrimNode* DiscrimNode :: get_lowest_common_discriminator(DiscrimNode* other_n
 	}
 	cerr << endl;
 	throw 0;
+}
+
+vector<DiscrimNode*> DiscrimNode :: get_all_leaves(){
+	vector<DiscrimNode*> result;
+	list<DiscrimNode*> next_nodes = {this};
+
+	while(!next_nodes.empty()){
+		DiscrimNode* node = next_nodes.back();
+		next_nodes.pop_back();
+
+		bool leaf = true;
+		for(int i=0; i < 2; ++i){
+			DiscrimNode* child = node->get_child(i);
+			if(child != NULL){
+				leaf = false;
+				next_nodes.push_front(child);
+			}
+		}
+
+		if(leaf){
+			result.push_back(node);
+		}
+	}
+
+	return result;
 }
 
 void DiscrimNode :: destroy_all_but_leaves(){

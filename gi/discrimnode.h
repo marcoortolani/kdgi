@@ -9,6 +9,7 @@
 #define DISCRIMNODE_H_
 
 #include <vector>
+#include <list>
 #include <string>
 #include <set>
 #include <iostream>
@@ -38,6 +39,9 @@ public:
 	bool is_final();
 	bool is_block_root();
 	void set_final();
+	bool is_accepting();
+	bool is_accepting(vector<symbol_> suffix, bool& truth);
+	bool is_accepting(vector<symbol_> prefix, vector<symbol_> suffix, bool& truth);
 
 	void set_phrase(vector <symbol_> ph);
 	vector<symbol_> get_phrase();
@@ -45,6 +49,8 @@ public:
 	DiscrimNode* get_block_root();
 
 	DiscrimNode* get_lowest_common_discriminator(DiscrimNode* other_node);
+
+	vector<DiscrimNode*> get_all_leaves();
 
 	void destroy_all_but_leaves();
 };

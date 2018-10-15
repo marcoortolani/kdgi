@@ -1,19 +1,25 @@
 #ifndef SILLY_ORACLE_H
 #define SILLY_ORACLE_H
 
-#include "oracle.h"
+#include <iostream>
+//#include "oracle.h"
 #include "concretedfa.h"
 
-class SillyOracle : public Oracle{
+using namespace std;
+
+class SillyOracle{
 private:
 	ConcreteDfa* silly_dfa;//Must be "concrete" for now, will be "general"
 
 public:
 	SillyOracle(ConcreteDfa* d1);
 
-	virtual bool is_member(vector <string> str);
+	virtual bool membership_query(vector <string> str);
 
-	virtual bool is_equiv(ConcreteDfa* dfa_hp , vector <string>* witness_results);
+	template <class Dfa>
+	bool equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_results);
 };
+
+#include "sillyoracle.tcc"
 
 #endif

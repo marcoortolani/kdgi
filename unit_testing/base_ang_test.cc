@@ -48,8 +48,7 @@ protected:
 	TestDfa* reference = new TestDfa(5,alph);
 	
 	ConcreteDfa* concrete_reference = reference;
-	SillyOracle o = SillyOracle(concrete_reference);
-	AngluinLearner l = AngluinLearner(&o, alph);
+	AngluinLearner<ConcreteDfa> l = AngluinLearner<ConcreteDfa>(concrete_reference, alph);
 	AngluinDfa* ang;
 	
 	vector<int> sequence2 = {1, 2, 4, 0, 3, 4, 1, 0, 4, 3, 2, 0, 4, 4, 3, 1, 4, 4, 4, 0};

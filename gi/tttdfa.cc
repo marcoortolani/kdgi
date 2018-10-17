@@ -775,7 +775,7 @@ void TTTDfa :: make_hypotesis(){
 			states_.emplace_back(state->is_accepting(), phrase, i++);
 			translator[state->get_charact_phrase()] = phrase;
 			for(symbol_ sym : sorted_alphabet){
-				DfaState* next_state = TTTDfa :: next_span_state(state, sym, false);//here
+				DfaState* next_state = TTTDfa :: next_span_state(state, sym, false);
 
 				if(states_found.find(next_state) == states_found.end()){
 					next_states.push_front(next_state);
@@ -801,6 +801,7 @@ void TTTDfa :: make_hypotesis(){
 				if(state_it->get_charact_phrase() == translator[next_tttstate->get_charact_phrase()]){
 					found = true;
 					generic_state_it->set_transition(s, &(*state_it));
+					state_it->set_incoming_transiction(std :: make_pair(&(*generic_state_it), s));
 				}
 			}
 			if(!found){
@@ -946,7 +947,7 @@ void TTTDfa :: print_ttt_dot(string title, string path){
 			DfaState* next = state->next(sym, false);
 			if(next != NULL){
 				string next_label = "";
-				string id;
+				string id = "";
 				if(next != &non_tree_transitions_){
 					id = "s";
 					for(symbol_ sym : next->get_charact_phrase())
@@ -954,11 +955,15 @@ void TTTDfa :: print_ttt_dot(string title, string path){
 				}
 				else{
 					DiscrimNode* disc = non_tree_transitions_.get_non_tree_arrive_node(state->get_charact_phrase(), sym);
-					id = "n";
-					if(disc->is_leaf())
+					if(disc->is_leaf()){
 						id = "l";
-					for(symbol_ sym : disc->get_phrase())
-						next_label += sym;
+						for(symbol_ sym : disc->get_phrase())
+							next_label += sym;
+					}
+					else{
+						id = "n";
+						next_label = disc->get_ancestors_string();
+					}
 				}
 				transitions = transitions + "s"+ label +" -> "+ id + next_label +" [label=\""+ sym +"\"];\n";
 			}
@@ -980,6 +985,8 @@ void TTTDfa :: print_ttt_dot(string title, string path){
 
 		string type = "";
 		string label = "";
+		string id = "";
+
 		for(symbol_ sym : disc->get_phrase())
 			label += sym;
 
@@ -987,6 +994,7 @@ void TTTDfa :: print_ttt_dot(string title, string path){
 			shape = "rectangle";
 			style = "filled";
 			type = "l";
+			id = label;
 		}
 		else{
 			shape = "ellipse";
@@ -997,10 +1005,10 @@ void TTTDfa :: print_ttt_dot(string title, string path){
 			else{
 				style = "dotted";
 			}
-
+			id = disc->get_ancestors_string();
 		}
-		states = states + type + label + " [style=\""+style+"\", color=\"black\", fillcolor=\""+color+"\" shape=\""+shape+"\", label=\""+label+"\"];\n";
-		ranks += type + label + "; ";
+		states = states + type + id + " [style=\""+style+"\", color=\"black\", fillcolor=\""+color+"\" shape=\""+shape+"\", label=\""+label+"\"];\n";
+		ranks += type + id + "; ";
 
 		for(int b = 0; b < 2; ++b){
 			DiscrimNode* child = disc->get_child(b);
@@ -1008,11 +1016,13 @@ void TTTDfa :: print_ttt_dot(string title, string path){
 				string child_label = "n";
 				if(child->is_leaf()){
 					child_label = "l";
+					for(symbol_ sym : child->get_phrase())
+						child_label += sym;
 				}
-				for(symbol_ sym : child->get_phrase())
-					child_label += sym;
+				else
+					child_label += child->get_ancestors_string();
 
-				transitions = transitions + "n"+ label +" -> "+ child_label +" [label=\""+std :: to_string(b)+"\"];\n";
+				transitions = transitions + type + id +" -> "+ child_label +" [label=\""+std :: to_string(b)+"\"];\n";
 				next_nodes.push_front(std :: make_pair(child, current_depth + 1));
 			}
 		}

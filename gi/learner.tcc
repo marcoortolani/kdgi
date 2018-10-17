@@ -10,10 +10,17 @@ tuple<int, int, int, int> Learner<I,O> ::get_costs(){
 template <class I, class O>
 void Learner<I,O> :: reset_costs(){
 	equivalence_cost = membership_cost = symbol_cost = repetition_cost = 0;
+	asked_queries.clear();
 }
 
 template <class I, class O>
 bool Learner<I,O> :: ask_membership(vector<symbol_> phrase){
+	if(oracle == NULL){
+		cerr << "Error in Learner :: ask_membership" << endl;
+		cerr << "It was not set any oracle" << endl;
+		throw 0;
+	}
+
 	auto query_it = asked_queries.find(phrase);
 	if(query_it != asked_queries.end()){
 		repetition_cost += 1;
@@ -31,6 +38,12 @@ bool Learner<I,O> :: ask_membership(vector<symbol_> phrase){
 
 template <class I, class O>
 bool Learner<I,O> :: ask_equivalence(Dfa<I>* hypotesis, vector<symbol_>&counterexample){
+	if(oracle == NULL){
+		cerr << "Errore in Learner :: ask_equivalence" << endl;
+		cerr << "It was not set any oracle" << endl;
+		throw 0;
+	}
+
 	equivalence_cost += 1;
 	return oracle->equivalence_query(hypotesis, counterexample);
 }

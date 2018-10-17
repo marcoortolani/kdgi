@@ -174,7 +174,6 @@ protected:
 public:
   friend class BlueFringe;
   friend class AngluinDfa;
-  //friend class SillyOracle;
   //******** CONSTRUCTORS: ********
 
   /**
@@ -445,18 +444,18 @@ public:
   void update_state_table();
 
   /**
-  	* Prints all the infos about the DfaState of the Dfa in the correct order.
+  	* Prints all the infos about the DfaStates of the Dfa in the correct order.
   	*/
   void print_state_table();
 
   /**
-   * Implements the Dfa's container-like behavior.
+   * Implements the Dfa's container-like behaviour.
    * @return an iterator to the first DfaState.
    */
   vector<DfaState> :: iterator begin();
 
   /**
-   * Implements the Dfa's container-like behavior.
+   * Implements the Dfa's container-like behaviour.
    * @return an iterator to the end of the Dfa.
    */
   vector<DfaState> :: iterator end();

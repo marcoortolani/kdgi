@@ -27,7 +27,30 @@ protected:
   int	  start_state_;									/*!< Index of start state */
   vector<symbol_> alphabet_;						/*!< Alphabet symbols */
 
+
+
+  //******** METHODS: ********
+  /**
+   * Set the number of states.
+   * @param n.
+   */
+  void 	set_num_state(int n);
+
+  /**
+   * Set the alphabet of dfa to alphabet in input of size "d_alf".
+   * @param alf.
+   */
+  void 	set_alphabet(const vector<symbol_> alf);
+
+public:
+  friend class BlueFringe;
   //******** CONSTRUCTORS: ********
+
+  /**
+   * Make an instance of null dfa.
+   */
+  Dfa();
+
   /**
    * Make an instance of new dfa with default start state to 0.
    * @param n_state	Number of states.
@@ -43,31 +66,6 @@ protected:
    */
   Dfa(const int n_state, const vector<symbol_> alf, const int s_state);
 
-  //******** METHODS: ********
-  /**
-   * Set the number of states.
-   * @param n.
-   */
-  void 	set_num_state(int n);
-
-//TO-DO eliminare questo "public" messo per motivi di debug
-//public:
-  /**
-   * Set the alphabet of dfa to alphabet in input of size "d_alf".
-   * @param alf.
-   */
-  void 	set_alphabet(const vector<symbol_> alf);
-
-public:
-  friend class BlueFringe;
-  //friend class SillyOracle;
-  //******** CONSTRUCTORS: ********
-
-  /**
-   * Make an instance of null dfa.
-   */
-  Dfa();
-
   virtual ~Dfa();
 
   //******** METHODS: ********
@@ -79,7 +77,7 @@ public:
 
   /**
    * Return a vector with alphabet symbols.
-   * @return Pointer to alphabet symbols (i.e. symbol_s).
+   * @return Pointer to alphabet symbols (i.e. strings).
    */
   const vector<symbol_>	get_alphabet() const;
 
@@ -104,45 +102,73 @@ public:
   virtual bool   membership_query(vector<symbol_> phrase) const = 0;
 
   /**
-   * Initialize a triangular upper matrix (realized by a map of map of phrases) for the table filling algorithm,
+   * Initialize a triangular upper matrix (realized by a map of map of phrases) for the table_filling1() method,
    * used to find every couple of equivalent states.
+   * @return the initialized triangular upper matrix: for each ordered couple of states will be indicated
+   * if they're both accepting/rejecting or if one is accepting and the other rejecting.
+   */
+  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling();
+
+  /**
+   * Very similar to the homonymous method, but conversely it generate a rectangular matrix
+   * that will be updated by equivalence_query() method and read by find_counterexample_from_table() method,
+   * because the 2 dfa could have a different number of states and every state of the first dfa
+   * must be confronted with every state of the second (while doing this in the other case
+   * would have stored redundant informations).
+   @return the triangular upper matrix; let's say the first dfa has 3 states: "a", "b" and "aa" and the second: "a" and "c".
+   * If we want to see the equivalence of "a" and "c" there is the pseudo-code:
+   * matrix = first->init_table_filling(second);
+   * row = matrix["a"]; (we search for "a" first based on the ordering of the dfas);
+   * discriminator = row["c"];
+   * if discriminator is found the states are different because
+   * if the discriminator is used on theirs respective output functions it will produce 2 different outputs.
+   * If we want to test the equivalence of the 2 languages we will confront the 2 initial states.
+   */
+  template <class O>
+  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling(Dfa<O>* second);
+
+  /**
+   * Verify if a dfa is canonical or not by returning a triangular upper matrix
+   * where for each couple of state is stored a discriminator if it exists.
    * @return the triangular upper matrix; let's say the dfa has 3 states: "a", "b" and "aa" (ordered in this way).
    * If we want to see the equivalence of "a" and "b" there is the pseudo-code:
    * matrix = init_table_filling();
    * row = matrix["a"]; (we search for "a" first based on the ordering);
    * discriminator = row["b"];
    * if discriminator is found the states are different because
-   * if the discriminator is used on theirs respective output functions it will produce 2 different outputs
-   */
-  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling();
-
-  template <class O>
-  map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> init_table_filling(Dfa<O>* second);
-
-  /**
-   * Fills a table with the "Table Filling Algorithm", suited for finding the equivalent/distinct states,
-   * and also for generating a witness between different DFAs.
-   * The Table considered is only the upper triangular matrix, that can be saved in a linear array.
-   * @return A table saved in a linear array, with a list of equivalent/different states.
+   * if the discriminator is used on theirs respective output functions it will produce 2 different outputs.
    */
   map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>>	table_filling1();
 
+  /**
+   * It finds a counterexample that distinguish this dfa from another one given an already generated table-filling table.
+   */
   template<class O>
   vector<symbol_> find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa<O>* subject_dfa);
 
+  /**
+   * Finds a counterexample (if one does exist) ie a phrase the other dfa recognize differently, using the table filling algorithm.
+   * @param other_dfa the other dfa
+   * @param counterexample a parameter passed by reference where the counterexample will be returned if it exists.
+   * @return true if the 2 dfas represents the same language,
+   * false otherwise in which case the counterexample will be stored in the parameter passed by reference
+   */
   template<class O>
   bool equivalence_query(Dfa<O>* other_dfa, vector<symbol_>& counterexample);
 
   /* Code related to the "dfa common interface" */
 
+  /**
+   * Needed to implement in the derived class the container-like behaviour.
+   * @return Must return (being pure virtual it is not implemented in the base class) an iterator to the first state of the dfa o to its end if it is empty.
+   */
   virtual iterator begin() = 0;
 
-  virtual iterator end() = 0;
-
   /**
-   * Returns true if the 2 Dfas are identical false otherwise.
+   * Needed to implement in the derived class the container-like behaviour.
+   * @return Must return (being pure virtual it is not implemented in the base class) an iterator to the end of the dfa.
    */
-  bool is_identical(Dfa* other_dfa, vector<symbol_>& phrase);
+  virtual iterator end() = 0;
 
   /**
    * Returns the alphabet in lexicographical order.
@@ -150,9 +176,10 @@ public:
   vector<symbol_> sort_alphabet() const;
 
   /**
-   * Return the next phrase in lexicographical order with the same length of the argument phrase or shorter.
+   * Returns true if the 2 Dfas are identical false otherwise.
    */
-  vector<symbol_> get_next_phrase(vector<symbol_> phrase);
+  template <class O>
+  bool is_identical(Dfa<O>* other_dfa, vector<symbol_>& phrase);
 
   /**
    * Returns the DfaState related to the phrase passed regardless of the type of container of symbol_.
@@ -186,8 +213,16 @@ public:
    */
    void print_structural_similarity(vector<vector<double>> similarity_matrix) const;
 
+   /**
+    * Print on screen the infos of all the states (It calls the print method of all DfaStates of this dfa in their order).
+    */
    void print();
 
+   /*
+    * Generate the dot file of the current status of the dfa.
+    * @param title the name we want to give to the dfa.
+    * @param file_path the path where we want to save the file.
+    */
    void print_dfa_dot(string title, string file_path);
 
 };

@@ -14,7 +14,7 @@ private:
 public:
 	SillyOracle(ConcreteDfa* d1);
 
-	virtual bool membership_query(vector <string> str);
+	bool membership_query(vector <string> str);
 
 	template <class Dfa>
 	bool equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_results);

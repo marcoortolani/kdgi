@@ -19,7 +19,7 @@ private:
 public:
 	RandomOracle(int max_length, vector<symbol_> alphabet);
 
-	virtual bool membership_query(vector <string> str);
+	bool membership_query(vector <string> str);
 
 	template <class Dfa>
 	bool equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_results);

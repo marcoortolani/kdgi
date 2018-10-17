@@ -19,12 +19,12 @@ using namespace std;
 class DfaState {
 private:
 	//******** DATA MEMBERS: ********
-	bool accepting_state;
-	vector<symbol_> char_phrase;
-	map<symbol_, DfaState*> transictions;
-	vector<pair<DfaState*, symbol_> > incoming_transictions_;
+	bool accepting_state;					/*!< True if the state is accepting, false otherwise */
+	vector<symbol_> char_phrase;			/*!< A phrase that belongs to the state (for now it must be the breadth access string) */
+	map<symbol_, DfaState*> transictions;	/*!< Transitions to the a-successors of this state for each symbol a */
+	vector<pair<DfaState*, symbol_> > incoming_transictions_;	/*!< Transitions from other states for witch this state is an a-successor */
 	
-	int index_;
+	int index_;		/*!< Index used to indicate the order of discovery (breadth-first search) of the states */
 
 public:
 
@@ -35,16 +35,6 @@ public:
 	 * @param int			A counter increasing for each new state we encounter exploring the dfa depth first
 	 */
 	DfaState(bool accepting, vector<symbol_> char_ph, int ind);
-
-	/**
-	 * This constructor is now unused, and probably always will be, due to the necessity to have the references to
-	 * other DfaStates of the Dfa.
-	 * @param accepting		True if the state must be accepting, false otherwise
-	 * @param char_ph		Characterizing phrase, ie the first sequence in Breadth first order to reach this state
-	 * @param tr			The map of transictions to other DfaStates for each symbol_
-	 * @param int			A counter increasing for each new state we encounter exploring the dfa depth first 
-	 */
-	DfaState(bool accepting, vector<symbol_> char_ph, map<symbol_, DfaState*> tr, int ind);
 
 	//******** METHODS: ********
 	/**
@@ -67,6 +57,12 @@ public:
 	vector <symbol_> get_charact_phrase();
 
 	/**
+	 * Returns the index of this DfaState, ie the number of states
+	 * visited before this in a depth first search of the Dfa
+	 */
+	int get_index() const;
+
+	/**
 	 * Set a particular transiction starting from this state
 	 * @param sym			The symbol_ of the transiction
 	 * @param arrive_state	A pointer to the reached DfaState
@@ -74,7 +70,7 @@ public:
 	void set_transition(symbol_ sym, DfaState* arrive_state);
 
 	/**
-	 * Set a particular transiction arriving to this state
+	 * Set a particoular transiction arriving to this state
 	 * @param in_trans		The (pair starting_state,symbol_) of the transiction
 	 */
 	void set_incoming_transiction(pair<DfaState*, symbol_> in_trans);
@@ -105,17 +101,6 @@ public:
 	vector<DfaState*> get_outcoming_states() const;
 
 	/**
-	 * Prints the data members of this DfaState
-	 */
-	void print();
-
-	/**
-	 * Returns the index of this DfaState, ie the number of states 
-	 * visited before this in a depth first search of the Dfa
-	 */
-	int get_index() const;
-
-	/**
 	 * Returns a pointer to the DfaState reached starting from this and
 	 * following a sequence of symbol_.
 	 * @param phrase	The sequence of symbol_, can be (or should be) any kind of sequential container of symbol_
@@ -136,6 +121,11 @@ public:
 		
 		return res;
 	}
+
+	/**
+	 * Prints the data members of this DfaState
+	 */
+	void print();
 };
 
 #endif /* DFASTATE_H_ */

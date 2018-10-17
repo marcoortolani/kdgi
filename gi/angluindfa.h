@@ -130,6 +130,13 @@ private:
 public:
 
 	/**
+	 * Constructor
+	 * @param alphabet		the alphabet of the language we want to find.
+	 * @param first_queries	each element indicates whether or not the corresponding symbol of the alphabet is a valid phrase. It's last element indicates whether or not the empty string is a valid phrase, so it must have the dimension of the alphabet +1.
+	 */
+	AngluinDfa(vector <string> alphabet, map <list<string>, bool>* first_queries);
+
+	/**
 	 * Returns true if the dfa is consistent, false otherwise.
 	 * If the dfa is found inconsistent, it will return some phrases and
 	 * will wait for the result of the membership queries of those phrases.
@@ -168,6 +175,13 @@ public:
 	void extend_rows(map <list<string>, bool>* mem_query_res);
 
 	/**
+	 * Return true if the phrase belongs to the language of the dfa, false otherwise.
+	 * Badly implemented, it should not be used if the dfa is not closed or not consistent.
+	 * @param phrase	the phrase to verify.
+	 */
+	virtual bool membership_query(vector<string> phrase) const;
+
+	/**
 	 * Returns a concrete dfa generated from the look_up_s
 	 * and look_up_sa table and S and Sa vectors.
 	 */
@@ -183,24 +197,9 @@ public:
 	 */
 	void print_new_tables();
 
-	/**
-	 * Return true if the phrase belongs to the language of the dfa, false otherwise.
-	 * Badly implemented, it should not be used if the dfa is not closed or not consistent.
-	 * @param phrase	the phrase to verify.
-	 */
-	virtual bool membership_query(vector<string> phrase) const;
-
-	/**
-	 * Constructor
-	 * @param alphabet		the alphabet of the language we want to find.
-	 * @param first_queries	each element indicates whether or not the corresponding symbol of the alphabet is a valid phrase. It's last element indicates whether or not the empty string is a valid phrase, so it must have the dimension of the alphabet +1.
-	 */
-	AngluinDfa(vector <string> alphabet, map <list<string>, bool>* first_queries);
-
-
 	/* Code related to the "dfa common interface" */
 
-protected:
+private:
 
 	vector<DfaState> state_table_;	/*!< The real container, AngluinDfa is just a wrapper */
 
@@ -255,10 +254,5 @@ public:
 	 * Print in the correct order all the infos about the DfaState of the Dfa.
 	 */
 	void print_state_table();
-
-	/*template <class SymIter>
-	DfaState* operator[](SymIter phrase){
-		return (*begin())[phrase];
-	}*/
 };
 #endif /* ANGLUINDFA_H_ */

@@ -9,6 +9,19 @@
 #include "utilities.h"
 
 template <class I>
+void Dfa<I>::set_num_state(int n){
+	num_states_ = n;
+}
+
+template <class I>
+void Dfa<I>::set_alphabet(const vector<symbol_> alf)
+{
+	alphabet_.clear();
+	alphabet_.reserve(alf.size());
+	copy(alf.begin(),alf.end(),back_inserter(alphabet_));
+}
+
+template <class I>
 Dfa<I>::Dfa(){
 	//TO-DO: implementare questo controllo per ogni costruttore di Dfa (spostare quelli non necessari in ConcreteDfa)
 	//Nota bene: questo controllo permette di usare solo i container sequenziali, in quanto quelli associativi richiedono
@@ -39,19 +52,6 @@ template <class I>
 Dfa<I>::~Dfa()
 {
 	alphabet_.clear();
-}
-
-template <class I>
-void Dfa<I>::set_num_state(int n){
-	num_states_ = n;
-}
-
-template <class I>
-void Dfa<I>::set_alphabet(const vector<symbol_> alf)
-{
-	alphabet_.clear();
-	alphabet_.reserve(alf.size());
-	copy(alf.begin(),alf.end(),back_inserter(alphabet_));
 }
 
 template <class I>
@@ -250,13 +250,6 @@ bool Dfa<I> :: equivalence_query(Dfa<O>* subject_dfa, vector<symbol_>& counterex
 		}
 	}
 	
-	/*cout << endl << "TABELLA IBRIDA: " << endl;
-	for(auto map : table){
-		cout << map.first << endl;
-		for(auto mapmap : map.second){
-			cout << "\t" << mapmap.first << " " << mapmap.second << endl;
-		}
-	}*/
 	auto map = table.find(vector<symbol_>())->second;
 	auto itt = map.find(vector<symbol_>());
 	if(itt == map.end())
@@ -291,7 +284,8 @@ vector<symbol_> Dfa<I> :: sort_alphabet() const{
 }
 
 template <class I>
-bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
+template <class O>
+bool Dfa<I>::is_identical(Dfa<O>* other_dfa, vector<symbol_>& phrase){
 	vector<symbol_> sorted_alphabet = sort_alphabet();
 	
 	auto state_it = this->begin();
@@ -340,41 +334,6 @@ bool Dfa<I>::is_identical(Dfa* other_dfa, vector<symbol_>& phrase){
 	  
 	return true;
 };
-
-template <class I>
-vector<symbol_> Dfa<I>::get_next_phrase(vector<symbol_> phrase){
-	vector<symbol_> sorted_alphabet = sort_alphabet();
-	
-	if(phrase.empty()){
-		cerr << "Error in Dfa :: next_phrase: argument has length 0" << endl;
-		throw 0;
-	}
-	
-	if(phrase.back() == sorted_alphabet.back()){
-		while(phrase.back() == sorted_alphabet.back()){
-			phrase.pop_back();
-		}
-		
-		if(phrase.empty()){
-			cerr << "Error in Dfa :: next_phrase: phrase is now empty" << endl;
-			throw 0;
-		}
-	}
-	
-	symbol_ last_sym = phrase.back();
-			
-	bool found_symbol = false;
-	for(auto next = sorted_alphabet.begin(); next != sorted_alphabet.end() && !found_symbol; ++next){
-		if(*next == last_sym){
-			found_symbol = true;
-			++next;
-			phrase.pop_back();
-			phrase.push_back(*next);
-		}
-	}
-	
-	return phrase;
-}
 
 template <class I>
 template <class SymIter>

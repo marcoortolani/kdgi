@@ -17,8 +17,7 @@ private:
 	void try_finalization(TTTDfa* t);
 
 	TTTDfa* OPACKlearn();
-	//TTTDfa* TTTlearn();
-	TTTDfa* TTTlearn_test();
+	TTTDfa* TTTlearn();
 
 public:
 	void set_opack(bool opack);

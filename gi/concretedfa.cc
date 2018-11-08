@@ -255,7 +255,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 	accepting_symbol = n;
 
 	header_line += 1;
-	
+
 	//if(alphabet_file)
 	//	alphabet_file.clear();
 
@@ -277,7 +277,7 @@ ConcreteDfa ConcreteDfa::read_dfa_file(const string file_name)
 		map<symbol_,int> tmp=map<symbol_,int>();
 		for(symbol_ sym : alphabet_file)
 			tmp[sym]=ND;
-		res.accepting_states_.push_back(0);	
+		res.accepting_states_.push_back(0);
 		res.ttable_.push_back(tmp);
 	}
 
@@ -661,7 +661,7 @@ void ConcreteDfa::print_dfa_dot(string title, const char *file_path)
 		else{
 			shape = "circle";
 			style = "filled";
-		} 
+		}
 		color="white";
 
 		states = states + "s"+std::to_string(i)+" [style=\""+style+"\", color=\"black\", fillcolor=\""+color+"\" shape=\""+shape+"\", label=\""+std::to_string(i)+"\"];\n";
@@ -738,14 +738,14 @@ void ConcreteDfa::print_dfa_in_text_file(const symbol_ file_path)
 		for(symbol_ sym : get_alphabet())
 		{
 			myfile << "dfa[" <<std::to_string(i)<<"][";
-			
+
 			myfile << sym << "]="<< get_ttable(i,sym) <<";\n";
 		}
 		myfile << "dfa["<<std::to_string(i)<<"][";
 		myfile << "@" << "]=";
 		if(is_accepting(i))
 			myfile << "1";
-		else 
+		else
 			myfile << "0";
 
 		myfile <<";\n";
@@ -966,7 +966,7 @@ map< vector<symbol_>, int> ConcreteDfa::generate_pos_neg_samples_without_weights
 	////////////////////////////////////////////////////
 	// POSITIVE SAMPLE
 	while(samples.size() < n_pos_samples)
-	{	
+	{
 		//cout<<"Iterazione: "<<debug<<endl;
 		//debug++;
 
@@ -1050,7 +1050,7 @@ map< vector<symbol_>, int> ConcreteDfa::generate_pos_neg_samples_without_weights
 		//cout << "Positive symbol_ generated: " << positive_sample << endl;
 
 
-		
+
 
 	} // END while(positive_sample)
 
@@ -1352,7 +1352,7 @@ bool ConcreteDfa::write_pos_neg_samples_in_file(int n_pos_samples,int n_neg_samp
 	// Extract list of equivalent states from table of distinct states,
 	// every vector contain a list of equivalent states for the state that correspond to the vector.
 	vector<vector<int>> equivalent_states_list = dfa_union->equivalent_states_list_from_table(distincts_table);
-	
+
 	int start_state = get_start_state();
 	int hp_start_state = dfa_hp->get_start_state();
 
@@ -1623,7 +1623,7 @@ size_t ConcreteDfa::get_set_depth(vector<vector<symbol_> > set) const{
 	for(vector<symbol_> phrase : set)
 		if(phrase.size()>max)
 			max=phrase.size();
-  	
+
   return max;
 }
 
@@ -2027,7 +2027,7 @@ vector<vector<symbol_>>	ConcreteDfa::get_w_method_test_set(ConcreteDfa* target_d
 	cout << "END. Size:" << w_method_test_set.size() << endl;
 	#endif
 
-	
+
 	vector<vector<symbol_>> w_vec(w_method_test_set.begin(),w_method_test_set.end());
 
 	return w_vec;
@@ -2114,7 +2114,7 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 	exec_time = std::chrono::duration_cast<std::chrono::milliseconds>( t2 - t1 ).count();
 
 	stats.push_back(exec_time);
-	
+
 	DfaSim sim = DfaSim(this,subject_dfa,stats,sim_matrix);
 
 	if(print){
@@ -2122,7 +2122,7 @@ DfaSim ConcreteDfa::dfa_similarity(ConcreteDfa* subject_dfa, bool print, bool si
 	}
 
 	return sim;
-	
+
 }
 
 
@@ -2306,7 +2306,7 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 
 	vector<map<symbol_,int>> ttable = vector<map<symbol_,int>>();
 	vector<int> accepting_states = vector<int>();
-	
+
 	for(int i = 0; i < nodes_number; ++i){
 		map<symbol_,int> tmp=map<symbol_,int>();
 		for(symbol_ sym : alphabet){
@@ -2331,7 +2331,7 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 
 	while(nodes_number - temp.get_num_states() > 0){
 		int tmp_states = temp.get_num_states();
-		
+
 		for(DfaState state : temp){
 			// possiamo cambiare una transizione da uno stato che ne ha in ingresso almeno 2
 			// e ridirigerla su un nuovo stato
@@ -2346,15 +2346,15 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 				uniform_int_distribution<unsigned> transizione_rand(0, rem_size-1);
 
 				int cas = transizione_rand(e);
-				
+
 				int index = removable[cas].first->get_index();
 
 				symbol_ symbol = removable[cas].second;
-				
+
 				temp.ttable_[index][symbol] = tmp_states;
 
 				map<symbol_, int> new_trans=map<symbol_,int>();
-				
+
 				for(symbol_ sym : alphabet){
 					uniform_int_distribution<unsigned> new_tr(0, tmp_states);
 					new_trans[sym] = new_tr(e);
@@ -2364,7 +2364,7 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 
 				if(accept)
 					temp.accepting_states_.push_back(tmp_states);
-				
+
 				temp.ttable_.push_back(new_trans);
 				temp.num_states_ = tmp_states + 1;
 
@@ -2372,7 +2372,7 @@ void ConcreteDfa::random_dfa_abbadingo(int n, int seed, int n_symbols, string fi
 
 				temp.remove_unreachable();
 
-				
+
 				break;
 
 			}
@@ -2404,4 +2404,3 @@ pair<double, unsigned int> ConcreteDfa::struct_sim(ConcreteDfa* subject_dfa, boo
 	vector<vector<double> > sim = neighbour_matching(subject_dfa, isomorphism, color, eps);
 	return std::make_pair(sim[num_states_][0], sim[num_states_][1]);
 }
-

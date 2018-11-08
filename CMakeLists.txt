@@ -1,4 +1,4 @@
-# MODIFICA PER FAR COMPILARE SUL SERVER 
+# MODIFICA PER FAR COMPILARE SUL SERVER
 # Andrea: 27/07/18
 cmake_minimum_required(VERSION 3.5)
 
@@ -8,6 +8,10 @@ project("GI learner")
 set(CMAKE_CXX_FLAGS "-g -Wall -fvisibility=hidden -std=gnu++11 -fPIC")
 
 set (CMAKE_CXX_STANDARD 11)
+
+# BOOST: eliminare???
+find_package(Boost 1.58 REQUIRED)
+include_directories(${Boost_INCLUDE_DIRS})
 
 ################################
 # Normal Libraries & Executables

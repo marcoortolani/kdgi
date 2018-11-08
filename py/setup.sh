@@ -7,15 +7,18 @@ fi
 
 libname=$(basename $1)
 basedir=$(dirname $1)
-basedir=${basedir%lib}
+#basedir=${basedir%lib}
+basedir=${basedir%py}
 
 echo $libname
-if [[ ! $libname =~ "libgigipy" ]]; then
+# if [[ ! $libname =~ "libgigipy" ]]; then
+if [[ ! $libname =~ "gipy_lib" ]]; then
 	echo "$1 doesn't appear to be a proper lib name!"
 	exit 1
 fi
 
-if [ ! -f $basedir/../src/gilearning/gi_dfa.h ]; then
+# if [ ! -f $basedir/../src/gilearning/gi_dfa.h ]; then
+if [ ! -f $basedir/../gi/dfa.h ]; then
 	echo "$basedir is not a proper GI-learning source dir!"
 	exit 1
 fi

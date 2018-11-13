@@ -271,7 +271,7 @@ vector<symbol_> Dfa<I> :: sort_alphabet() const{
 
 	while(!sorted){
 		sorted = true;
-		for(int i = 0; i < sorted_alphabet.size() - 1 && sorted; ++i){
+		for(unsigned int i = 0; i < sorted_alphabet.size() - 1 && sorted; ++i){
 			if(!lexicographical_compare(sorted_alphabet.begin() + i, sorted_alphabet.begin() + i+1, sorted_alphabet.begin() + i+1, sorted_alphabet.begin() + i+2)){
 				sorted = false;
 				symbol_ temp = sorted_alphabet[i];

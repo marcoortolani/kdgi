@@ -787,7 +787,7 @@ ConcreteDfa* AngluinDfa::gen_concrete_dfa() const{
 
     vector <vector<int>> states;
     vector <int> indices;
-    int start_state;
+    int start_state = 0;
 
     int i = 0;
     auto it = S.begin();

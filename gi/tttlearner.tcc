@@ -9,20 +9,20 @@ void TTTLearner<O> :: close_transition(TTTDfa* t, tuple<vector<string,allocator<
 	vector<symbol_> suffix;
 
 	t->init_sifting(std :: get<0>(pair), std :: get<1>(pair), suffix, std :: get<2>(pair));
-		do{
-			vector <symbol_> phrase = prefix;
-			phrase.insert(phrase.end(), suffix.begin(), suffix.end());
+	do{
+		vector <symbol_> phrase = prefix;
+		phrase.insert(phrase.end(), suffix.begin(), suffix.end());
 
-			bool query;
+		bool query;
 
-			//if(!t->know_phrase_for_sure(phrase, query)){
-				query = this->ask_membership(phrase);
-			//}
-			queries.push_back(query);
-		}
-		while(t->sift_step(suffix, queries.back(), std :: get<2>(pair)));
+		//if(!t->know_phrase_for_sure(phrase, query)){
+			query = this->ask_membership(phrase);
+		//}
+		queries.push_back(query);
+	}
+	while(t->sift_step(suffix, queries.back(), std :: get<2>(pair)));
 
-		t->close_transition(std :: get<0>(pair), std :: get<1>(pair), queries.back());
+	t->close_transition(std :: get<0>(pair), std :: get<1>(pair), queries.back());
 }
 
 template <class O>
@@ -53,8 +53,7 @@ TTTDfa* TTTLearner<O> :: OPACKlearn(){
 	while(!this->ask_equivalence(t, counterexample)){
 		bool truth = !t->membership_query(counterexample);
 
-		while(t->membership_query(counterexample) != truth){
-			t->handle_counterexample(counterexample);
+		while(t->handle_counterexample(counterexample, truth)){
 
 			close_transitions(t, true);
 
@@ -126,8 +125,8 @@ TTTDfa* TTTLearner<O> :: TTTlearn(){
 		while(t->membership_query(counterexample) != truth){
 			vector<symbol_> prefix;
 			symbol_ transition;
-			while(t->handle_counterexample_test(counterexample, truth, prefix, transition)){
-				auto tuple = std :: make_tuple(prefix, transition, true);
+			while(t->handle_counterexample(counterexample, truth/*, prefix, transition*/)){
+				//auto tuple = std :: make_tuple(prefix, transition, true);
 				close_transitions(t, false);
 
 				try_finalization(t);

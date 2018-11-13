@@ -76,7 +76,7 @@ DfaState* TTTDfa :: set_final_transition(DfaState* start_state, symbol_ transiti
 	if(father->get_child(child) != NULL){
 		cerr << "Error in TTTDfa :: set_deterministic_transition" << endl;
 		cerr << "the " << child << " child of the node " << father->get_phrase() << "is not a new state" << endl;
-		cerr << "(ie it's not a NULL pointer)" << endl;
+		cerr << "(i.e. it's not a NULL pointer)" << endl;
 		throw 0;
 	}
 
@@ -198,7 +198,7 @@ void TTTDfa :: split_state(DfaState* start_state, symbol_ transition, vector<sym
 	span_disc_link_[new_state_phrase].second = ch_new;
 }
 
-void TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex){
+/*void TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex){
 	vector <symbol_> prefix;
 	symbol_ transition;
 	list<symbol_> suffix;
@@ -237,9 +237,9 @@ void TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex){
 	cerr << "Error in TTTDfa :: subdivide_counterexample:" << endl;
 	cerr <<"A subdivision of the counterexample (Rivest Schapire) couldn't be found" << endl;
 	throw 0;
-}
+}*/
 
-bool TTTDfa :: handle_counterexample_test(vector <symbol_> cntr_ex, bool cntr_truth, vector <symbol_>& prefix, symbol_& transition){
+bool TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex, bool cntr_truth/*, vector <symbol_>& prefix, symbol_& transition*/){
 	list<symbol_> suffix;
 
 	suffix.insert(suffix.end(), cntr_ex.begin(), cntr_ex.end());
@@ -254,7 +254,7 @@ bool TTTDfa :: handle_counterexample_test(vector <symbol_> cntr_ex, bool cntr_tr
 
 	state = span_tree_;
 	while(!suffix.empty()){
-		transition = suffix.front();
+		symbol_ transition = suffix.front();
 
 		DfaState* next_state = state->next(transition);
 		if(next_state == &non_tree_transitions_ && test_closure(state, suffix, !cntr_truth, false)){
@@ -271,7 +271,7 @@ bool TTTDfa :: handle_counterexample_test(vector <symbol_> cntr_ex, bool cntr_tr
 		}
 
 		suffix.pop_front();
-		prefix.push_back(transition);
+		//prefix.push_back(transition);
 		state = next_state;
 	}
 
@@ -300,10 +300,6 @@ vector<std::tuple<vector<symbol_>, symbol_, bool>> TTTDfa :: get_transitions_to_
 					else if(disc->is_final()){
 						res.push_back(std::make_tuple(state->get_charact_phrase(), sym, false));
 					}
-					/*else{
-						cerr << "Error in TTTDfa :: get_transitions_to_sift" << endl;
-						throw 0;
-					}*/
 				}
 			}
 		}
@@ -331,13 +327,11 @@ void TTTDfa :: init_sifting(vector<symbol_> prefix, symbol_ transition, vector<s
 			}
 			else{
 				utility_node_ = disc;
-				//suffix = utility_node_->get_phrase();
 			}
 		}
 	}
 	else{
 		utility_node_ = discrim_tree_;
-		//suffix.clear();
 	}
 
 	suffix = utility_node_->get_phrase();
@@ -507,10 +501,10 @@ bool TTTDfa :: try_single_finalization(vector<vector<symbol_>>& prefixes_to_veri
 		prefixes0.clear();
 		prefixes1.clear();
 		for(vector<symbol_> prefix : temp_prefixes){
-			vector<symbol_> aaaAAA = prefix;
-			aaaAAA.insert(aaaAAA.end(), suffix.begin(), suffix.end());
+			vector<symbol_> phrase = prefix;
+			phrase.insert(phrase.end(), suffix.begin(), suffix.end());
 			bool x;
-			if(know_phrase_for_sure(aaaAAA, x)){
+			if(know_phrase_for_sure(phrase, x)){
 				if(x){
 					prefixes1.push_back(prefix);
 				}

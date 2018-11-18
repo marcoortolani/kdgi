@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.5)
 project("GI learner")
 
 # Enable all warning by default
-set(CMAKE_CXX_FLAGS "-g -Wall -fvisibility=hidden")
+set(CMAKE_CXX_FLAGS "-g -Wall -fvisibility=hidden -fPIC")
 
 set (CMAKE_CXX_STANDARD 11)
 

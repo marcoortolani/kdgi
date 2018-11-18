@@ -6,43 +6,131 @@
 #include <pybind11/functional.h>
 #include <pybind11/chrono.h>
 
+#include <pybind11/stl_bind.h>
+
 //For operators overload: https://pybind11.readthedocs.io/en/stable/advanced/classes.html#operator-overloading
 #include <pybind11/operators.h>
 
 #include "concretedfa.h"
+#include "angluindfa.h"
+#include "angluinlearner.h"
+#include "tttdfa.h"
+#include "tttlearner.h"
 
 //Default arguments: https://pybind11.readthedocs.io/en/stable/basics.html#default-args
 
 namespace py = pybind11;
 
-PYBIND11_MODULE(gi_gipy, m) {
-    m.doc() = "pybind11 plugin for the kdgi library";
+//Definiamo PyDfa come trampolino della classe Dfa per poter gestire i suoi metodi virtuali.
+//Deve essere anche generica in quanto Dfa è generica.
+template <class Iter>
+class PyDfa : public Dfa<Iter> {
+public:
 
+	/* Aliases for the begin and end methods*/
+	using 	basetype = typename std::iterator_traits< Iter >::value_type;
+	using 	iterator = typename basetype::iterator;
 
-    py::class_<DfaSim>(m,"DfaSim")
+    /* Inherit the constructors */
+    using Dfa<Iter>::Dfa;
 
-      .def(py::init())
+    /* Trampoline (need one for each virtual function) */
+    bool membership_query(vector<symbol_> phrase) const override {
+        PYBIND11_OVERLOAD_PURE(
+            bool, /* Return type */
+            Dfa<Iter>,      /* Parent class */
+            membership_query,	/* Name of function in C++ (must match Python name) */
+            phrase      /* Argument(s) */
+        );
+    }
+    
+    /* Trampoline (need one for each virtual function) */
+    iterator begin() override {
+        PYBIND11_OVERLOAD_PURE(
+            iterator, /* Return type */
+            Dfa<Iter>,      /* Parent class */
+            begin	/* Name of function in C++ (must match Python name) */
+                  /* Argument(s) */
+        );
+    }
+    
+    /* Trampoline (need one for each virtual function) */
+    iterator end() override {
+        PYBIND11_OVERLOAD_PURE(
+            iterator, /* Return type */
+            Dfa<Iter>,      /* Parent class */
+            end	/* Name of function in C++ (must match Python name) */
+                  /* Argument(s) */
+        );
+    }
+};
 
-      //.def("print_sim", &DfaSim::print_sim, "Print the similarity score between dfas, taking into account both linguistical and structural sides.")
+//templated declaration for Dfa<Iter>
+//Questo funzione generica viene usata per istanziare le classi. 
+//In pratica il codice viene riscritto ogni volta che la funzione viene richiamata,
+//ma in questo modo lo scriviamo una sola volta nei sorgenti.
+template<typename Iter>
+void declare_Dfa(py::module &m, std::string typestr) {
+	
+	std::string pyclass_name = std::string("Dfa") + typestr;
+	std::cout << pyclass_name.c_str() << endl;
+	
+	//Dfa<Iter> non può essere instanziata normalmente, perchè oltre ad essere una classe generica è anche astratta.
+	//Bisogna passare per una classe "trampolino" definita (sopra) solo in python proprio per questo scopo,
+	//la quale gestirà le funzioni (puramente e non) virtuali. Questa classe è solo un trampolino, per cui tutti i
+	//binding dei metodi saranno riferiti alla classe reale.
+	py::class_<Dfa<Iter>, PyDfa<Iter>>(m, pyclass_name.c_str(), py::buffer_protocol(), py::dynamic_attr())
+		/* Constructor */
+		.def(py::init<>())
+		
+		/* Common methods */
+		.def("get_dim_alphabet", &Dfa<Iter>::get_dim_alphabet)
+		.def("get_alphabet", &Dfa<Iter>::get_alphabet)
+		.def("print_dfa", &Dfa<Iter>::print)
+		.def("print_dot", &Dfa<Iter>::print_dfa_dot)
+		.def("print_structural_similarity", &Dfa<Iter>::print_structural_similarity)
+		
+		/* Pure virtual functions */
+		.def("membership_query", &Dfa<Iter>::membership_query)
+		.def("begin", &Dfa<Iter>::begin)
+		.def("end", &Dfa<Iter>::end)
+	;
+}
 
-      .def("get_true_positives", &DfaSim::get_true_positives)
-      .def("get_true_negatives", &DfaSim::get_true_negatives)
-      .def("get_false_positives", &DfaSim::get_false_positives)
-      .def("get_false_negatives", &DfaSim::get_false_negatives)
-      .def("get_precision", &DfaSim::get_precision)
-      .def("get_recall", &DfaSim::get_recall)
-      .def("get_linguistical_f_measure", &DfaSim::get_linguistical_f_measure)
-      .def("get_specificity", &DfaSim::get_specificity)
-      .def("get_bcr", &DfaSim::get_bcr)
-      .def("get_nodes_sim_matrix", &DfaSim::get_nodes_sim_matrix)
-      .def("get_structural_f_measure", &DfaSim::get_structural_f_measure)
-      .def("get_exec_time", &DfaSim::get_exec_time)
+template<typename D1, typename D2>
+std::pair<bool, vector<symbol_>> equivalence_query(D1* d1, D2* d2){
+	vector<symbol_> counterexample;
+	bool res = d1->equivalence_query(d2, counterexample);
+	return std::make_pair(res, counterexample);
+};
 
-      //.def("which_dfas", (void (DfaSim::*)()const)  &DfaSim::which_dfas,"Print the ttable of reference and subject dfas")
-      .def("which_dfas", (const ConcreteDfa* (DfaSim::*)(const ConcreteDfa*)const) &DfaSim::which_dfas,"Returns the two dfas compared")
+template<typename D1, typename D2>
+vector< vector< double > > neighbour_matching(D1* d1, D2* d2){//, bool isomorphism=false, bool color=false, double eps=0.0001){
+	return d1->neighbour_matching(d2);//, isomorphism, color, eps);
+};
+
+template<typename Learner, typename Oracle>
+void declare_Learner(py::module &m, std::string typestr) {
+    using Class = Learner;
+    std::string pyclass_name = typestr;
+    std::cout << pyclass_name.c_str() << endl;
+    
+    py::class_<Class>(m, pyclass_name.c_str(), py::buffer_protocol(), py::dynamic_attr())
+		.def(py::init<Oracle*, vector<symbol_>>())
+		.def("learn", &Learner::learn)
     ;
+}
 
-    py::class_<ConcreteDfa>(m, "Dfa")
+//Ho cambiato il nome del modulo per farlo matchare con il target
+//PYBIND11_MODULE(gi_gipy, m) {
+PYBIND11_MODULE(gipy_lib, m) {
+    m.doc() = "pybind11 plugin for the kdgi library";
+	
+	//Instanziamo il Dfa<vector...> prima di poterlo usare come classe base per il ConcreteDfa
+	declare_Dfa<vector<DfaState>*>(m, "_vec");
+	
+	//A questo punto possiamo definire il ConcreteDfa come classe derivata di Dfa<vector...>
+	py::class_<ConcreteDfa, Dfa<vector<DfaState>*>>(m, "ConcreteDfa")
 
       //*** Constructors ***
       .def(py::init(),"Make an instance of null dfa.")
@@ -59,49 +147,57 @@ PYBIND11_MODULE(gi_gipy, m) {
       //===========================================================================================
 
       //*** Basic methods ***
-      .def("get_dim_alphabet", &ConcreteDfa::get_dim_alphabet,"Return size of alphabet.")
-
-      .def("get_alphabet",&ConcreteDfa::get_alphabet,"Return a vector with alphabet symbols.")
-
-      .def("get_accepting_states",&ConcreteDfa::get_accepting_states,"Return accepting states.")
-
-      .def("is_accepting",&ConcreteDfa::is_accepting,"Returns true if current state is accepting.")
-
-      .def("get_num_states",&ConcreteDfa::get_num_states,"Get number of states.")
-
-      .def("get_start_state",&ConcreteDfa::get_start_state,"Get index of start state.")
-
-      //.def("print_dfa_ttable",&ConcreteDfa::print_dfa_ttable,"Print the transition table of current dfa. Before the transition table print the title passed as parameter.")
+      .def_static("read_dfa_file", &ConcreteDfa::read_dfa_file)
+      .def("print_dfa_ttable",&ConcreteDfa::print_dfa_ttable,"Print the transition table of current dfa. Before the transition table print the title passed as parameter.")
       
-      .def_static("read_dfa_file", &ConcreteDfa::read_dfa_file, "Read a dfa from a file.")
-      
-      .def("save_dfa", &ConcreteDfa::print_dfa_in_text_file, "Print a DFA in a text file. Adopted format is the same used for reading a DFA from file.")
-      
-      .def("print_dfa_dot", &ConcreteDfa::print_dfa_dot, "Print a dot file for the current dfa.")
-      
-      .def("membership_query", &ConcreteDfa::membership_query, "Make a membership query to dfa with the \"phrase\" string with alphabet symbol. Return \"true\" if the arrive state for \"phrase\" is acceptor, else \"false\".")
-      
-      .def("gen_samples", &ConcreteDfa::generate_pos_neg_samples_without_weights, "It returns a set random samples (all different) generated from current DFA.")
-      
-      //===========================================================================================
-
-      //*** W-Method ***
-      .def("get_w_method_test_set", &ConcreteDfa::get_w_method_test_set, "Return a W-METHOD test set of strings for current DFA.",py::arg("target_dfa"), py::arg("sigma") = 1)
-      
-      .def("get_w_method_statistics", &ConcreteDfa::get_w_method_statistics, "Return a 9-dimensional array with all the w-method statistics.")
-      
-      .def("print_w_method", &ConcreteDfa::print_w_method, "Print the w-method statistics")
-
-      //===========================================================================================
-
-      //*** Structural similarity ***
-      .def("neighbour_matching_structural_similarity", &ConcreteDfa::neighbour_matching, "Gives the structural similarity score matrix between every pair of states of two DFAs",py::arg("target_dfa"), py::arg("eps") = 0.0001, py::arg("color") = 0)
-      .def("print_structural_similarity", &ConcreteDfa::print_structural_similarity, "Print the matrix containing the similarity score between pair of nodes.")
-      
-      //===========================================================================================
-      
-      //*** Overall similarity ***
-      .def("dfa_similarity", &ConcreteDfa::dfa_similarity, "Returns and print the similarity score between dfas, taking into account both linguistical and structural sides.",py::arg("target_dfa"),py::arg("print") = 0, py::arg("sigma") = 1, py::arg("eps") = 0.0001, py::arg("color") = 0)
     ;
 
+	/* Active learning */
+
+	/*----------Angluin----------*/
+	// AngluinDfa eredita da Dfa<vector...>
+    py::class_<AngluinDfa, Dfa<vector<DfaState>*>>(m, "AngluinDfa");
+    
+    /* dichiaro i learner angluin per i tipi di oracoli che mi interessano 
+     * (_C per ConcreteDfa e _A per AngluinDfa) 
+     */
+    declare_Learner<AngluinLearner<ConcreteDfa>, ConcreteDfa>(m, "AngluinLearner_C");
+    declare_Learner<AngluinLearner<AngluinDfa>, AngluinDfa>(m, "AngluinLearner_A");
+    declare_Learner<AngluinLearner<TTTDfa>, TTTDfa>(m, "AngluinLearner_T");
+    
+    /*----------TTT----------*/
+    // TTT eredita da Dfa<list...>
+    declare_Dfa<list<DfaState>*>(m, "_list");
+    py::class_<TTTDfa, Dfa<list<DfaState>*>>(m, "TTTDfa");
+    
+    declare_Learner<TTTLearner<ConcreteDfa>, ConcreteDfa>(m, "TTTLearner_C");
+    declare_Learner<TTTLearner<AngluinDfa>, AngluinDfa>(m, "TTTLearner_A");
+    declare_Learner<TTTLearner<TTTDfa>, TTTDfa>(m, "TTTLearner_T");
+    
+    /*----------Function templates----------*/
+    //Equivalence query
+    m.def("equivalence_query", equivalence_query<ConcreteDfa, ConcreteDfa>);
+    m.def("equivalence_query", equivalence_query<ConcreteDfa, AngluinDfa>);
+    m.def("equivalence_query", equivalence_query<ConcreteDfa, TTTDfa>);
+    
+    m.def("equivalence_query", equivalence_query<AngluinDfa, AngluinDfa>);
+    m.def("equivalence_query", equivalence_query<AngluinDfa, ConcreteDfa>);
+    m.def("equivalence_query", equivalence_query<AngluinDfa, TTTDfa>);
+    
+    m.def("equivalence_query", equivalence_query<TTTDfa, TTTDfa>);
+    m.def("equivalence_query", equivalence_query<TTTDfa, ConcreteDfa>);
+    m.def("equivalence_query", equivalence_query<TTTDfa, AngluinDfa>);
+    
+    //Neighbour matching
+    m.def("neighbour_matching", neighbour_matching<ConcreteDfa, ConcreteDfa>);
+    m.def("neighbour_matching", neighbour_matching<ConcreteDfa, AngluinDfa>);
+    m.def("neighbour_matching", neighbour_matching<ConcreteDfa, TTTDfa>);
+    
+    m.def("neighbour_matching", neighbour_matching<AngluinDfa, AngluinDfa>);
+    m.def("neighbour_matching", neighbour_matching<AngluinDfa, ConcreteDfa>);
+    m.def("neighbour_matching", neighbour_matching<AngluinDfa, TTTDfa>);
+    
+    m.def("neighbour_matching", neighbour_matching<TTTDfa, TTTDfa>);
+    m.def("neighbour_matching", neighbour_matching<TTTDfa, ConcreteDfa>);
+    m.def("neighbour_matching", neighbour_matching<TTTDfa, AngluinDfa>);
 }

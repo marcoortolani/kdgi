@@ -58,24 +58,24 @@ void test1(){
 							};
 
 	for(string name : files){
-		string path = "data/" + name + ".txt";
+		string path = "../gi/data/" + name + ".txt";
 		cout << name << endl;
 
 		ConcreteDfa c = c.read_dfa_file(path);
 		c.update_state_table();
 
-		SillyOracle silly(&c);
+		//SillyOracle silly(&c);
 
 		vector<symbol_> counterexample;
 
-		TTTLearner<SillyOracle> tttl(&silly, c.get_alphabet(), true);
+		TTTLearner<ConcreteDfa> tttl(&c, c.get_alphabet(), true);
 		TTTDfa* op = tttl.learn();
 		if(!op->equivalence_query(&c, counterexample)){
 			cout << "\tOPack non corrisponde, controesempio trovato: " << counterexample << endl;
 		}
 		else{
 			cout << "\tOPack" << endl;
-			print_results(&silly, &tttl);
+			print_results(&c, &tttl);
 		}
 		tttl.reset_costs();
 
@@ -86,24 +86,24 @@ void test1(){
 		}
 		else{
 			cout << "\tTTTDfa" << endl;
-			print_results(&silly, &tttl);
+			print_results(&c, &tttl);
 		}
 		tttl.reset_costs();
 
-		AngluinLearner<SillyOracle> al(&silly, c.get_alphabet());
+		AngluinLearner<ConcreteDfa> al(&c, c.get_alphabet());
 		AngluinDfa* ang = al.learn();
 		if(!ang->equivalence_query(&c, counterexample)){
 			cout << "\tAngluinDfa non corrisponde, controesempio trovato: " << counterexample << endl;
 		}
 		else{
 			cout << "\tAngluinDfa" << endl;
-			print_results(&silly, &al);
+			print_results(&c, &al);
 		}
 		al.reset_costs();
 
-		compare(ttt, ang, &silly, "ttt", "ang");
-		compare(ang, ttt, &silly, "ang", "ttt");
-		compare(ang, ttt, &silly, "ang", "ttt");
+		compare(ttt, ang, &c, "ttt", "ang");
+		compare(ang, ttt, &c, "ang", "ttt");
+		compare(ang, ttt, &c, "ang", "ttt");
 
 		/*op->print_ttt_dot("", "dfas/dot/OPack" + name + ".dot");
 		ttt->print_ttt_dot("", "dfas/dot/TTT" + name + ".dot");
@@ -179,7 +179,184 @@ void test2(int max_length, vector<symbol_> alphabet){
 	delete ang;
 }
 
+void test3(int max_length){
+	vector<vector<symbol_>> dataset;
+	string path = "_odd_a_odd_b";
+	
+	ConcreteDfa c = ConcreteDfa :: read_dfa_file("../gi/data/" + path + ".txt");
+	c.update_state_table();
+	
+	vector<symbol_> alphabet = c.get_alphabet();
+	
+	//Scorro il numero di simboli che le frasi dovranno avere (da 0 al massimo indicato).
+	for(int i = 0; i <= max_length; ++i){
+		//Scorro tutti gli interi da 0 ad dim_alfabeto ^ lunghezza_frase_corrente
+		//e converto il numero in base dim_alfabeto per poi sostituire ogni cifra al simbolo corrispondente.
+		for(int j = 0; j < pow(alphabet.size(), i); ++j){
+				int val = j;
+				vector<symbol_> word;
+				for(int k = 0; k < i; k++){
+					word.push_back(alphabet[val % alphabet.size()]);
+					val /= alphabet.size();
+				}
+
+				cout << word << endl;
+
+				if(c.membership_query(word))
+					dataset.push_back(word);
+		}
+	}
+	
+	SillyOracle silly(dataset);
+	TTTLearner<SillyOracle> l(&silly, c.get_alphabet());
+	l.set_opack(false);
+	TTTDfa* ttt = l.learn();
+	
+	ttt->print_dfa_dot("", "dfas/dot/" + path + ".dot");
+	
+	ttt->print();
+	c.print();
+	cout << "Results:" << endl;
+	cout << ttt->neighbour_matching(&c, true, true)[ttt->get_num_states()][0] << " : ";
+	cout << c.neighbour_matching(ttt, true, true)[c.get_num_states()][0] << endl;
+	
+	delete ttt;
+}
+
+void test4(int max_length, int rand_length, vector<symbol_> alphabet){
+	RandomOracle rand(rand_length, alphabet);
+	vector<vector<symbol_>> dataset;
+	
+	//Scorro il numero di simboli che le frasi dovranno avere (da 0 al massimo indicato).
+	for(int i = 0; i <= max_length; ++i){
+		//Scorro tutti gli interi da 0 ad dim_alfabeto ^ lunghezza_frase_corrente
+		//e converto il numero in base dim_alfabeto per poi sostituire ogni cifra al simbolo corrispondente.
+		for(int j = 0; j < pow(alphabet.size(), i); ++j){
+				int val = j;
+				vector<symbol_> word;
+				for(int k = 0; k < i; k++){
+					word.push_back(alphabet[val % alphabet.size()]);
+					val /= alphabet.size();
+				}
+
+				if(rand.membership_query(word)){
+					//cout << word << endl;
+					dataset.push_back(word);
+				}
+		}
+	}
+	
+	SillyOracle silly(dataset);
+	
+	TTTLearner<RandomOracle> l1(&rand, alphabet);
+	TTTLearner<SillyOracle> l2(&silly, alphabet);
+	
+	TTTDfa* ttt1 = l1.learn();
+	cout << "learned l1" << endl;
+	TTTDfa* ttt2 = l2.learn();
+	cout << "learned l2" << endl;
+	
+	//ttt1->print_dfa_dot("", "dfas/dot/rand.dot");
+	//ttt2->print_dfa_dot("", "dfas/dot/silly.dot");
+	
+	cout << "Results:" << endl;
+	cout << ttt1->neighbour_matching(ttt2, true, true)[ttt1->get_num_states()][0] << " : ";
+	cout << ttt2->neighbour_matching(ttt1, true, true)[ttt2->get_num_states()][0] << endl ;
+	
+	vector<symbol_> counterexample;
+	if(! ttt1->equivalence_query(ttt2, counterexample))
+		cout << counterexample << endl;
+		
+	delete ttt1;
+	delete ttt2;
+}
+
+void test5(){
+	vector<symbol_> alphabet = vector<symbol_>{"a", "b"};
+	vector<vector<symbol_>> dataset = {vector<symbol_>{"b"},
+	vector<symbol_>{"b", "a"},
+	vector<symbol_>{"a", "a", "a"},
+	vector<symbol_>{"b", "a", "a"},
+	vector<symbol_>{"a", "b", "a"},
+	vector<symbol_>{"a", "a", "b"},
+	vector<symbol_>{"b", "a", "b"},
+	vector<symbol_>{"a", "a", "a"},
+	vector<symbol_>{"a", "a", "a", "a"},
+	vector<symbol_>{"b", "a", "a", "a"},
+	vector<symbol_>{"a", "b", "b", "a"},
+	vector<symbol_>{"b", "b", "b", "a"},
+	vector<symbol_>{"a", "a", "a", "b"},
+	vector<symbol_>{"b", "a", "a", "b"},
+	vector<symbol_>{"a", "b", "a", "b"},
+	vector<symbol_>{"a", "a", "b", "b"},
+	vector<symbol_>{"a", "b", "b", "b"},
+	vector<symbol_>{"b", "b", "b", "b"},
+	vector<symbol_>{"a", "a", "a", "a"},
+	vector<symbol_>{"a", "a", "a", "a", "a"},
+	vector<symbol_>{"b", "b", "a", "a", "a"},
+	vector<symbol_>{"b", "a", "b", "a", "a"},
+	vector<symbol_>{"a", "b", "b", "a", "a"},
+	vector<symbol_>{"b", "b", "b", "a", "a"},
+	vector<symbol_>{"a", "b", "a", "b", "a"},
+	vector<symbol_>{"b", "b", "a", "b", "a"},
+	vector<symbol_>{"a", "a", "b", "b", "a"},
+	vector<symbol_>{"b", "a", "b", "b", "a"},
+	vector<symbol_>{"b", "b", "b", "b", "a"},
+	vector<symbol_>{"a", "a", "a", "a", "b"},
+	vector<symbol_>{"b", "b", "a", "a", "b"},
+	vector<symbol_>{"a", "b", "a", "b", "b"},
+	vector<symbol_>{"b", "b", "a", "b", "b"},
+	vector<symbol_>{"b", "a", "b", "b", "b"},
+	vector<symbol_>{"a", "b", "b", "b", "b"},
+	vector<symbol_>{"b", "b", "b", "b", "b"},
+	vector<symbol_>{"a", "a", "a", "a", "a"},
+	vector<symbol_>{"b", "a", "a", "a", "a", "a"},
+	vector<symbol_>{"b", "a", "b", "a", "a", "a"},
+	vector<symbol_>{"b", "b", "b", "a", "a", "a"},
+	vector<symbol_>{"a", "b", "a", "b", "a", "a"},
+	vector<symbol_>{"b", "b", "a", "b", "a", "a"},
+	vector<symbol_>{"b", "a", "b", "b", "a", "a"},
+	vector<symbol_>{"b", "b", "b", "b", "a", "a"},
+	vector<symbol_>{"a", "a", "a", "a", "b", "a"},
+	vector<symbol_>{"b", "a", "a", "a", "b", "a"},
+	vector<symbol_>{"a", "a", "b", "a", "b", "a"},
+	vector<symbol_>{"b", "a", "b", "a", "b", "a"},
+	vector<symbol_>{"a", "b", "b", "a", "b", "a"},
+	vector<symbol_>{"b", "b", "b", "a", "b", "a"},
+	vector<symbol_>{"a", "a", "a", "b", "b", "a"},
+	vector<symbol_>{"b", "a", "a", "b", "b", "a"},
+	vector<symbol_>{"a", "b", "a", "b", "b", "a"},
+	vector<symbol_>{"a", "b", "b", "b", "b", "a"},
+	vector<symbol_>{"b", "b", "b", "b", "b", "a"},
+	vector<symbol_>{"a", "a", "a", "a", "a", "b"},
+	vector<symbol_>{"a", "b", "a", "a", "a", "b"},
+	vector<symbol_>{"b", "a", "b", "a", "a", "b"},
+	vector<symbol_>{"a", "b", "a", "b", "a", "b"},
+	vector<symbol_>{"b", "b", "a", "b", "a", "b"},
+	vector<symbol_>{"b", "a", "b", "b", "a", "b"},
+	vector<symbol_>{"b", "b", "b", "b", "a", "b"},
+	vector<symbol_>{"a", "a", "a", "a", "b", "b"},
+	vector<symbol_>{"b", "a", "a", "a", "b", "b"},
+	vector<symbol_>{"a", "b", "a", "a", "b", "b"},
+	vector<symbol_>{"b", "b", "a", "a", "b", "b"},
+	vector<symbol_>{"a", "a", "b", "a", "b", "b"},
+	vector<symbol_>{"b", "b", "b", "a", "b", "b"},
+	vector<symbol_>{"a", "b", "b", "b", "b", "b"},
+	vector<symbol_>{"b", "b", "b", "b", "b", "b"}};
+	
+	SillyOracle silly(dataset);
+	TTTLearner<SillyOracle> l2(&silly, alphabet);
+	TTTDfa* ttt2 = l2.learn();
+	cout << "learned l2" << endl;
+	//ttt2->print_dfa_dot("", "dfas/dot/silly.dot");
+	
+	delete ttt2;
+}
+
 int main() {
-	//test1();
+	test1();
 	test2(4, vector<symbol_>{"a", "b", "c", "d"});
+	test3(8);
+	test4(6, 9, vector<symbol_>{"a", "b"});
+	//test5();
 }

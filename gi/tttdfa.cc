@@ -11,8 +11,11 @@ bool DEBUG = false;
 
 bool TTTDfa::membership_query(vector<symbol_> phrase) const {
 	DfaState* state = span_tree_;
+	
 	for(symbol_ sym : phrase){
-		state = next_span_state(state, sym);
+		//Controllare qui
+		//state = next_span_state(state, sym);
+		state = next_span_state(state, sym, false);
 	}
 	return state->is_accepting();
 }
@@ -129,7 +132,7 @@ DfaState* TTTDfa :: next_span_state(DfaState* start, symbol_ transition, bool st
 		DiscrimNode* arrive_node = non_tree_transitions_.get_non_tree_arrive_node(start->get_charact_phrase(), transition);
 		bool leaf = arrive_node->is_leaf();
 		if(strict && !leaf){
-			cerr << "Error in TTTDfa :: next_state" << endl;
+			cerr << "Error in TTTDfa :: next_span_state" << endl;
 			cerr << "the Dfa is still non deterministic, cannot reach any state for the phrase " << start->get_charact_phrase() << " " << transition << endl;
 			throw 0;
 		}
@@ -176,7 +179,6 @@ bool TTTDfa :: test_closure(DfaState* start, list<symbol_> discriminator, bool e
 }
 
 void TTTDfa :: split_state(DfaState* start_state, symbol_ transition, vector<symbol_> discriminator, bool state_position, bool strict){
-
 	vector<symbol_> old_state_phrase = next_span_state(start_state, transition, strict)->get_charact_phrase();
 	vector<symbol_> new_state_phrase = start_state->get_charact_phrase();
 	new_state_phrase.push_back(transition);
@@ -239,7 +241,7 @@ void TTTDfa :: split_state(DfaState* start_state, symbol_ transition, vector<sym
 	throw 0;
 }*/
 
-bool TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex, bool cntr_truth/*, vector <symbol_>& prefix, symbol_& transition*/){
+bool TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex, bool cntr_truth){
 	list<symbol_> suffix;
 
 	suffix.insert(suffix.end(), cntr_ex.begin(), cntr_ex.end());
@@ -404,11 +406,14 @@ bool is_prefix(vector<symbol_> prefix, vector<symbol_> word){
 }
 
 bool TTTDfa :: know_phrase_for_sure(vector<symbol_> phrase, bool& truth){
+	return false;
 	auto it = lost_queries_.find(phrase);
 	if(it != lost_queries_.end()){
 		truth = it->second;
 		return true;
 	}
+	
+	//return false;
 
 	DfaState* state = span_tree_;
 	DfaState* next = NULL;
@@ -515,6 +520,11 @@ bool TTTDfa :: try_single_finalization(vector<vector<symbol_>>& prefixes_to_veri
 			else{
 				prefixes_to_verify.push_back(prefix);
 			}
+		}
+
+		if( (prefixes_to_verify.empty() && prefixes0.empty()) || (prefixes_to_verify.empty() && prefixes1.empty()) ){
+			cerr << "Error in TTTDfa :: try_single_finalization" << endl;
+			throw 0;
 		}
 
 		return true;
@@ -638,7 +648,6 @@ void TTTDfa :: update_lost_queries(vector<pair<vector<symbol_>, bool>> leaf_quer
 
 		vector<symbol_> prefix = disc->get_phrase();
 
-		//while(disc != utility_node_){
 		bool test = true;
 		while(test){
 			if(disc == utility_node_)
@@ -688,6 +697,7 @@ void TTTDfa :: split_block(vector<pair<vector<symbol_>, bool>> leaf_queries, vec
 	if(mark_0.empty() || mark_1.empty()){
 		cerr << "Error in TTTDfa :: split_block" << endl;
 		cerr << "Block cannot be split if there aren't 2 states with different outcome for suffix: " << suffix << endl;
+		//print_ttt_dot("", "debug.dot");
 		throw 0;
 	}
 
@@ -788,8 +798,10 @@ void TTTDfa :: make_hypotesis(){
 		}
 
 		for(symbol_ s : sorted_alphabet){
-
-			DfaState* next_tttstate = TTTDfa :: next_span_state(tttstate, s);
+			//Controllare qui
+			//DfaState* next_tttstate = TTTDfa :: next_span_state(tttstate, s);
+			DfaState* next_tttstate = TTTDfa :: next_span_state(tttstate, s, false);
+			
 			bool found = false;
 			for(auto state_it = this->begin(); !found && state_it != this->end(); ++state_it){
 				if(state_it->get_charact_phrase() == translator[next_tttstate->get_charact_phrase()]){
@@ -873,26 +885,25 @@ void TTTDfa :: print() const{
 	cout << endl;
 }
 
-bool TTTDfa :: is_deterministic(){
-	bool deterministic = true;
-	for(auto pair_it = span_disc_link_.begin(); deterministic && pair_it != span_disc_link_.end(); ++pair_it){
+bool TTTDfa :: is_deterministic() const{
+	for(auto pair_it = span_disc_link_.begin(); pair_it != span_disc_link_.end(); ++pair_it){
 		DfaState* start_state = pair_it->second.first;
 		vector<symbol_> sorted_alphabet = sort_alphabet();
 		for(symbol_ sym : sorted_alphabet){
 			DfaState* arrive_state = start_state->next(sym, false);
 			if(arrive_state == NULL){
-				deterministic = false;
+				return false;
 			}
 			else if(arrive_state == &non_tree_transitions_){
 				DiscrimNode* arrive_node = non_tree_transitions_.get_non_tree_arrive_node(start_state->get_charact_phrase(), sym);
 				if(!arrive_node->is_leaf()){
-					deterministic = false;
+					return false;
 				}
 			}
 		}
 	}
 
-	return deterministic;
+	return true;
 }
 
 void TTTDfa :: print_ttt_dot(string title, string path){

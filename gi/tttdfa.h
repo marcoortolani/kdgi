@@ -134,7 +134,7 @@ public:
 	/**
 	 * Return true if the Dfa is deterministic thus an hypothesis can be made.
 	 */
-	bool is_deterministic();
+	bool is_deterministic() const;
 
 	/**
 	 * continua da qui.

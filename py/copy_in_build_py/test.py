@@ -1,17 +1,4 @@
-from gipy_lib import ConcreteDfa
-
-from gipy_lib import AngluinDfa
-from gipy_lib import AngluinLearner_A
-from gipy_lib import AngluinLearner_C
-from gipy_lib import AngluinLearner_T
-
-from gipy_lib import TTTDfa
-from gipy_lib import TTTLearner_A
-from gipy_lib import TTTLearner_C
-from gipy_lib import TTTLearner_T
-
-from gipy_lib import equivalence_query
-from gipy_lib import neighbour_matching
+from gipy_lib import *
 
 c = ConcreteDfa.read_dfa_file("data/_all_except_abab.txt")
 c.print_dot("not_abab_c", "dfas/dot/not_abab_c.dot")

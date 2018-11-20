@@ -16,6 +16,8 @@
 #include "angluinlearner.h"
 #include "tttdfa.h"
 #include "tttlearner.h"
+#include "randomoracle.h"
+#include "sillyoracle.h"
 
 //Default arguments: https://pybind11.readthedocs.io/en/stable/basics.html#default-args
 
@@ -89,6 +91,7 @@ void declare_Dfa(py::module &m, std::string typestr) {
 		.def("print_dfa", &Dfa<Iter>::print)
 		.def("print_dot", &Dfa<Iter>::print_dfa_dot)
 		.def("print_structural_similarity", &Dfa<Iter>::print_structural_similarity)
+		.def("get_num_states", &Dfa<Iter>::get_num_states)
 		
 		/* Pure virtual functions */
 		.def("membership_query", &Dfa<Iter>::membership_query)
@@ -110,15 +113,27 @@ vector< vector< double > > neighbour_matching(D1* d1, D2* d2){//, bool isomorphi
 };
 
 template<typename Learner, typename Oracle>
-void declare_Learner(py::module &m, std::string typestr) {
-    using Class = Learner;
+py::class_<Learner> declare_Learner(py::module &m, std::string typestr) {
+    //using Class = Learner;
     std::string pyclass_name = typestr;
     std::cout << pyclass_name.c_str() << endl;
     
-    py::class_<Class>(m, pyclass_name.c_str(), py::buffer_protocol(), py::dynamic_attr())
+    return py::class_<Learner>(m, pyclass_name.c_str(), py::buffer_protocol(), py::dynamic_attr())
 		.def(py::init<Oracle*, vector<symbol_>>())
 		.def("learn", &Learner::learn)
+		.def("get_costs", &Learner::get_costs)
+		.def("reset_costs", &Learner::reset_costs)
     ;
+}
+
+template<typename Oracle>
+py::class_<TTTLearner<Oracle>> declare_TTTLearner(py::module &m, std::string templstr) {
+	std::string pyclass_name = "TTTLearner" + templstr;
+	
+	auto LClass = declare_Learner<TTTLearner<Oracle>, Oracle>(m, pyclass_name);
+	LClass.def("set_opack", &TTTLearner<Oracle>::set_opack);
+	
+	return LClass;
 }
 
 //Ho cambiato il nome del modulo per farlo matchare con il target
@@ -153,26 +168,67 @@ PYBIND11_MODULE(gipy_lib, m) {
     ;
 
 	/* Active learning */
-
+	
+	//Learner
+	
 	/*----------Angluin----------*/
 	// AngluinDfa eredita da Dfa<vector...>
     py::class_<AngluinDfa, Dfa<vector<DfaState>*>>(m, "AngluinDfa");
     
     /* dichiaro i learner angluin per i tipi di oracoli che mi interessano 
-     * (_C per ConcreteDfa e _A per AngluinDfa) 
+     * (_C per ConcreteDfa e _A per AngluinDfa etc) 
      */
     declare_Learner<AngluinLearner<ConcreteDfa>, ConcreteDfa>(m, "AngluinLearner_C");
     declare_Learner<AngluinLearner<AngluinDfa>, AngluinDfa>(m, "AngluinLearner_A");
     declare_Learner<AngluinLearner<TTTDfa>, TTTDfa>(m, "AngluinLearner_T");
+    declare_Learner<AngluinLearner<SillyOracle>, SillyOracle>(m, "AngluinLearner_S");
+    declare_Learner<AngluinLearner<RandomOracle>, RandomOracle>(m, "AngluinLearner_R");
+    
     
     /*----------TTT----------*/
     // TTT eredita da Dfa<list...>
     declare_Dfa<list<DfaState>*>(m, "_list");
-    py::class_<TTTDfa, Dfa<list<DfaState>*>>(m, "TTTDfa");
+    py::class_<TTTDfa, Dfa<list<DfaState>*>>(m, "TTTDfa")
+		.def("print_ttt", &TTTDfa::print_ttt_dot)
+    ;
     
-    declare_Learner<TTTLearner<ConcreteDfa>, ConcreteDfa>(m, "TTTLearner_C");
-    declare_Learner<TTTLearner<AngluinDfa>, AngluinDfa>(m, "TTTLearner_A");
-    declare_Learner<TTTLearner<TTTDfa>, TTTDfa>(m, "TTTLearner_T");
+    declare_TTTLearner<ConcreteDfa>(m, "_C");
+    declare_TTTLearner<AngluinDfa>(m, "_A");
+    declare_TTTLearner<TTTDfa>(m, "_T");
+    declare_TTTLearner<SillyOracle>(m, "_S");
+    declare_TTTLearner<RandomOracle>(m, "_R");
+    /*declare_Learner<TTTLearner<ConcreteDfa>, ConcreteDfa>(m, "TTTLearner_C")
+		.def("set_opack", &TTTLearner<ConcreteDfa>::set_opack)
+	;
+	
+    declare_Learner<TTTLearner<AngluinDfa>, AngluinDfa>(m, "TTTLearner_A")
+		.def("set_opack", &TTTLearner<AngluinDfa>::set_opack)
+	;
+	
+    declare_Learner<TTTLearner<TTTDfa>, TTTDfa>(m, "TTTLearner_T")
+		.def("set_opack", &TTTLearner<TTTDfa>::set_opack)
+	;
+	
+    declare_Learner<TTTLearner<SillyOracle>, SillyOracle>(m, "TTTLearner_S")
+		.def("set_opack", &TTTLearner<SillyOracle>::set_opack)
+	;
+	
+    declare_Learner<TTTLearner<RandomOracle>, RandomOracle>(m, "TTTLearner_R")
+		.def("set_opack", &TTTLearner<RandomOracle>::set_opack)
+	;*/
+    
+    /*----------Oracles----------*/
+    py::class_<RandomOracle>(m, "RandomOracle")
+		.def(py::init<int, vector<symbol_>>())
+		.def("membership_query",&RandomOracle::membership_query)
+	;
+	
+    py::class_<SillyOracle>(m, "SillyOracle")
+		.def(py::init< vector<vector<symbol_>> >())
+		.def("membership_query",&SillyOracle::membership_query)
+	;
+	
+	
     
     /*----------Function templates----------*/
     //Equivalence query
@@ -187,6 +243,14 @@ PYBIND11_MODULE(gipy_lib, m) {
     m.def("equivalence_query", equivalence_query<TTTDfa, TTTDfa>);
     m.def("equivalence_query", equivalence_query<TTTDfa, ConcreteDfa>);
     m.def("equivalence_query", equivalence_query<TTTDfa, AngluinDfa>);
+    
+    m.def("equivalence_query", equivalence_query<RandomOracle, ConcreteDfa>);
+    m.def("equivalence_query", equivalence_query<RandomOracle, AngluinDfa>);
+    m.def("equivalence_query", equivalence_query<RandomOracle, TTTDfa>);
+    
+    m.def("equivalence_query", equivalence_query<SillyOracle, ConcreteDfa>);
+    m.def("equivalence_query", equivalence_query<SillyOracle, AngluinDfa>);
+    m.def("equivalence_query", equivalence_query<SillyOracle, TTTDfa>);
     
     //Neighbour matching
     m.def("neighbour_matching", neighbour_matching<ConcreteDfa, ConcreteDfa>);

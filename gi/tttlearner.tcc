@@ -66,6 +66,7 @@ TTTDfa* TTTLearner<O> :: OPACKlearn(){
 template <class O>
 void TTTLearner<O> :: try_finalization(TTTDfa* t){
 	int debug = 0;
+
 	vector<vector<symbol_>> prefixes;
 	vector<vector<symbol_>> prefixes0;
 	vector<vector<symbol_>> prefixes1;

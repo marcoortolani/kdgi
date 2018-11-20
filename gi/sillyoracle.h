@@ -2,17 +2,15 @@
 #define SILLY_ORACLE_H
 
 #include <iostream>
-//#include "oracle.h"
 #include "concretedfa.h"
 
 using namespace std;
 
 class SillyOracle{
 private:
-	ConcreteDfa* silly_dfa;//Must be "concrete" for now, will be "general"
-
+	vector<vector<symbol_>> dataset_;
 public:
-	SillyOracle(ConcreteDfa* d1);
+	SillyOracle(vector<vector<symbol_>> ds);
 
 	bool membership_query(vector <string> str);
 

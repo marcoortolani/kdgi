@@ -1,6 +1,3 @@
-
-
-
 RandomOracle :: RandomOracle(int max_length, vector<symbol_> alphabet){
 	std::default_random_engine generator;
 	std::uniform_int_distribution<int> distribution(0,1);

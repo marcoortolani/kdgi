@@ -21,7 +21,7 @@ public:
 	 * @alphabet			The language alphabet.
 	 */
 	RandomOracle(int max_length, vector<symbol_> alphabet);
-
+	
 	/**
 	 * Every class that will be used ad an oracle must implement this very method.
 	 * It returns the acceptance of a phrase.

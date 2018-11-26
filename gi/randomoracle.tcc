@@ -1,6 +1,6 @@
 RandomOracle :: RandomOracle(int max_length, vector<symbol_> alphabet){
 	std::default_random_engine generator;
-	std::uniform_int_distribution<int> distribution(0,1);
+	std::uniform_int_distribution<int> distribution(0,3);
 
 	//Scorro il numero di simboli che le frasi dovranno avere (da 0 al massimo indicato).
 	for(int i = 0; i <= max_length; ++i){
@@ -15,8 +15,11 @@ RandomOracle :: RandomOracle(int max_length, vector<symbol_> alphabet){
 				}
 
 				//Genero a caso il valore da assegnare alla parola corrente.
-				int coin_toss = distribution(generator);
-				samples_[word] = static_cast<bool>(coin_toss);
+				bool coin_toss = false;
+				if(distribution(generator) == 0)
+					coin_toss = true;
+					
+				samples_[word] = coin_toss;
 		}
 	}
 };

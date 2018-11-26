@@ -9,8 +9,10 @@ using namespace std;
 class SillyOracle{
 private:
 	vector<vector<symbol_>> dataset_;
+	int percentage_;
+	
 public:
-	SillyOracle(vector<vector<symbol_>> ds);
+	SillyOracle(vector<vector<symbol_>> ds, int percent = 0);
 
 	bool membership_query(vector <string> str);
 

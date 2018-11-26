@@ -197,25 +197,6 @@ PYBIND11_MODULE(gipy_lib, m) {
     declare_TTTLearner<TTTDfa>(m, "_T");
     declare_TTTLearner<SillyOracle>(m, "_S");
     declare_TTTLearner<RandomOracle>(m, "_R");
-    /*declare_Learner<TTTLearner<ConcreteDfa>, ConcreteDfa>(m, "TTTLearner_C")
-		.def("set_opack", &TTTLearner<ConcreteDfa>::set_opack)
-	;
-	
-    declare_Learner<TTTLearner<AngluinDfa>, AngluinDfa>(m, "TTTLearner_A")
-		.def("set_opack", &TTTLearner<AngluinDfa>::set_opack)
-	;
-	
-    declare_Learner<TTTLearner<TTTDfa>, TTTDfa>(m, "TTTLearner_T")
-		.def("set_opack", &TTTLearner<TTTDfa>::set_opack)
-	;
-	
-    declare_Learner<TTTLearner<SillyOracle>, SillyOracle>(m, "TTTLearner_S")
-		.def("set_opack", &TTTLearner<SillyOracle>::set_opack)
-	;
-	
-    declare_Learner<TTTLearner<RandomOracle>, RandomOracle>(m, "TTTLearner_R")
-		.def("set_opack", &TTTLearner<RandomOracle>::set_opack)
-	;*/
     
     /*----------Oracles----------*/
     py::class_<RandomOracle>(m, "RandomOracle")
@@ -225,6 +206,7 @@ PYBIND11_MODULE(gipy_lib, m) {
 	
     py::class_<SillyOracle>(m, "SillyOracle")
 		.def(py::init< vector<vector<symbol_>> >())
+		.def(py::init< vector<vector<symbol_>>, int >())
 		.def("membership_query",&SillyOracle::membership_query)
 	;
 	

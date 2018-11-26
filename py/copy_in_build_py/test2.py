@@ -13,10 +13,10 @@ def f1(dfa1, dfa2):
 	
 	
 def f2(dfa, oracle, max_length, alphabet):
-	tp = 0
-	fp = 0
-	tn = 0
-	fn = 0
+	tp = 0.0
+	fp = 0.0
+	tn = 0.0
+	fn = 0.0
 
 	for i in range(0, max_length + 1) :
 		for j in range(0, pow(len(alphabet), i)) :
@@ -38,10 +38,12 @@ def f2(dfa, oracle, max_length, alphabet):
 				else :
 					tn = tn + 1
 
-	print "true positive:" + str(tp)
-	print "true negative:" + str(tn)
-	print "false positive:" + str(fp)
-	print "false negative:" + str(fn)
+	precision = tp / (tp + fp)
+	recall = tp / (tp + fn)
+	f_measure = 2 * (precision * recall) / (precision + recall)
+	print "precision:" + str(precision)
+	print "recall:" + str(recall)
+	print "f-measure:" + str(f_measure)
 	print
 
 	
@@ -50,12 +52,12 @@ dataset = []
 alphabet = ["a", "b", "c"]
 rand_length = 7
 
-#alphabet = ["a", "b"]
-#rand_length = 9
+alphabet = ["a", "b"]
+rand_length = 9
 
 rand = RandomOracle(rand_length, alphabet)
 
-max_length = 4
+max_length = 6
 for i in range(0, max_length + 1) :
 	for j in range(0, pow(len(alphabet), i)) :
 		val = j
@@ -145,23 +147,23 @@ print
 print "ttts"
 #f1(tttr, ttts)
 print equivalence_query(rand, ttts)
-print "ttts silly"
-f2(ttts, silly, max_length, alphabet)
+#print "ttts silly"
+#f2(ttts, silly, max_length, alphabet)
 print "ttts rand"
 f2(ttts, rand, rand_length, alphabet)
 
 print "opacks"
 #f1(opackr, opacks)
 print equivalence_query(rand, opacks)
-print "opacks silly"
-f2(opacks, silly, max_length, alphabet)
+#print "opacks silly"
+#f2(opacks, silly, max_length, alphabet)
 print "opacks rand"
 f2(opacks, rand, rand_length, alphabet)
 
 print "angs"
 #f1(angr, angs)
 print equivalence_query(rand, angs)
-print "angs silly"
-f2(angs, silly, max_length, alphabet)
+#print "angs silly"
+#f2(angs, silly, max_length, alphabet)
 print "angs rand"
 f2(angs, rand, rand_length, alphabet)

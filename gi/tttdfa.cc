@@ -13,8 +13,6 @@ bool TTTDfa::membership_query(vector<symbol_> phrase) const {
 	DfaState* state = span_tree_;
 	
 	for(symbol_ sym : phrase){
-		//Controllare qui
-		//state = next_span_state(state, sym);
 		state = next_span_state(state, sym, false);
 	}
 	return state->is_accepting();
@@ -200,52 +198,7 @@ void TTTDfa :: split_state(DfaState* start_state, symbol_ transition, vector<sym
 	span_disc_link_[new_state_phrase].second = ch_new;
 }
 
-/*void TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex){
-	vector <symbol_> prefix;
-	symbol_ transition;
-	list<symbol_> suffix;
-
-	suffix.insert(suffix.end(), cntr_ex.begin(), cntr_ex.end());
-
-	DfaState* start_state = span_tree_;
-	for(symbol_ sym : cntr_ex){
-		start_state = next_span_state(start_state, sym);
-	}
-
-	bool cntr_truth = !start_state->is_accepting();
-
-	start_state = span_tree_;
-	while(!suffix.empty()){
-		transition = suffix.front();
-
-		DfaState* next_state = start_state->next(transition);
-		if(next_state == &non_tree_transitions_ && test_closure(start_state, suffix, !cntr_truth)){
-			suffix.pop_front();
-
-			vector<symbol_> suff_vec;
-			suff_vec.insert(suff_vec.end(), suffix.begin(), suffix.end());
-			split_state(start_state, transition, suff_vec, !cntr_truth);
-
-			//cout << "trovata suddivisione del controesempio " << start_state->get_charact_phrase() << " : " << transition << " : " << suff_vec << endl;
-
-			return;
-		}
-
-		suffix.pop_front();
-		prefix.push_back(transition);
-		start_state = next_state;
-	}
-
-	cerr << "Error in TTTDfa :: subdivide_counterexample:" << endl;
-	cerr <<"A subdivision of the counterexample (Rivest Schapire) couldn't be found" << endl;
-	throw 0;
-}*/
-
 bool TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex, bool cntr_truth){
-	list<symbol_> suffix;
-
-	suffix.insert(suffix.end(), cntr_ex.begin(), cntr_ex.end());
-
 	DfaState* state = span_tree_;
 	for(symbol_ sym : cntr_ex){
 		state = next_span_state(state, sym, false);
@@ -255,6 +208,9 @@ bool TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex, bool cntr_truth){
 		return false;
 
 	state = span_tree_;
+	
+	list<symbol_> suffix;
+	suffix.insert(suffix.end(), cntr_ex.begin(), cntr_ex.end());
 	while(!suffix.empty()){
 		symbol_ transition = suffix.front();
 
@@ -272,12 +228,23 @@ bool TTTDfa :: handle_counterexample(vector <symbol_> cntr_ex, bool cntr_truth){
 			return true;
 		}
 
+		if(next_state == NULL){
+			cerr << "Error in TTTDfa :: handle_counterexample:" << endl;
+			cerr << "Found a NULL transition" << endl;
+			throw 0;
+		}
+		
+		if(next_state == &non_tree_transitions_){
+			cerr << "Error in TTTDfa :: handle_counterexample:" << endl;
+			cerr << "Found a non tree transition not causing a subdvivision of the counterexample" << endl;
+			throw 0;
+		}
+
 		suffix.pop_front();
-		//prefix.push_back(transition);
 		state = next_state;
 	}
 
-	cerr << "Error in TTTDfa :: subdivide_counterexample:" << endl;
+	cerr << "Error in TTTDfa :: handle_counterexample:" << endl;
 	cerr <<"A subdivision of the counterexample (Rivest Schapire) couldn't be found" << endl;
 	throw 0;
 }
@@ -406,14 +373,15 @@ bool is_prefix(vector<symbol_> prefix, vector<symbol_> word){
 }
 
 bool TTTDfa :: know_phrase_for_sure(vector<symbol_> phrase, bool& truth){
-	return false;
-	auto it = lost_queries_.find(phrase);
+	//This cause the error for some random languages.
+	//The map is badly generated so it is not used for now.
+	/*auto it = lost_queries_.find(phrase);
 	if(it != lost_queries_.end()){
 		truth = it->second;
 		return true;
 	}
 	
-	//return false;
+	return false;*/
 
 	DfaState* state = span_tree_;
 	DfaState* next = NULL;
@@ -444,20 +412,6 @@ bool TTTDfa :: know_phrase_for_sure(vector<symbol_> phrase, bool& truth){
 
 	truth = state->is_accepting();
 	return true;
-	/*next = state->next(phrase.back(), false);
-
-	if(next != NULL){
-		if(next == &non_tree_transitions_){
-			DiscrimNode* disc = non_tree_transitions_.get_non_tree_arrive_node(state->get_charact_phrase(), phrase.back());
-			truth = disc->is_accepting();
-		}
-		else{
-			truth = next->is_accepting();
-			}
-		return true;
-	}
-
-	return false;*/
 }
 
 bool TTTDfa :: try_single_finalization(vector<vector<symbol_>>& prefixes_to_verify, vector<vector<symbol_>>& prefixes0, vector<vector<symbol_>>& prefixes1, vector<symbol_>& suffix){
@@ -798,8 +752,6 @@ void TTTDfa :: make_hypotesis(){
 		}
 
 		for(symbol_ s : sorted_alphabet){
-			//Controllare qui
-			//DfaState* next_tttstate = TTTDfa :: next_span_state(tttstate, s);
 			DfaState* next_tttstate = TTTDfa :: next_span_state(tttstate, s, false);
 			
 			bool found = false;
@@ -863,7 +815,7 @@ void TTTDfa :: print_disc() const {
 			cout << "\tfoglia" << endl;
 		}
 		else{
-			cout << "\tfinal:" << n->is_final() << endl;
+			cout << "\tfinale:" << n->is_final() << endl;
 		}
 
 		if(n->get_child(0) != NULL){

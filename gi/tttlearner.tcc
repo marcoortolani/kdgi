@@ -126,8 +126,7 @@ TTTDfa* TTTLearner<O> :: TTTlearn(){
 		while(t->membership_query(counterexample) != truth){
 			vector<symbol_> prefix;
 			symbol_ transition;
-			while(t->handle_counterexample(counterexample, truth/*, prefix, transition*/)){
-				//auto tuple = std :: make_tuple(prefix, transition, true);
+			while(t->handle_counterexample(counterexample, truth)){
 				close_transitions(t, false);
 
 				try_finalization(t);

@@ -137,37 +137,140 @@ public:
 	bool is_deterministic() const;
 
 	/**
-	 * continua da qui.
+	 * Needed to avoid asking twice the same membership query.
+	 * A membership query should not be asked twice to an oracle for 2 reasons:
+	 * It would raise the cost (membership cost and computation time) of the algorithm (although
+	 * the cost of this function could be higher than repeating the membership query to the oracle).
+	 * It could result in the hypothesis being much more complex than it needs to be, or in the 
+	 * impossibility to find an hypothesis at all if the oracle is not a "deterministic" one
+	 * (i.e. if the same membership query could cause 2 different answers).
+	 * Thus this function verify if the query can be answered by the TTTDfa data structures.
+	 * 
+	 * BUG FOUND 30-11-2018: some random generated languages will cause to incur an exception.
+	 * It most probably is related to the map used to store "lost queries" (data that is removed after a finalization).
+	 * At the moment the map is updated normally (with the bug) but is never used.
+	 * 
+	 * @param phrase	The phrase that will be searched.
+	 * @param x			The answer will be put in this variable if the phrase was already known by the TTTDfa.
+	 * @return			Whether the TTTDfa already know the phrase or not.
 	 */
 	bool know_phrase_for_sure(vector<symbol_> phrase, bool& x);
 
+
+	/**
+	 * Prints the span tree, indicating label and transitions for each node.
+	 */
 	void print_span() const;
 
+	/**
+	 * Prints the discrimination tree, indicating for each node label, 
+	 * if the node is a leaf or not, if the node is final or not and its children if any.
+	 */
 	void print_disc() const;
 
+	/**
+	 * Prints span and discrimination tree in this order.
+	 */
 	void print() const;
 
+	/**
+	 * Print the TTTDfa's data structure on a dot file.
+	 * @param name 	The name of the Dfa.
+	 * @param path	The path of the dot file.
+	 */
 	void print_ttt_dot(string name, string path);
 
 private:
+	/**
+	 * Create a new final transition in the span state (and a new state as well).
+	 * @param start_state	The span node being the transition starting point.
+	 * @param transition	The symbol linked to this transition.
+	 * @param father		The discrimination tree node father of the new state.
+	 * @param child			Whether the new state is a 1 child of the father node or a 0 child.
+	 * @return				A pointer to the new state.
+	 */
 	DfaState* set_final_transition(DfaState* start_state, symbol_ transition, DiscrimNode* father, bool child);
 
+	/**
+	 * Sets a non-tree transition (a transition that starts from a span 
+	 * tree node but arrives to a discrimination tree node).
+	 * @param state			The span node being the transition starting point.
+	 * @param transition	The symbol linked to this transition.
+	 * @param disc_node		The discrimination tree node being the transition arrive point.
+	 */
 	void set_non_tree_transition(DfaState* state, symbol_ transition, DiscrimNode* disc_node);
 
+	/**
+	 * Returns the couple span tree node - discrimination tree node
+	 * representing the state labeled by the phrase passed.
+	 * @param phrase	The phrase addressing the wanted state.
+	 * @return 			The couple of nodes representing the state.
+	 */
 	pair<DfaState*, DiscrimNode*> get_state_leaf_link(vector<symbol_> phrase) const;
 
+
+	/**
+	 * Returns the a-successor of a state given the symbol a (representing states as span tree nodes).
+	 * @param start			The span node being the transition starting point.
+	 * @param transition	The symbol linked to this transition.
+	 * @param strict		
+	 * @return 				The span tree node being the transition arrive point.
+	 */
 	DfaState* next_span_state(DfaState* start, symbol_ transition, bool strict = true) const;
 
+	/**
+	 * Returns the a-successor of a state given the symbol a 
+	 * (representing states as discrimination tree nodes).
+	 * @param start			The span node being the transition starting point.
+	 * @param transition	The symbol linked to this transition.
+	 * @return 				The discrimination tree node being the transition arrive point.
+	 */
 	DiscrimNode* next_disc_node(DiscrimNode* start, symbol_ transition) const;
 
+	/**
+	 * Indicates if the given discriminator is still wrongly recognized by the Dfa.
+	 * @param start				The starting state (span tree node).
+	 * @param discriminator		The sequence of symbols to test.
+	 * @param expect			The value that the Dfa should return given the start state and the discriminator.
+	 * @param strict
+	 * @return					Whether the Dfa correctly recognize the discriminator given the start state or not.
+	 */
 	bool test_closure(DfaState* start, list<symbol_> discriminator, bool expect, bool strict = true);
 
+	/**
+	 * After a subdvision of the counterexample is found (prefix, transition, suffix),
+	 * this function split the correct state (identified by prefix and transition).
+	 * @param start_state		The state reached by the prefix.
+	 * @param transition		The transition from the start state to the state "to be split".
+	 * @param discriminator		The discriminator that "proves" that the state must be splitted.
+	 * @param state_position	Whether the old state was a 1 child of his (discrimination tree node) father or a 0 child (thus the new state will be the opposite).
+	 * @param strict
+	 */
 	void split_state(DfaState* start_state, symbol_ transition, vector<symbol_> discriminator, bool state_position, bool strict = true);
 
+
+	/**
+	 * Marks the nodes of a block of the discrimination tree to put them 
+	 * in the correct new block (eventually in both 0 and 1 block) after finalization.
+	 * @param leaf_queries	Contains all the prefixes related to the discrimination tree nodes of the block and the information about their belonging to the 0 block, the 1 block or both.
+	 * @param mark_0		In this set passed by reference will be stored every discrimination tree node of the block that must be added to the 0 block after the finalization.
+	 * @param mark_1		In this set passed by reference will be stored every discrimination tree node of the block that must be added to the 1 block after the finalization.
+	 */
 	void mark_nodes(vector<pair<vector<symbol_>, bool>> leaf_queries, set<DiscrimNode*>& mark_0, set<DiscrimNode*>& mark_1);
 
+	/**
+	 * Gets all the leaves of the discrimination tree and groups them by their block.
+	 * @return 		A vector of blocks represented as vectors of leaves.
+	 */
 	vector<vector<DiscrimNode*>> group_leaves_into_blocks();
 
+	/**
+	 * After a finalization some information are lost. To avoid this, for reasons
+	 * stated in more detail in TTTDfa::know_phrase_for_sure this function puts into a map
+	 * all the "lost queries" before the finalization.
+	 * 
+	 * BUG FOUND 30-11-2018: more detail in TTTDfa::know_phrase_for_sure.
+	 */
 	void update_lost_queries(vector<pair<vector<symbol_>, bool>> leaf_queries, set<DiscrimNode*> mark_0, set<DiscrimNode*> mark_1);
 };
 

@@ -16,9 +16,9 @@ private:
 public:
 	/**
 	 * Constructor, it generates the sample set, by choosing a pseudo-random boolean value for every phrase of alphabet*
-	 * equal in size to or shorter of  the max length specified.
+	 * equal in size to or shorter of the max length specified.
 	 * @param max_length	The max length our samples can reach.
-	 * @alphabet			The language alphabet.
+	 * @param alphabet		The language alphabet.
 	 */
 	RandomOracle(int max_length, vector<symbol_> alphabet);
 	

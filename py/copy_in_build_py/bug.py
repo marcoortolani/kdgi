@@ -1,18 +1,18 @@
 from gipy_lib import *
 
-"This is a code to let a bug surface.
-In order to do this go into TTTDfa.cc
-in the TTTDfa :: know_phrase_for_sure function and make sure
-that the following lines are uncommented:
-	
-	auto it = lost_queries_.find(phrase);
-	if(it != lost_queries_.end()){
-		truth = it->second;
-		return true;
-	}
-	
-	return false;
-	
+"This is a code to let a bug surface. \
+In order to do this go into TTTDfa. \
+in the TTTDfa :: know_phrase_for_sure function and make sure \
+that the following lines are uncommented: \
+	\
+	auto it = lost_queries_.find(phrase);\
+	if(it != lost_queries_.end()){ \
+		truth = it->second; \
+		return true; \
+	} \
+	\
+	return false; \
+	\
 then build the library and run this code in the kdgi/build/py folder."
 
 def f1(dfa1, dfa2):

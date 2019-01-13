@@ -27,6 +27,12 @@ list<DfaState>::iterator TTTDfa::end(){
 }
 
 TTTDfa :: TTTDfa(vector<symbol_> alph, vector<bool> first_membership_queries){
+	/*
+	 * Alla creazione del TTTDfa devono essere note un insieme di query,
+	 * in particolare una query per ogni simbolo dell'alfabeto e una per
+	 * epsilon. Per cui se il numero di query presentate è diverso dalla
+	 * dimensione dell'alfabeto + 1 allora ci deve essere un errore.
+	*/
 	if(alph.size() != first_membership_queries.size() - 1){
 		cerr << "Error in initialization of TTTDfa" << endl;
 		throw 0;
@@ -35,23 +41,59 @@ TTTDfa :: TTTDfa(vector<symbol_> alph, vector<bool> first_membership_queries){
 	Dfa::set_alphabet(alph);
 	Dfa::set_num_state(0);
 
+	/*
+	 * Lo span tree inizialmente è composto di un solo stato, la cui frase
+	 * caratteristica è epsilon, accettante o meno a seconda dell'ultima
+	 * delle membership query passata per argomento e identificato dall'indice 0.
+	 */
 	span_tree_ = new DfaState(first_membership_queries.back(), vector<symbol_>(), num_states_++);
+	
+	/*
+	 * Il discrimination tree inizialmente è composto di soli 2 nodi: 
+	 * il nodo radice finale epsilon che separa stati accettanti e non,
+	 * e il nodo foglia epsilon relativo al primo stato e figlio diretto
+	 * del nodo radice.
+	 */
 	discrim_tree_ = new DiscrimNode(vector<symbol_>(), NULL);
 	discrim_tree_->set_child(new DiscrimNode(vector<symbol_>(), discrim_tree_), first_membership_queries.back());
 	discrim_tree_->set_final();
 
+	/*
+	 * Viene aggiunta una entry che colleghi la stringa epsilon al nodo 
+	 * radice dello span tree e al nodo foglia del discrimination tree.
+	 */
 	span_disc_link_[vector<symbol_>()] = make_pair(span_tree_, discrim_tree_->get_child(first_membership_queries.back()));
 
+	/*
+	 * A questo punto si scorrono le altre membership query (quelle da 
+	 * un simbolo) per chiudere le transizioni del primo stato.
+	 */
 	DfaState* other_node = NULL;
-
 	for(int i = 0; i < alph.size(); ++i){
+		/*
+		 * Se l'accettanza della membership query per il simbolo i-esimo
+		 * è la stessa del primo stato allora chiuderemo la transizione 
+		 * dal primo stato per quel simbolo verso il nodo foglia "epsilon"
+		 */
 		if(first_membership_queries[i] == first_membership_queries.back()){
 			set_non_tree_transition(span_tree_, alph[i], discrim_tree_->get_child(first_membership_queries[i]));
 		}
 		else{
+			/*
+			 * Se l'accettanza è diversa e ancora il nostro dfa è composto
+			 * da un solo stato dobbiamo fare uno split molto semplice, 
+			 * limitandoci a creare un nuovo stato nello span tree e una
+			 * nuova foglia, figlia della radice nel discrimination tree.
+			 */
 			if(other_node == NULL){
 				other_node = set_final_transition(span_tree_, alph[i], discrim_tree_, !first_membership_queries.back());
 			}
+			/*
+			 * Se l'accettanza è diversa e il dfa ha già 2 stati, uno 
+			 * accettante e l'altro no, dobbiamo semplicemente creare una
+			 * transizione non finale verso la foglia più nuova del 
+			 * discrimination tree.
+			 */
 			else{
 				set_non_tree_transition(span_tree_, alph[i], discrim_tree_->get_child(first_membership_queries[i]));
 			}
@@ -60,11 +102,19 @@ TTTDfa :: TTTDfa(vector<symbol_> alph, vector<bool> first_membership_queries){
 }
 
 TTTDfa :: ~TTTDfa(){
+	/*
+	 * Purtroppo è necessaria molta allocazione dinamica.
+	 * Cancello ogni stato dello span tree singolarmente.
+	 */
 	for(auto pair : span_disc_link_){
 		DfaState* s = pair.second.first;
 		delete s;
 	}
-
+	
+	/*
+	 * Il discrimination tree chiama ricorsivamente la delete sui suoi
+	 * figli, chiamo la delete solo sulla radice.
+	 */
 	delete discrim_tree_;
 }
 
@@ -74,6 +124,13 @@ DfaState* TTTDfa :: set_final_transition(DfaState* start_state, symbol_ transiti
 		cerr << "passed a NULL pointer as father node" << endl;
 		throw 0;
 	}
+	/*
+	 * Una transizione finale viene inserita nello span tree solo quando
+	 * viene fatto lo split di uno stato (in pratica ne viene creato uno
+	 * nuovo). Il nuovo stato deve essere differente da tutti gli altri
+	 * e quindi occupare uno spazio nel discriination tree ancora vacante.
+	 * Questa posizione è indicata dalla coppia father child.
+	 */
 	if(father->get_child(child) != NULL){
 		cerr << "Error in TTTDfa :: set_deterministic_transition" << endl;
 		cerr << "the " << child << " child of the node " << father->get_phrase() << "is not a new state" << endl;
@@ -81,9 +138,18 @@ DfaState* TTTDfa :: set_final_transition(DfaState* start_state, symbol_ transiti
 		throw 0;
 	}
 
+	/*
+	 * new_phrase sarà la stringa caratteristica del nuovo stato (poichè
+	 * è stato scoperto a partire da questa coppia prefisso/transizione).
+	 */
 	vector <symbol_> new_phrase = start_state->get_charact_phrase();
 	new_phrase.push_back(transition);
 
+	/*
+	 * Il nuovo stato sarà accettante se lo è il padre, ma se il padre è
+	 * il nodo radice del discrimination tree allora l'accettanza è data
+	 * dal parametro child.
+	 */
 	bool accepting;
 	if(father->get_father() != NULL){
 		accepting = father->is_accepting();
@@ -91,19 +157,28 @@ DfaState* TTTDfa :: set_final_transition(DfaState* start_state, symbol_ transiti
 	else{
 		accepting = child;
 	}
+	
+	//Creiamo il nuovo stato da aggiungere allo span tree.
 	DfaState* arrive_state = new DfaState(accepting, new_phrase, num_states_++);
-
+	//Spostiamo la transizione dello stato di partenza a quello nuovo appena creato.
 	start_state->set_transition(transition, arrive_state);
+	//Eliminiamo la vecchia transizione che portava al discrimination tree.
 	non_tree_transitions_.erase_non_tree_transition(start_state->get_charact_phrase(), transition);
-
+	//Aggiungiamo il nuovo nodo foglia relativo al nuovo stato al discrimination tree. 
 	father->set_child(new DiscrimNode(new_phrase, father), child);
-
+	/* Aggiungiamo una entry che colleghi la nuova stringa caratteristica
+	 * alla coppia di nodi dello span tree e discrimination tree appena
+	 * creati.
+	 */
 	span_disc_link_[new_phrase] = std::make_pair(arrive_state, father->get_child(child));
+	
 	return arrive_state;
 }
 
 void TTTDfa :: set_non_tree_transition(DfaState* state, symbol_ transition, DiscrimNode* disc_node){
+	//Settiamo la transizione uscente perchè punti al nodo non_tree_transictions_.
 	state->set_transition(transition, &non_tree_transitions_);
+	//Settiamo la transizione entrante nel nodo non_tree_transictions_.
 	non_tree_transitions_.set_non_tree_transition(state->get_charact_phrase(), transition, disc_node);
 }
 
@@ -119,6 +194,8 @@ pair<DfaState*, DiscrimNode*> TTTDfa :: get_state_leaf_link(vector<symbol_> phra
 }
 
 DfaState* TTTDfa :: next_span_state(DfaState* start, symbol_ transition, bool strict) const{
+	/*arrive_state è l'oggetto puntato dalla transizione uscente da
+	start state relativa al simbolo transition*/
 	DfaState* arrive_state = start->next(transition, false);
 	if(arrive_state == NULL){
 		cerr << "Error in TTTDfa :: next_span_state" << endl;
@@ -126,19 +203,41 @@ DfaState* TTTDfa :: next_span_state(DfaState* start, symbol_ transition, bool st
 		throw 0;
 	}
 
+	/*
+	 * Se la transizione non è finale ma punta invece al discrimination 
+	 * tree sono necessarie delle operazioni aggiuntive per recuperare
+	 * il nodo dello span tree relativo allo stato di arrivo.
+	 */
 	if(arrive_state == &non_tree_transitions_){
+		//Recuperiamo il nodo del discrimination tree corretto.		
 		DiscrimNode* arrive_node = non_tree_transitions_.get_non_tree_arrive_node(start->get_charact_phrase(), transition);
 		bool leaf = arrive_node->is_leaf();
+		/*
+		 * Uno stato è correttamente identificato da una foglia.
+		 * Nel TTT alcune transizioni non puntano a foglie ma a blocchi,
+		 * che vuol dire che abbiamo un insieme di possibili successori.
+		 * Di fatto però (dato che fanno parte dello stesso blocco) 
+		 * questi successori  potrebbero avere le stesse funzioni di 
+		 * output, (di fatto le avranno se avremo già effettuato tutte 
+		 * le finalizzazioni possibili). In alcuni casi dunque ci basterà
+		 * uno stato qualunque del blocco (strict = false) in altri 
+		 * invece vorremo la foglia corretta (strict = true).
+		 */
 		if(strict && !leaf){
 			cerr << "Error in TTTDfa :: next_span_state" << endl;
 			cerr << "the Dfa is still non deterministic, cannot reach any state for the phrase " << start->get_charact_phrase() << " " << transition << endl;
 			throw 0;
 		}
 
+		/*
+		 * Se il nodo trovato non è una foglia (ma strict è false 
+		 * prendiamo una qualunque foglia del blocco.
+		 */
 		if(!leaf){
 			arrive_node = arrive_node->get_all_leaves().front();
 		}
-
+		
+		//Recuperiamo il nodo dello span tree a partire dal nodo foglia.
 		arrive_state = get_state_leaf_link(arrive_node->get_phrase()).first;
 	}
 
@@ -158,9 +257,22 @@ DiscrimNode* TTTDfa :: next_disc_node(DiscrimNode* start, symbol_ transition) co
 		throw 0;
 	}
 
+	/*
+	 * A partire dal nodo (foglia) del discrimination tree troviamo il
+	 * corrispondente nodo dello span tree.
+	 */
 	DfaState* state = get_state_leaf_link(start->get_phrase()).first;
 
+	// Proseguiamo perla transizione richiesta
 	state = state->next(transition);
+	
+	/*
+	 * Se siamo giunti a un nodo del discrimination tree (la transizione 
+	 * era non finale), restituiamo direttamente quello, altrimenti a
+	 * partire dal nodo dello span tree passiamo al corrispondente nodo
+	 * foglia del discrimination tree tramite la stringa caratteristica
+	 * dello stato.
+	 */
 	if(state == &non_tree_transitions_){
 		return non_tree_transitions_.get_non_tree_arrive_node(start->get_phrase(), transition);
 	}

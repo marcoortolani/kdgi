@@ -45,46 +45,34 @@ def fmeasure(dfa, oracle, max_length, alphabet):
 	
 dataset = []
 
-alphabet = ["a", "b", "c"]
+alphabet = ["a", "b"]
 rand_length = 7
 
 rand = RandomOracle(rand_length, alphabet)
 
-def test4(percentage) :
+angl = AngluinLearner_R(rand, alphabet)
+tttOracle = angl.learn()
 
-	max_length = 5
-	for i in range(0, max_length + 1) :
-		for j in range(0, pow(len(alphabet), i)) :
-			val = j
-			word = []
-			
-			for k in range(0, i) :
-				word.extend(alphabet[ val % len(alphabet) ])
-				val = val / len(alphabet)
-			
-			if rand.membership_query(word) :
-				dataset.extend([word])
+print tttOracle.get_num_states()
 
-	silly = SillyOracle(dataset, percentage)
+tl = TTTLearner_A(tttOracle, alphabet)
+al = AngluinLearner_A(tttOracle, alphabet)
 
-	lt = TTTLearner_S(silly, alphabet)
-	la = AngluinLearner_S(silly, alphabet)
+ttt = tl.learn()
+print "ttt learned"
+print tl.get_costs()
 
-	ttt = lt.learn()
-	lt.set_opack(True)
-	lt.reset_costs()
-	
-	opack = lt.learn()
-	
-	ang = la.learn()
+tl.reset_costs()
+tl.set_opack(True)
 
-	print str(percentage) + "\t" + str(fmeasure(ttt, silly, max_length, alphabet)) + "\t" + str(fmeasure(opack, silly, max_length, alphabet)) + "\t" + str(fmeasure(ang, silly, max_length, alphabet))
-	
-	ttt.print_dot("", "dfas/dot/ttt_" + str(percentage) + ".dot")
-	opack.print_dot("", "dfas/dot/opack_" + str(percentage) + ".dot")
-	ang.print_dot("", "dfas/dot/ang_" + str(percentage) + ".dot")
-	
-print "\tttt\t\topack\t\tang"
+opack = tl.learn()
+print "opack learned"
+print tl.get_costs()
 
-for percentage in range(0, 101, 10) :
-	test4(percentage)
+ang = al.learn()
+print "ang learned"
+print al.get_costs()
+
+print equivalence_query(ttt, opack)
+print equivalence_query(opack, ang)
+print equivalence_query(ang, ttt)

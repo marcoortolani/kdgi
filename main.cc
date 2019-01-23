@@ -5,6 +5,8 @@
 #include "angluinlearner.h"
 #include "concretedfa.h"
 
+#include "lstm.h"
+
 using namespace std;
 
 template <class Oracle, class Iterator>
@@ -354,9 +356,21 @@ void test5(){
 }
 
 int main() {
+	/*
 	test1();
 	test2(4, vector<symbol_>{"a", "b", "c", "d"});
 	test3(8);
 	test4(6, 9, vector<symbol_>{"a", "b"});
-	//test5();
+	test5();
+	*/
+	
+	py::scoped_interpreter guard{};
+	py::module m = py::module::import("LSTMOracle");
+	py::object net = m.attr("LSTMOracle")("test", 2);
+	
+	std::vector<std::string> alphabet = {"a", "b"};
+	
+    auto lstm = LSTMOracle("test", 2, alphabet, &net);
+    
+    std::cout << lstm.membership_query(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
 }

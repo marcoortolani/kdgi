@@ -17,6 +17,12 @@ add_subdirectory(gi)
 
 add_executable(gilearner main.cc)
 
+# For binding python interpreter    #
+include_directories(lstm)
+add_subdirectory(lstm)
+target_link_libraries(gilearner lstm)
+#####################################
+
 # Extra linking for the project.
 target_link_libraries(gilearner gi_lib)
 
@@ -44,8 +50,8 @@ doxygen_add_docs(docs
 ################################
 if (python)
 #  find_package (Python)
-  find_package( PythonInterp 2.7 REQUIRED )
-  find_package( PythonLibs 2.7 REQUIRED )
+  find_package( PythonInterp 3.6 REQUIRED )
+  find_package( PythonLibs 3.6 REQUIRED )
   add_subdirectory(py)
 endif()
 

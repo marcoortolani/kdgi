@@ -22,7 +22,7 @@ bool LSTMOracle::membership_query(std::vector<std::string> phrase){
 			}
 			
 		for(int i = 0; i < alphabet_.size(); i++){
-			if(sym == alphabet_[i]){
+			if(sym.compare(alphabet_[i]) == 0){
 				unidentified_symbol = false;
 				s += std::to_string(i + 1);
 			}
@@ -33,8 +33,19 @@ bool LSTMOracle::membership_query(std::vector<std::string> phrase){
 		}
 	}
 	
+	if(first){
+		s = "0";
+	}
+	
 	//py::print(net_->attr("membership_query")(s));
+	std::cout << "Stringa: " + s << std::endl;
 	double result = net_->attr("membership_query")(s).cast<double>();
 	bool x = result > 0.5 ? true : false;
 	return x;
 }
+/*
+template<class Dfa>
+bool LSTMOracle :: equivalence_query(Dfa* dfa_hp , vector <symbol_>& witness_results){
+	return true;
+}
+*/

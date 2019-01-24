@@ -355,6 +355,22 @@ void test5(){
 	delete ttt2;
 }
 
+void testlstm(){
+	py::scoped_interpreter guard{};
+	py::module m = py::module::import("LSTMOracle");
+	py::object net = m.attr("LSTMOracle")("test", 2);
+	
+	std::vector<std::string> alphabet = {"a", "b"};
+	
+    LSTMOracle lstm = LSTMOracle("model6", 2, alphabet, &net);
+    
+    std::cout << lstm.membership_query(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
+    
+    TTTLearner<LSTMOracle> learner(&lstm, alphabet);
+	TTTDfa* dfa = learner.learn();
+	dfa->print_dfa_dot("", "lstm.dot");
+}
+
 int main() {
 	/*
 	test1();
@@ -364,13 +380,5 @@ int main() {
 	test5();
 	*/
 	
-	py::scoped_interpreter guard{};
-	py::module m = py::module::import("LSTMOracle");
-	py::object net = m.attr("LSTMOracle")("test", 2);
-	
-	std::vector<std::string> alphabet = {"a", "b"};
-	
-    auto lstm = LSTMOracle("test", 2, alphabet, &net);
-    
-    std::cout << lstm.membership_query(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
+	testlstm();
 }

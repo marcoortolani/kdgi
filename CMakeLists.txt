@@ -17,11 +17,17 @@ add_subdirectory(gi)
 
 add_executable(gilearner main.cc)
 
+if (pyembed)
 # For binding python interpreter    #
-include_directories(lstm)
-add_subdirectory(lstm)
-target_link_libraries(gilearner lstm)
+	include_directories(lstm)
+	add_subdirectory(lstm)
+	target_link_libraries(gilearner lstm)
+#Needed to copy some files in the build folder
+	add_custom_command(TARGET gilearner PRE_BUILD
+					COMMAND ${CMAKE_COMMAND} -E copy_directory
+					${CMAKE_SOURCE_DIR}/ker $<TARGET_FILE_DIR:gilearner>)
 #####################################
+endif()
 
 # Extra linking for the project.
 target_link_libraries(gilearner gi_lib)

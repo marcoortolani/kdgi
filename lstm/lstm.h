@@ -1,3 +1,6 @@
+#ifndef LSTM_H
+#define LSTM_H
+
 //for python interpreter embedding
 #include <pybind11/embed.h>
 //for type conversion c++/python
@@ -18,5 +21,11 @@ class LSTMOracle {
 		
 	public:
 		LSTMOracle(std::string modelname, int layer, std::vector<std::string> alphabet, py::object* n);
+		
 		bool membership_query(std::vector<std::string> phrase);
+		
+		template <class Dfa>
+		bool equivalence_query(Dfa* dfa_hp , vector<string>& witness_results){return true;};
 };
+
+#endif

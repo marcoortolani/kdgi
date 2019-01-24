@@ -11,9 +11,9 @@ add_library(lstm lstm.cc)
 
 find_package(PythonLibs REQUIRED)
 #include_directories(${PYTHON_INCLUDE_DIRS})
-#target_link_libraries(lstm ${PYTHON_LIBRARIES})
-include_directories("/usr/include/python3.6m/")
-target_link_libraries(lstm "/home/marco/anaconda3/envs/alearn/lib/libpython3.6m.so")
+target_link_libraries(lstm ${PYTHON_LIBRARIES})
+#include_directories("/usr/include/python3.6m/")
+#target_link_libraries(lstm "/home/marco/anaconda3/envs/alearn/lib/libpython3.6m.so")
 
 
 #Needed to copy some files in the build folder

@@ -6,6 +6,7 @@
 //for type conversion c++/python
 #include<pybind11/stl.h>
 
+//#include "ConcreteDfa.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -17,10 +18,16 @@ using namespace std;
 class LSTMOracle {
 	private:
 		py::object* net_;
+		py::object* classifier_;
 		std::vector<string> alphabet_;
+		int layer_;
 		
 	public:
-		LSTMOracle(std::string modelname, int layer, std::vector<std::string> alphabet, py::object* n);
+	
+		void build_dfa(std::vector<std::string> phrase);
+	
+		//LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn, py::object* svm);
+		LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn);
 		
 		bool membership_query(std::vector<std::string> phrase);
 		

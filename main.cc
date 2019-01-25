@@ -357,18 +357,22 @@ void test5(){
 
 void testlstm(){
 	py::scoped_interpreter guard{};
-	py::module m = py::module::import("LSTMOracle");
-	py::object net = m.attr("LSTMOracle")("test", 2);
+	py::module m0 = py::module::import("LSTMOracle");
+	//py::module m1 = py::module::import("svm");
+	py::object net = m0.attr("LSTMOracle")("model6", 2);
+	//py::object net = m1.attr("SVMClassifier")("test", 2);
 	
 	std::vector<std::string> alphabet = {"a", "b"};
 	
-    LSTMOracle lstm = LSTMOracle("model6", 2, alphabet, &net);
+    LSTMOracle lstm = LSTMOracle(2, alphabet, &net);
     
     std::cout << lstm.membership_query(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
     
     TTTLearner<LSTMOracle> learner(&lstm, alphabet);
 	TTTDfa* dfa = learner.learn();
 	dfa->print_dfa_dot("", "lstm.dot");
+	
+	lstm.build_dfa(std::vector<std::string>{"a", "b", "a", "a"});
 }
 
 int main() {

@@ -1,37 +1,145 @@
-import tensorflow as tf
-import numpy as np
+from sklearn import svm
 
-X0 = np.zeros([157, 128])
-Y0 = np.zeros([157], dtype=np.int32)
-X1 = np.ones([157, 128])
-Y1 = np.ones([157], dtype=np.int32)
-example_id = np.array(['%d' % i for i in range(len(Y0))])
+class Tree:
+	def __init__(self, left, right, svm):
+		self.left = left
+		self.right = right
+		self.svm = svm
+		
+	def add_node(self, x, svr, value):
+		node, direction = self.branch_down(x)
+		if(isinstance(node, Tree)):
+			node.add_node_bis(x, svr, value)
+		else:
+			if(isinstance(node, int)):
+				if direction == "left":
+					newnode = Tree(self.left, value, svr)
+					self.left = newnode
+					
+				if direction == "right":
+					newnode = Tree(self.right, value, svr)
+					self.right = newnode
+			else:
+				raise ValueError('In function add_node of class Tree: parameter lr must be either "left" or "right".')
+		
+	def branch_down(self, x):
+		y_pred = self.svm.predict([x])[0]
+		if(y_pred > 0.5):
+			return self.right, "right"
+		else:
+			return self.left, "left"
+			
+	def get_leaf(self, x):
+		node, _ = self.branch_down(x)
+		if(isinstance(node, int)):
+			return node
+		else:
+			if(isinstance(node, Tree)):
+				return node.get_leaf(x)
+			else:
+				raise ValueError('In function get_leaf of class Tree: got a non int and non Tree node.')
+				
+	def stamp(self, depth):
+		s = ""
+		for i in range(depth):
+			s = s + "\t"
+		print(s + "node")
+		
+		node = self.left
+		if(isinstance(node, Tree)):
+			node.stamp(depth + 1)
+		else:
+			print(s + "\t" + str(node))
+		node = self.right
+		if(isinstance(node, Tree)):
+			node.stamp(depth + 1)
+		else:
+			print(s + "\t" + str(node))
 
-x_column_name = 'x'
-example_id_column_name = 'example_id'
+class SVMClassifier:
+	def __init__(self, X):
+		if(len(X) < 2):
+			raise ValueError('In function __init__ of class SVMClassifier: param X must be a list of at least 2 elements.')
+		self.vectors = X[0:2]
+		
+		clf = svm.SVC(gamma='scale')
+		clf.fit(X[0:2], [0, 1])
+		self.root = Tree(0, 1, clf)
+		
+		self.add_elements(X[2:])
+	
+	def add_single_element(self, x1):
+		index = self.root.get_leaf(x1)
+		
+		l = len(self.vectors)
+		if(index >= l):
+			raise ValueError('In function add_single_element of class SVMClassifier: got an index equal to or greater than num_elements.')
+		
+		x0 = self.vectors[index]
+		
+		clf = svm.SVC(gamma='scale')
+		clf.fit([x0, x1], [0, 1])
+		
+		self.root.add_node(x1, clf, l)
+		
+		self.vectors = self.vectors + [x1]
+	
+	def add_elements(self, X):
+		for x in X :
+			self.add_single_element(x)
+	
+	def get_index(self, x):
+		return self.root.get_leaf(x)
+	
+	def stamp(self):
+		i = 0
+		for v in self.vectors :
+			print(str(i) + str(v))
+			i = i + 1
+		self.root.stamp(0)
 
-train_input_fn0 = tf.estimator.inputs.numpy_input_fn(
-    x={x_column_name: X0, example_id_column_name: example_id},
-    y=Y0,
-    num_epochs=None,
-    shuffle=True)
-    
-train_input_fn1 = tf.estimator.inputs.numpy_input_fn(
-    x={x_column_name: X1, example_id_column_name: example_id},
-    y=Y1,
-    num_epochs=None,
-    shuffle=True)
+"""	
+x0 = [0.0, 1.0, 0.6, 0.2, 0.84]
+x1 = [1.0, 0.62, 0.84, 0.11, 0.0]
+x2 = [0.5, 0.3, 0.76, 1, 0.4]
+Dset = [x0, x1, x2]
 
-svm = tf.contrib.learn.SVM(
-    example_id_column=example_id_column_name,
-    feature_columns=(tf.contrib.layers.real_valued_column(
-        column_name=x_column_name, dimension=128),),
-    l2_regularization=0.1)
+C = SVMClassifier(Dset)
 
-svm.fit(input_fn=train_input_fn0, steps=10)
-svm.fit(input_fn=train_input_fn1, steps=10)
+for x in Dset :
+	print(C.root.get_leaf(x))
 
-#svm.evaluate(input_fn=train_input_fn0)
-x = np.ones([2, 157]) * 0.2
-print(x)
-print(svm.predict(x))
+print()
+
+C.stamp()
+"""
+
+
+"""
+X = [x0, x1]
+y = [0, 1]
+
+clf = svm.SVC(gamma='scale')
+clf.fit(X, y)
+
+T = Tree(0, 1, clf)
+
+X = [Dset[T.get_leaf(x2)], x2]
+y = [0, 1]
+
+clf = svm.SVC(gamma='scale')
+clf.fit(X, y)
+T.add_node(x2, clf, 2)
+
+print(T.get_leaf(x0))
+print(T.get_leaf(x1))
+print(T.get_leaf(x2))
+"""
+
+"""
+print(T)
+print(T.left)
+print(T.right)
+print(T.right.left)
+print(T.right.right)
+"""

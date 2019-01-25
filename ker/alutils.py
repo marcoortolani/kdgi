@@ -56,7 +56,7 @@ def OneHot(input_dim=None, input_length=None):
                   arguments={'num_classes': input_dim},
                   input_shape=(input_length,))
 
-def build_and_train_model(filename, modelname, epochs, batch_size): #oracle6.cvs, model6, epochs=4000, batch_size=128
+def build_and_train_model(filename, modelname, epochs, batch_size): #"oracle6", "model6", epochs=4000, batch_size=128
 	num_words = 3
 	X_train, y_train, X_test, y_test = csv2intlist('review', 'sentiment', filename="csv/" + filename + ".csv", testTrainRatio=0.75)
 	# truncate and pad input sequences

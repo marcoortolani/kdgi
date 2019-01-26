@@ -18,14 +18,20 @@ using namespace std;
 class LSTMOracle {
 	private:
 		py::object* net_;
-		py::object* classifier_;
+		py::object classifier_;
+		
 		std::vector<string> alphabet_;
 		int layer_;
 		
+		std::vector<std::vector<std::string>> words_;
+		
 	public:
-	
-		void build_dfa(std::vector<std::string> phrase);
-	
+		//private methods made temporarily public for debugging purpouse
+		int get_state_index_from_word(std::vector<std::string> phrase);
+		std::vector<double> get_layer_output(std::vector<int> net_input);
+		void build_dfa();
+		
+		//real public methods
 		//LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn, py::object* svm);
 		LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn);
 		

@@ -37,7 +37,6 @@ std::string vec_sym_to_str(std::vector<std::string> phrase, std::vector<std::str
 
 std::vector<int> vec_sym_to_vec_int(std::vector<std::string> phrase, std::vector<std::string> alphabet){
 	std::vector<int> vec_int;
-	bool first = true;
 	for(std::string sym : phrase){
 		bool unidentified_symbol = true;
 		for(int i = 0; i < alphabet.size(); i++){
@@ -55,41 +54,68 @@ std::vector<int> vec_sym_to_vec_int(std::vector<std::string> phrase, std::vector
 	return vec_int;
 }
 
+std::vector<double> LSTMOracle::get_layer_output(std::vector<int> net_input){
+	py::object temp = net_->attr("get_layer_output")(layer_, py::cast(net_input));
+	std::vector<double> layer_output = temp.cast<std::vector<double>>();
+	return layer_output;
+}
+
 //LSTMOracle::LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn, py::object* svm){
 LSTMOracle::LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn){
 	alphabet_ = alphabet;
 	net_ = rnn;
-	//classifier_ = svm;
 	layer = layer_;
+	
+	std::vector<std::vector<double>> X_layer;
+	words_.push_back(std::vector<std::string>());
+	auto net_input =  vec_sym_to_vec_int(words_.back(), alphabet_);
+	X_layer.push_back(get_layer_output(net_input));
+	
+	for(auto sym : alphabet_){
+		words_.push_back(std::vector<std::string>{sym});
+		net_input =  vec_sym_to_vec_int(words_.back(), alphabet_);
+		X_layer.push_back(get_layer_output(net_input));
+	}
+	
+	py::module svm_module = py::module::import("svm");
+	
+	
+	py::object X = py::cast(X_layer);
+	classifier_ = svm_module.attr("SVMClassifier")(X);
 }
 	
 bool LSTMOracle::membership_query(std::vector<std::string> phrase){
-	//std::string s = vec_sym_to_str(phrase, alphabet_);
 	std::vector<int> vec_int = vec_sym_to_vec_int(phrase, alphabet_);
-	
-	//py::print(net_->attr("membership_query")(s));
-	//std::cout << "Stringa: " + s << std::endl;
-	//double result = net_->attr("membership_query")(s).cast<double>();
 	py::object temp = py::cast(vec_int);
 	double result = net_->attr("membership_query")(vec_int).cast<double>();
 	bool x = result > 0.5 ? true : false;
 	return x;
 }
 
-void LSTMOracle::build_dfa(std::vector<std::string> phrase){
-	//std::string s = vec_sym_to_str(phrase, alphabet_);
-	std::vector<int> vec_int = vec_sym_to_vec_int(phrase, alphabet_);
+int LSTMOracle::get_state_index_from_word(std::vector<std::string> phrase){
+	std::vector<int> net_input = vec_sym_to_vec_int(phrase, alphabet_);
+	std::vector<double> layer_output = get_layer_output(net_input);
+	py::object temp = classifier_.attr("get_index")(py::cast(layer_output));
+	int index = temp.cast<int>();
+	return index;
+}
+
+void LSTMOracle::build_dfa(){
+	int len = classifier_.attr("get_dim")().cast<int>();
+	std::cout << "Dimensione: " << len << std::endl;
+	for(auto sym : alphabet_){
+		std::cout << "\t" << sym;
+	}
+	std::cout << std::endl;
+	std::cout << std::endl;
 	
-	py::object temp = net_->attr("get_layer_output")(layer_, py::cast(vec_int));
-	std::vector<double> vec = temp.cast<std::vector<double>>();
-	
-	for(auto el : vec){
-		std::cout << el << std::endl;
+	for(int i = 0; i < len; i++){
+		std::cout << get_state_index_from_word(words_[i]);
+		for(auto sym : alphabet_){
+			auto word = words_[i];
+			word.push_back(sym);
+			std::cout << "\t" << get_state_index_from_word(word);
+		}
+		std::cout << std::endl;
 	}
 }
-/*
-template<class Dfa>
-bool LSTMOracle :: equivalence_query(Dfa* dfa_hp , vector <symbol_>& witness_results){
-	return true;
-}
-*/

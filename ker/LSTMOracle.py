@@ -36,6 +36,6 @@ class LSTMOracle:
 		functor = K.function([inp, K.learning_phase()], outputs )
 		outs = functor([x, 1.])
 		
-		print(outs)
+		#print(outs)
 		
 		return outs[0][0]

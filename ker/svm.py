@@ -91,6 +91,9 @@ class SVMClassifier:
 	def get_index(self, x):
 		return self.root.get_leaf(x)
 	
+	def get_dim(self):
+		return len(self.vectors)
+	
 	def stamp(self):
 		i = 0
 		for v in self.vectors :

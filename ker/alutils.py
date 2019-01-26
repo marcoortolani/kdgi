@@ -88,6 +88,37 @@ def build_and_train_model(filename, modelname, epochs, batch_size): #"oracle6", 
 	f.write(json_string) 
 
 	model.save_weights("models/" + modelname + ".hdf5")
+	
+def build_and_train_model2(filename, modelname, epochs, batch_size): #"oracle6", "model6", epochs=4000, batch_size=128
+	num_words = 3
+	X_train, y_train, X_test, y_test = csv2intlist('review', 'sentiment', filename="csv/" + filename + ".csv", testTrainRatio=1.0)
+	print("length:" + str(len(X_train)))
+	# truncate and pad input sequences
+	X_train = sequence.pad_sequences(X_train, maxlen=max_length)
+	X_test = sequence.pad_sequences(X_test, maxlen=max_length)
+
+	# create the model
+	model = Sequential()
+	model.add(OneHot(input_dim=num_words, input_length=max_length))
+	model.add(LSTM(10, activation='sigmoid'))
+	model.add(Dense(5, activation='relu'))
+	model.add(Dense(1, activation='sigmoid'))
+
+	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+	print(model.summary())
+
+	model.fit(X_train, y_train, validation_data=(X_train, y_train), epochs=epochs, batch_size=batch_size)
+
+	json_string = model.to_json()
+	f = open("models/" + modelname + ".txt", "a")
+	f.write(json_string) 
+
+	model.save_weights("models/" + modelname + ".hdf5")
+
+	# Final evaluation of the model
+	autoscores = model.evaluate(X_train, y_train, verbose=0)
+	print("Train Accuracy: %.2f%%" % (autoscores[1]*100))
 
 def get_model(modelname):
 	f = open("models/" + modelname + ".txt", "r")

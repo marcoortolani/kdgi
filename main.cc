@@ -377,7 +377,14 @@ void testlstm(){
 	std::cout << lstm.get_state_index_from_word(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
 	*/
 	
-	lstm.build_dfa();
+	/*
+	ConcreteDfa conc = lstm.build_dfa();
+	conc.update_state_table();
+	
+	conc.print_dfa_dot("", "conc.dot");
+	vector<symbol_> cnex;
+	dfa->equivalence_query(&conc, cnex);
+	*/
 }
 
 int main() {

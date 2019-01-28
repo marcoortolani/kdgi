@@ -9,7 +9,7 @@ class Tree:
 	def add_node(self, x, svr, value):
 		node, direction = self.branch_down(x)
 		if(isinstance(node, Tree)):
-			node.add_node_bis(x, svr, value)
+			node.add_node(x, svr, value)
 		else:
 			if(isinstance(node, int)):
 				if direction == "left":

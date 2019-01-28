@@ -13,14 +13,7 @@ class LSTMOracle:
 		self.class_layer = layer
 		inp = self.model.input
 		self.sequence_length = inp.shape[1].value
-	"""	
-	def membership_query(self, stringofint):
-		listofint = stringofint.split(" ")
-		#print(listofint)
-		X = sequence.pad_sequences([listofint], maxlen=self.sequence_length)
-		y = self.model.predict(X)
-		return y[0][0]
-	"""
+		
 	def membership_query(self, x):
 		x = sequence.pad_sequences([x], maxlen=self.sequence_length)
 		y = self.model.predict(x)

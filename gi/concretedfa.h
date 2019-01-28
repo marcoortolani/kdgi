@@ -34,7 +34,7 @@ protected:
   //******** DATA MEMBERS: ********
   vector<int> accepting_states_;      /*!< List of accepting states */
   vector<map<symbol_,int>> ttable_;			  	/*!< Transition table */
-
+  
   //******** CONSTRUCTORS: ********
   /**
    * Make an instance of new dfa with default start state to 0.
@@ -61,6 +61,7 @@ protected:
    */
   ConcreteDfa(const int n_state, const vector<symbol_> alf, const int s_state, vector<map<symbol_,int>> tt_copy, vector<int> accepting_states );
 
+protected:
   //******** METHODS: ********
   /**
    * Set the transition table ("ttable") reference to an extern transition table passed as argument.
@@ -174,6 +175,7 @@ protected:
 public:
   friend class BlueFringe;
   friend class AngluinDfa;
+  friend class LSTMOracle;
   //******** CONSTRUCTORS: ********
 
   /**

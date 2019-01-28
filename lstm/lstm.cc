@@ -55,6 +55,7 @@ std::vector<int> vec_sym_to_vec_int(std::vector<std::string> phrase, std::vector
 }
 
 std::vector<double> LSTMOracle::get_layer_output(std::vector<int> net_input){
+	//std::cout << "get layer output" << std::endl;
 	py::object temp = net_->attr("get_layer_output")(layer_, py::cast(net_input));
 	std::vector<double> layer_output = temp.cast<std::vector<double>>();
 	return layer_output;
@@ -82,6 +83,10 @@ LSTMOracle::LSTMOracle(int layer, std::vector<std::string> alphabet, py::object*
 	
 	py::object X = py::cast(X_layer);
 	classifier_ = svm_module.attr("SVMClassifier")(X);
+	
+	build_dfa();
+	
+	counter_ = 0;
 }
 	
 bool LSTMOracle::membership_query(std::vector<std::string> phrase){
@@ -102,20 +107,43 @@ int LSTMOracle::get_state_index_from_word(std::vector<std::string> phrase){
 
 void LSTMOracle::build_dfa(){
 	int len = classifier_.attr("get_dim")().cast<int>();
-	std::cout << "Dimensione: " << len << std::endl;
+	
+	/*std::cout << "Dimensione: " << len << std::endl;
 	for(auto sym : alphabet_){
 		std::cout << "\t" << sym;
 	}
 	std::cout << std::endl;
-	std::cout << std::endl;
+	std::cout << std::endl;*/
+	
+	std::vector<map<symbol_,int>> ttab;
+	vector<int> accepting_states;
 	
 	for(int i = 0; i < len; i++){
-		std::cout << get_state_index_from_word(words_[i]);
+		//std::cout << get_state_index_from_word(words_[i]);
+		ttab.push_back(map<symbol_,int>());
+		accepting_states.push_back(membership_query(words_[i]));
+		
 		for(auto sym : alphabet_){
 			auto word = words_[i];
 			word.push_back(sym);
-			std::cout << "\t" << get_state_index_from_word(word);
+			int index = get_state_index_from_word(word);
+			//std::cout << "\t" << index;
+			ttab.back()[sym] = index;
 		}
-		std::cout << std::endl;
+		//std::cout << std::endl;
 	}
+	
+	A_ = ConcreteDfa(len, alphabet_, 0, ttab, accepting_states);
+	A_.update_state_table();
+	A_.print_dfa_dot("", "A.dot");
+	
+	counter_++;
+}
+void LSTMOracle::add_word(std::vector<symbol_> word){
+	std::vector<double> x_layer;
+	words_.push_back(word);
+	auto net_input =  vec_sym_to_vec_int(word, alphabet_);
+	x_layer = get_layer_output(net_input);
+	py::object x = py::cast(x_layer);
+	classifier_.attr("add_single_element")(x);
 }

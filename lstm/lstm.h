@@ -23,8 +23,8 @@ class LSTMOracle {
 		std::vector<string> alphabet_;
 		int layer_;
 		
-		std::vector<std::vector<std::string>> words_;
-		ConcreteDfa A_;
+		std::vector<std::vector<symbol_>> words_;
+		ConcreteDfa* A_;
 		int counter_;
 		
 	public:
@@ -43,21 +43,34 @@ class LSTMOracle {
 		template <class Dfa>
 		bool equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result){
 			vector<symbol_> counterexample;
-			
-			while(!A_.equivalence_query(dfa_hp, counterexample) and counter_ < 3){
-				std::cout << counterexample << std::endl;
-				if(membership_query(counterexample) == A_.membership_query(counterexample)){
-					
+			while(!A_->equivalence_query(dfa_hp, counterexample) and counter_ < 10){
+				if(membership_query(counterexample) == A_->membership_query(counterexample)){
+					cout << "debug1.1" << endl;
 					witness_result = counterexample;
 					return false;
 				}
 				else{
+					std::string s;
+					for(auto sym : counterexample)
+						s += sym;
+					std::cout << s << std::endl;
 					
-					add_word(counterexample);					
+					for(auto word : words_){
+						if(word == counterexample){
+							return true;
+						}
+					}
+					
+					add_word(counterexample);
+					
+					classifier_.attr("stamp")();
+									
+					dfa_hp->print();
+					dfa_hp->print_dfa_dot("", "lstmhyp.dot");
+					A_->print_dfa_ttable(s);
 					build_dfa();
 				}
 			}
-			
 			return true;
 		};
 };

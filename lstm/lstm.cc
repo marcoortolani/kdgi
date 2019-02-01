@@ -66,6 +66,7 @@ LSTMOracle::LSTMOracle(int layer, std::vector<std::string> alphabet, py::object*
 	alphabet_ = alphabet;
 	net_ = rnn;
 	layer = layer_;
+	A_ = nullptr;
 	
 	std::vector<std::vector<double>> X_layer;
 	words_.push_back(std::vector<std::string>());
@@ -85,7 +86,8 @@ LSTMOracle::LSTMOracle(int layer, std::vector<std::string> alphabet, py::object*
 	classifier_ = svm_module.attr("SVMClassifier")(X);
 	
 	build_dfa();
-	
+	classifier_.attr("stamp")();
+	A_->print_dfa_ttable("_");
 	counter_ = 0;
 }
 	
@@ -118,8 +120,12 @@ void LSTMOracle::build_dfa(){
 	std::vector<map<symbol_,int>> ttab;
 	vector<int> accepting_states;
 	
+	vector<int> present_states = vector<int>(len, 0);
+	vector<int> translate_vec;
+	
 	for(int i = 0; i < len; i++){
-		//std::cout << get_state_index_from_word(words_[i]);
+		translate_vec.push_back(i);
+		
 		ttab.push_back(map<symbol_,int>());
 		accepting_states.push_back(membership_query(words_[i]));
 		
@@ -127,16 +133,42 @@ void LSTMOracle::build_dfa(){
 			auto word = words_[i];
 			word.push_back(sym);
 			int index = get_state_index_from_word(word);
-			//std::cout << "\t" << index;
 			ttab.back()[sym] = index;
+			
+			present_states[index] = 1;
 		}
-		//std::cout << std::endl;
 	}
 	
-	A_ = ConcreteDfa(len, alphabet_, 0, ttab, accepting_states);
-	A_.update_state_table();
-	A_.print_dfa_dot("", "A.dot");
+	present_states[0] = 1;
+	//cout << present_states << endl;
+	//cout << translate_vec << endl;
 	
+	std::vector<map<symbol_,int>> new_ttab;
+	for(int i=0; i < len; i++){
+		if(present_states[i] == 0){
+			for(int j=i+1; j < len; j++){
+				translate_vec[j] = translate_vec[j] - 1;
+			}
+		}
+		else{
+			new_ttab.push_back(ttab[i]);
+		}
+	}
+	
+	len = new_ttab.size();
+	for(int i=0; i < len; i++){
+		for(auto sym : alphabet_){
+			new_ttab[i][sym] = translate_vec[new_ttab[i][sym]];
+		}
+	}
+	
+	if(A_ != nullptr){
+		delete A_;
+	}
+	A_ = new ConcreteDfa(len, alphabet_, 0, new_ttab, accepting_states);
+	A_->print_dfa_ttable("");
+	A_->update_state_table();
+	//A_.print_dfa_dot("", "A.dot");
 	counter_++;
 }
 void LSTMOracle::add_word(std::vector<symbol_> word){

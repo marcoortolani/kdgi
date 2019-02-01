@@ -62,8 +62,12 @@ class SVMClassifier:
 			raise ValueError('In function __init__ of class SVMClassifier: param X must be a list of at least 2 elements.')
 		self.vectors = X[0:2]
 		
-		clf = svm.SVC(gamma='scale')
+		clf = svm.SVC(kernel='rbf', gamma='scale')
+		
 		clf.fit(X[0:2], [0, 1])
+		while(not (clf.predict(X[0:1])[0] < 0.25 and clf.predict(X[1:2])[0] > 0.75)):
+			clf.fit(X[0:2], [0, 1])
+			
 		self.root = Tree(0, 1, clf)
 		
 		self.add_elements(X[2:])
@@ -77,8 +81,11 @@ class SVMClassifier:
 		
 		x0 = self.vectors[index]
 		
-		clf = svm.SVC(gamma='scale')
+		clf = svm.SVC(kernel='rbf', gamma='scale')
+		
 		clf.fit([x0, x1], [0, 1])
+		while(not (clf.predict([x0])[0] < 0.25 and clf.predict([x1])[0] > 0.75)):
+			clf.fit([x0, x1], [0, 1])
 		
 		self.root.add_node(x1, clf, l)
 		

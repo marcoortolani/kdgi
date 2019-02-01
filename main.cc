@@ -397,4 +397,30 @@ int main() {
 	*/
 	
 	testlstm();
+	/*
+	std::vector<map<symbol_,int>> ttab;
+	vector<int> accepting_states;
+	int len = 4;
+	auto alphabet_ = std::vector<symbol_>{"a", "b"};
+	for(int i = 0; i < len; i++){
+		//std::cout << get_state_index_from_word(words_[i]);
+		ttab.push_back(map<symbol_,int>());
+		accepting_states.push_back(true);
+		
+		for(auto sym : alphabet_){
+			ttab.back()[sym] = 0;
+		}
+	}
+	
+	auto A_ = new ConcreteDfa(len, alphabet_, 0, ttab, accepting_states);
+	delete A_;
+	A_ = new ConcreteDfa(len, alphabet_, 0, ttab, accepting_states);
+	A_->print_dfa_ttable("");
+	A_->print_state_table();
+	for(int i=0; i < 100; i++){
+		std::cout << i << std::endl;
+		delete A_;
+		A_ = new ConcreteDfa(len, alphabet_, 0, ttab, accepting_states);
+	}
+	*/
 }

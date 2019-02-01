@@ -2,9 +2,9 @@
 #define LSTM_H
 
 //for python interpreter embedding
-#include <pybind11/embed.h>
+#include "pybind11/embed.h"
 //for type conversion c++/python
-#include<pybind11/stl.h>
+#include "pybind11/stl.h"
 
 #include "concretedfa.h"
 #include <iostream>

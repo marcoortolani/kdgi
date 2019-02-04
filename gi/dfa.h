@@ -144,7 +144,7 @@ public:
    * It finds a counterexample that distinguish this dfa from another one given an already generated table-filling table.
    */
   template<class O>
-  vector<symbol_> find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa<O>* subject_dfa);
+  vector<symbol_> find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa<O>* subject_dfa, vector<symbol_> phrase1 = vector<symbol_>(), vector<symbol_> phrase2 = vector<symbol_>());
 
   /**
    * Finds a counterexample (if one does exist) ie a phrase the other dfa recognize differently, using the table filling algorithm.
@@ -154,7 +154,7 @@ public:
    * false otherwise in which case the counterexample will be stored in the parameter passed by reference
    */
   template<class O>
-  bool equivalence_query(Dfa<O>* other_dfa, vector<symbol_>& counterexample);
+  bool equivalence_query(Dfa<O>* other_dfa, vector<symbol_>& counterexample, vector<symbol_> phrase1 = vector<symbol_>(), vector<symbol_> phrase2 = vector<symbol_>());
 
   /* Code related to the "dfa common interface" */
 

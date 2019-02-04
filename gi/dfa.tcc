@@ -100,7 +100,6 @@ map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I> :: init_table
 	map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> res;
 
 	//TO-DO: controllare che second punti a qualcosa
-
 	for(auto s1 = this->begin(); s1 != this->end(); ++s1){
 		map<vector<symbol_>, vector<symbol_>> tmp;
 		//cout << "s1: " << s1->get_charact_phrase() << endl;
@@ -168,10 +167,10 @@ map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> Dfa<I>::table_fillin
 
 template <class I>
 template <class O>
-vector<symbol_> Dfa<I> :: find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa<O>* subject_dfa){
+vector<symbol_> Dfa<I> :: find_counterexample_from_table(map<vector<symbol_>, map<vector<symbol_>, vector<symbol_>>> table, Dfa<O>* subject_dfa, vector<symbol_> phrase1, vector<symbol_> phrase2){
 	vector<symbol_> counterexample;
-	DfaState* s1 = (*this)[vector<symbol_>()];
-	DfaState* s2 = (*subject_dfa)[vector<symbol_>()];
+	DfaState* s1 = (*this)[phrase1];
+	DfaState* s2 = (*subject_dfa)[phrase2];
 	
 	while(true){
 		//Questa funzione si aspetta di ricevere una tabella inizializzata
@@ -203,14 +202,14 @@ vector<symbol_> Dfa<I> :: find_counterexample_from_table(map<vector<symbol_>, ma
 
 template <class I>
 template <class O>
-bool Dfa<I> :: equivalence_query(Dfa<O>* subject_dfa, vector<symbol_>& counterexample){
+bool Dfa<I> :: equivalence_query(Dfa<O>* subject_dfa, vector<symbol_>& counterexample, vector<symbol_> phrase1, vector<symbol_> phrase2){
 	
 	if(this->sort_alphabet() != subject_dfa->sort_alphabet()){
 		cerr << "dfa.tcc : equivalence_query : Cannot compare 2 Dfas with different alphabets" << endl;
 		throw 0;
 	}
 	
-	if((*this)[vector<symbol_>()]->is_accepting() != (*subject_dfa)[vector<symbol_>()]->is_accepting()){
+	if((*this)[phrase1]->is_accepting() != (*subject_dfa)[phrase2]->is_accepting()){
 		counterexample.clear();
 		return false;
 	}
@@ -226,19 +225,19 @@ bool Dfa<I> :: equivalence_query(Dfa<O>* subject_dfa, vector<symbol_>& counterex
 				if(map.find(s2->get_charact_phrase()) == map.end()){
 					//cout << "TROVATA COPPIA NON VERIFICATA:" << s1->get_charact_phrase() << " : " << s2->get_charact_phrase() << endl;
 					for(symbol_ s : get_alphabet()){
-						//cout << "TENTATIVO PER SIMBOLO: " << s << endl;
+						//cout << "\tTENTATIVO PER SIMBOLO: " << s << endl;
 						DfaState* next_s1 = s1->next(s);
 						DfaState* next_s2 = s2->next(s);
 						
-						//cout << "SUCCESSORI: " << next_s1->get_charact_phrase() << " : " << next_s2->get_charact_phrase() << endl;
+						//cout << "\tSUCCESSORI: " << next_s1->get_charact_phrase() << " : " << next_s2->get_charact_phrase() << endl;
 						auto next_map = table.find(next_s1->get_charact_phrase())->second;
 						if(next_map.find(next_s2->get_charact_phrase()) != next_map.end()){
-							//cout << "SUCCESSORI DIVERSI -> STATI DIVERSI" << endl;
+							//cout << "\tSUCCESSORI DIVERSI -> STATI DIVERSI" << endl;
 							finished = false;
 							table[s1->get_charact_phrase()][s2->get_charact_phrase()] = vector<symbol_>(1, s);
 							
-							if(s1->get_charact_phrase().empty() && s2->get_charact_phrase().empty()){
-								counterexample = find_counterexample_from_table(table, subject_dfa);
+							if(s1->get_charact_phrase() == phrase1 && s2->get_charact_phrase() == phrase2){
+								counterexample = find_counterexample_from_table(table, subject_dfa, phrase1, phrase2);
 								return false;
 							}
 							

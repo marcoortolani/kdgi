@@ -362,7 +362,7 @@ void testlstm(){
 	
 	std::vector<std::string> alphabet = {"a", "b"};
 	
-    LSTMOracle lstm = LSTMOracle(2, alphabet, &net);
+    LSTMOracle lstm = LSTMOracle(2, alphabet, &net, 10);
     
     //std::cout << lstm.membership_query(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
     

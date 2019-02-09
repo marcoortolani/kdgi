@@ -63,6 +63,13 @@ int LSTMOracle::get_state_index_from_word(std::vector<std::string> phrase){
 }
 
 void LSTMOracle::add_word(std::vector<symbol_> word){
+	for(auto w : words_){
+		if(w == word){
+			cout << "A_: " << A_->membership_query(word) << endl;
+			cout << "classifier: " << membership_query(word) << endl;
+		}
+	}
+	cout << "\tnew word: " << word << endl;
 	std::vector<double> x_layer;
 	words_.push_back(word);
 	auto net_input =  vec_sym_to_vec_int(word, alphabet_);
@@ -111,13 +118,31 @@ void LSTMOracle::build_dfa(){
 		for(auto sym : alphabet_){
 			auto word = words_[i];
 			word.push_back(sym);
-			int index = get_state_index_from_word(word);
-			ttab.back()[sym] = index;
 			
-			present_states[index] = 1;
+			
+			bool in_words = false;
+			for(int j=0; j<len and !in_words; j++){
+				if(word == words_[j]){
+					in_words = true;
+					ttab.back()[sym] = j;
+					present_states[j] = 1;
+					cout << "in_words" << endl;
+				}
+			}
+			
+
+			if(!in_words){
+				int index = get_state_index_from_word(word);
+				ttab.back()[sym] = index;
+			
+				present_states[index] = 1;
+				cout << "not in_words" << endl;
+			}
+			cout << word << ":" << sym << ":" << ttab.back()[sym] << endl;
 		}
 	}
 	
+	/*
 	present_states[0] = 1;
 	
 	std::vector<map<symbol_,int>> new_ttab;
@@ -140,13 +165,15 @@ void LSTMOracle::build_dfa(){
 			new_ttab[i][sym] = translate_vec[new_ttab[i][sym]];
 		}
 	}
-	
+	*/
 	if(A_ != nullptr){
 		delete A_;
 	}
-	A_ = new ConcreteDfa(len, alphabet_, 0, new_ttab, new_accepting_states);
+	//A_ = new ConcreteDfa(len, alphabet_, 0, new_ttab, new_accepting_states);
+	A_ = new ConcreteDfa(len, alphabet_, 0, ttab, accepting_states);
+	A_->print_dfa_ttable("A_");
 	A_->update_state_table();
-	counter_++;
+	cout << "counter: " << counter_++ << endl;
 }
 
 LSTMOracle::LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn, int max_build){
@@ -188,6 +215,15 @@ template <class Dfa>
 bool LSTMOracle::equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result){
 	while(counter_ < max_build_){
 		build_dfa();
+		
+		vector<symbol_> cntr;
+		if(A_->equivalence_query(dfa_hp, cntr)){
+			return true;
+		}
+		else{
+			cout << "cntr: " << cntr << endl;
+		}
+		
 		auto word_pair = breadth_search(dfa_hp, A_->get_num_states());
 		
 		vector<symbol_> prefix1 = word_pair.first;
@@ -223,6 +259,7 @@ bool LSTMOracle::equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result
 			else{
 				witness_result = word2;
 			}
+			cout << "\tcounterexample: " << witness_result << endl;
 			return false;
 		}
 		else{

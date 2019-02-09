@@ -362,14 +362,14 @@ void testlstm(){
 	
 	std::vector<std::string> alphabet = {"a", "b"};
 	
-    LSTMOracle lstm = LSTMOracle(2, alphabet, &net, 10);
+    LSTMOracle lstm = LSTMOracle(2, alphabet, &net, 50);
     
     //std::cout << lstm.membership_query(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
     
     TTTLearner<LSTMOracle> learner(&lstm, alphabet);
 	TTTDfa* dfa = learner.learn();
 	dfa->print_dfa_dot("", "lstm.dot");
-	
+	dfa->Dfa<list<DfaState>*>::print();
 	/*
 	std::cout << lstm.get_state_index_from_word(std::vector<std::string>()) << std::endl;
 	std::cout << lstm.get_state_index_from_word(std::vector<std::string>{"a"}) << std::endl;

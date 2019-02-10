@@ -28,7 +28,10 @@ class LSTMOracle {
 		int counter_;
 		int max_build_;
 		
-		vector<vector<symbol_>> get_words_by_length(int max_len);
+		int last_len_;
+		map<pair<int, symbol_>, int> mandatory_transictions_;
+		
+		vector<vector<symbol_>> get_words_by_length(int min_len, int max_len);
 		
 		int get_state_index_from_word(std::vector<std::string> phrase);
 		
@@ -37,7 +40,10 @@ class LSTMOracle {
 		void add_word(std::vector<symbol_> word);
 		
 		template <class Dfa>
-		pair<vector<symbol_>,vector<symbol_>> breadth_search(Dfa* dfa_hp, int max_len);
+		pair<vector<symbol_>,vector<symbol_>> breadth_search(Dfa* dfa_hp, int min_length, int max_len);
+		
+		template <class Dfa>
+		pair<vector<symbol_>,vector<symbol_>> breadth_search2(Dfa* dfa_hp, int max_len);
 		
 		void build_dfa();
 		

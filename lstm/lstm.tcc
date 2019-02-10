@@ -23,11 +23,11 @@ std::vector<int> vec_sym_to_vec_int(std::vector<std::string> phrase, std::vector
 	return vec_int;
 }
 
-vector<vector<symbol_>> LSTMOracle::get_words_by_length(int max_len){
+vector<vector<symbol_>> LSTMOracle::get_words_by_length(int min_len, int max_len){
 	vector<vector<symbol_>> words;
 	int len = alphabet_.size();
 	
-	for(int i = 0; i < max_len; i++){
+	for(int i = min_len; i < max_len; i++){
 		int c = pow(len, i);
 		for(int j = 0; j < c; j++){
 			int val = j;
@@ -69,6 +69,15 @@ void LSTMOracle::add_word(std::vector<symbol_> word){
 			cout << "classifier: " << membership_query(word) << endl;
 		}
 	}
+	
+	vector<symbol_> prefix = word;
+	symbol_ transiction = prefix.back();
+	prefix.pop_back();
+	
+	int start_state = A_->get_arrive_state(prefix);
+	int arrive_state = words_.size();
+	mandatory_transictions_[make_pair(start_state, transiction)] = arrive_state;
+	
 	cout << "\tnew word: " << word << endl;
 	std::vector<double> x_layer;
 	words_.push_back(word);
@@ -79,8 +88,8 @@ void LSTMOracle::add_word(std::vector<symbol_> word){
 }
 
 template <class Dfa>
-pair<vector<symbol_>,vector<symbol_>> LSTMOracle::breadth_search(Dfa* dfa_hp, int max_len){
-	vector<vector<symbol_>> words_by_length = get_words_by_length(max_len);
+pair<vector<symbol_>,vector<symbol_>> LSTMOracle::breadth_search(Dfa* dfa_hp, int min_len, int max_len){
+	vector<vector<symbol_>> words_by_length = get_words_by_length(min_len, max_len);
 	map<vector<symbol_>, pair<vector<symbol_>, vector<symbol_>>> state_recorder;
 	
 	for(auto word : words_by_length){
@@ -93,6 +102,45 @@ pair<vector<symbol_>,vector<symbol_>> LSTMOracle::breadth_search(Dfa* dfa_hp, in
 		else{
 			if(it->second.first != learnerState->get_charact_phrase()){
 				return make_pair(it->second.second, word);
+			}
+		}
+	}
+	
+	return make_pair(vector<symbol_>(), vector<symbol_>());
+}
+
+
+template <class Dfa>
+pair<vector<symbol_>,vector<symbol_>> LSTMOracle::breadth_search2(Dfa* dfa_hp, int max_len){
+	
+	int len = alphabet_.size();
+	map<vector<symbol_>, pair<vector<symbol_>, vector<symbol_>>> state_recorder;
+	
+	for(int i = 0; i < max_len; i++){
+		int c = pow(len, i);
+		for(int j = 0; j < c; j++){
+			int val = j;
+			vector<symbol_> w;
+			for(int k = 0; k < i; k++){
+				int q = val % len;
+				val = val / len;
+				w.push_back(alphabet_[q]);
+			}
+			vector<symbol_> word;
+			for(int l = w.size() - 1; l >= 0; l--){
+				word.push_back(w[l]);
+			}
+			
+			DfaState* lstmState = (*A_)[word];
+			DfaState* learnerState = (*dfa_hp)[word];
+			auto it = state_recorder.find(lstmState->get_charact_phrase());
+			if(it == state_recorder.end()){
+				state_recorder[lstmState->get_charact_phrase()] = make_pair(learnerState->get_charact_phrase(), word);
+			}
+			else{
+				if(it->second.first != learnerState->get_charact_phrase()){
+					return make_pair(it->second.second, word);
+				}
 			}
 		}
 	}
@@ -119,14 +167,27 @@ void LSTMOracle::build_dfa(){
 			auto word = words_[i];
 			word.push_back(sym);
 			
+			auto it = mandatory_transictions_.find(make_pair(i, sym));
+			if(it == mandatory_transictions_.end()){
+				int index = get_state_index_from_word(word);
+				ttab.back()[sym] = index;
 			
+				present_states[index] = 1;
+				//cout << "not in_words" << endl;
+			}
+			else{
+				ttab.back()[sym] = it->second;
+				present_states[it->second] = 1;
+				//cout << "in_words" << endl;
+			}
+			/*
 			bool in_words = false;
 			for(int j=0; j<len and !in_words; j++){
 				if(word == words_[j]){
 					in_words = true;
 					ttab.back()[sym] = j;
 					present_states[j] = 1;
-					cout << "in_words" << endl;
+					//cout << "in_words" << endl;
 				}
 			}
 			
@@ -136,9 +197,10 @@ void LSTMOracle::build_dfa(){
 				ttab.back()[sym] = index;
 			
 				present_states[index] = 1;
-				cout << "not in_words" << endl;
+				//cout << "not in_words" << endl;
 			}
-			cout << word << ":" << sym << ":" << ttab.back()[sym] << endl;
+			*/
+			//cout << word << ":" << sym << ":" << ttab.back()[sym] << endl;
 		}
 	}
 	
@@ -201,6 +263,7 @@ LSTMOracle::LSTMOracle(int layer, std::vector<std::string> alphabet, py::object*
 	classifier_ = svm_module.attr("SVMClassifier")(X);
 	
 	counter_ = 0;
+	last_len_ = 0;
 }
 
 bool LSTMOracle::membership_query(std::vector<std::string> phrase){
@@ -213,6 +276,7 @@ bool LSTMOracle::membership_query(std::vector<std::string> phrase){
 
 template <class Dfa>
 bool LSTMOracle::equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result){
+	cout << counter_ << ":" << max_build_ << endl;
 	while(counter_ < max_build_){
 		build_dfa();
 		
@@ -224,7 +288,7 @@ bool LSTMOracle::equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result
 			cout << "cntr: " << cntr << endl;
 		}
 		
-		auto word_pair = breadth_search(dfa_hp, A_->get_num_states());
+		auto word_pair = breadth_search2(dfa_hp, A_->get_num_states());
 		
 		vector<symbol_> prefix1 = word_pair.first;
 		vector<symbol_> prefix2 = word_pair.second;
@@ -232,6 +296,8 @@ bool LSTMOracle::equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result
 		if(prefix1.empty() and prefix2.empty()){
 			return true;
 		}
+		
+		last_len_ = prefix1.size() < prefix2.size() ? prefix1.size() - 1 : prefix2.size() - 1;
 		
 		vector<symbol_> phrase1 = (*dfa_hp)[prefix1]->get_charact_phrase();
 		vector<symbol_> phrase2 = (*dfa_hp)[prefix2]->get_charact_phrase();

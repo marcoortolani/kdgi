@@ -62,9 +62,9 @@ int LSTMOracle::get_state_index_from_word(std::vector<std::string> phrase){
 	return index;
 }
 
-void LSTMOracle::add_word(std::vector<symbol_> word){
+void LSTMOracle::add_word(std::vector<symbol_> word1, ){
 	for(auto w : words_){
-		if(w == word){
+		if(w == word1){
 			cout << "A_: " << A_->membership_query(word) << endl;
 			cout << "classifier: " << membership_query(word) << endl;
 		}

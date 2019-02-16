@@ -5,12 +5,12 @@ from keras import backend as K
 
 class LSTMOracle:
 	model = None
-	class_layer = None
+	#class_layer = None
 	sequence_length = None
 	
-	def __init__(self, modelname, layer):
+	def __init__(self, modelname):
 		self.model = ut.get_model(modelname)
-		self.class_layer = layer
+		#self.class_layer = layer
 		inp = self.model.input
 		self.sequence_length = inp.shape[1].value
 		

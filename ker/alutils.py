@@ -129,7 +129,8 @@ def get_model(modelname):
 	print(model.summary())
 
 	return model
-	
+
+"""
 def get_layer_output(model, layer, x):
 	x = sequence.pad_sequences(x, maxlen=max_length)
 
@@ -141,3 +142,4 @@ def get_layer_output(model, layer, x):
 	outs = functor([x, 1.])
 
 	return outs
+"""

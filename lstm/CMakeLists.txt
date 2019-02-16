@@ -1,11 +1,17 @@
-add_subdirectory(../py/pybind11 lib)
+cmake_minimum_required(VERSION 3.5)
+
+# Enable all warning by default
+#set(CMAKE_CXX_FLAGS "-g -Wall -fvisibility=hidden -fPIC")
+
+set(CMAKE_CXX_STANDARD 11)
 
 add_library(lstm lstm.cc)
 
-find_package(PythonLibs 3.6 REQUIRED)
-find_package(PythonInterp 3.6 REQUIRED)
-target_link_libraries(lstm pybind11)
-include_directories(${PYTHON_INCLUDE_DIRS})
+find_package(PythonLibs REQUIRED)
+#include_directories(${PYTHON_INCLUDE_DIRS})
 target_link_libraries(lstm ${PYTHON_LIBRARIES})
 
-message("messaggio di test python directories ${PYTHON_INCLUDE_DIRS} python libraries ${PYTHON_LIBRARIES}")
+target_link_libraries(lstm gi_lib)
+
+#include_directories("/usr/include/python3.6m/")
+#target_link_libraries(lstm "/home/marco/anaconda3/envs/alearn/lib/libpython3.6m.so")

@@ -17,7 +17,8 @@ using namespace std;
 
 class LSTMOracle {
 	private:
-		py::object* net_;
+		//py::object* net_;
+		py::object net_;
 		py::object classifier_;
 		
 		std::vector<string> alphabet_;
@@ -29,7 +30,7 @@ class LSTMOracle {
 		int max_build_;
 		
 		int last_len_;
-		map<pair<int, symbol_>, int> mandatory_transictions_;
+		map<pair<int, symbol_>, int> mandatory_transitions_;
 		
 		vector<vector<symbol_>> get_words_by_length(int min_len, int max_len);
 		
@@ -37,7 +38,7 @@ class LSTMOracle {
 		
 		std::vector<double> get_layer_output(std::vector<int> net_input);
 		
-		void add_word(std::vector<symbol_> word);
+		bool add_word(std::vector<symbol_> word);
 		
 		template <class Dfa>
 		pair<vector<symbol_>,vector<symbol_>> breadth_search(Dfa* dfa_hp, int min_length, int max_len);
@@ -48,7 +49,8 @@ class LSTMOracle {
 		void build_dfa();
 		
 	public:
-		LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn, int max_build);
+		//LSTMOracle(int layer, std::vector<std::string> alphabet, py::object* rnn, int max_build);
+		LSTMOracle(int layer, std::vector<std::string> alphabet, int max_build);
 		
 		bool membership_query(std::vector<std::string> phrase);
 		

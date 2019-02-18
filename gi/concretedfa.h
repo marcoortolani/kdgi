@@ -175,7 +175,7 @@ protected:
 public:
   friend class BlueFringe;
   friend class AngluinDfa;
-  friend class LSTMOracle;
+  friend class RNNOracle;
   //******** CONSTRUCTORS: ********
 
   /**

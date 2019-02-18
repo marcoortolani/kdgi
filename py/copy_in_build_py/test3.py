@@ -1,101 +1,58 @@
 from gipy_lib import *
 
-def f1(dfa1, dfa2):
-	query = equivalence_query(dfa1, dfa2)
-	print query
-	query = equivalence_query(dfa2, dfa1)
-	print query
-	
-	mat = neighbour_matching(dfa1, dfa2)
-	n = mat[len(mat) - 1][0]
-	print "Neighbour matching:"
-	print n
-	
-	
-def fmeasure(dfa, oracle, max_length, alphabet):
-	tp = 0.0
-	fp = 0.0
-	tn = 0.0
-	fn = 0.0
-
-	for i in range(0, max_length + 1) :
+def gen_dataset_from_oracle(oracle, length, alphabet) :
+	dataset = []
+	for i in range(0, length + 1) :
 		for j in range(0, pow(len(alphabet), i)) :
 			val = j
 			word = []
 			
 			for k in range(0, i) :
-				word.extend(alphabet[ val % len(alphabet) ])
+				word.extend(alphabet[ int(val % len(alphabet)) ])
 				val = val / len(alphabet)
 			
-			if oracle.membership_query(word) != dfa.membership_query(word) :
-				if dfa.membership_query(word) :
-					fp = fp + 1
-				else :
-					fn = fn + 1
-			else :
-				if dfa.membership_query(word) :
-					tp = tp + 1
-				else :
-					tn = tn + 1
-
-	precision = tp / (tp + fp)
-	recall = tp / (tp + fn)
-	f_measure = 2 * (precision * recall) / (precision + recall)
-	#print "precision:" + str(precision)
-	#print "recall:" + str(recall)
-	return f_measure
-
-def test3(alphabet, rand_length, max_length) :
-	if max_length > rand_length :
-		max_length = rand_length
-	
-	dim = 0
-	for i in range(0, rand_length + 1):
-		dim += pow(len(alphabet), i)
-
-	print "Complete language dimension:" + str(dim)
-	print
-	print "\tttt\t\topack\t\tang"
-
-	for silly_length in range(2, max_length + 1) :
-		dataset = []
-		rand = RandomOracle(rand_length, alphabet)
-
-		for i in range(0, silly_length + 1) :
-			for j in range(0, pow(len(alphabet), i)) :
-				val = j
-				word = []
+			if oracle.membership_query(word) :
+				dataset.extend([word])
 				
-				for k in range(0, i) :
-					word.extend(alphabet[ val % len(alphabet) ])
-					val = val / len(alphabet)
-				
-				if rand.membership_query(word) :
-					dataset.extend([word])
+	return dataset
 
-		silly = SillyOracle(dataset)
+alphabet1 = ["a", "b", "c", "d", 'e']
+alphabet2 = ["a", "b", "c"]
+len1 = 3
+len2 = 5
 
-		lr = TTTLearner_R(rand, alphabet)
-		lar = AngluinLearner_R(rand, alphabet)
+rand1 = RandomOracle(len1, alphabet1)
+rand2 = RandomOracle(len2, alphabet2)
 
-		ls = TTTLearner_S(silly, alphabet)
-		las = AngluinLearner_S(silly, alphabet)
+dataset1 = gen_dataset_from_oracle(rand1, len1, alphabet1)
+dataset2 = gen_dataset_from_oracle(rand2, len2, alphabet2)
 
-		ttts = ls.learn()
+silly_lang1_per50 = SillyOracle(dataset1, 50)
+silly_lang1_per20 = SillyOracle(dataset1, 20)
+silly_lang2_per50 = SillyOracle(dataset2, 50)
+silly_lang2_per20 = SillyOracle(dataset2, 20)
 
-		ls.reset_costs()
-		ls.set_opack(True)
-		opacks = ls.learn()
+lt1 = TTTLearner_S(silly_lang1_per20, alphabet1)
+lt2 = TTTLearner_S(silly_lang2_per20, alphabet2)
 
-		angs = las.learn()
+la1 = AngluinLearner_S(silly_lang1_per50, alphabet1)
+la2 = AngluinLearner_S(silly_lang2_per50, alphabet2)
 
-		fttt = fmeasure(ttts, rand, rand_length, alphabet)
+ttt1 = lt1.learn()
+print(ttt1.get_num_states())
+ang1 = la1.learn()
+print(ang1.get_num_states())
+ttt2 = lt2.learn()
+print(ttt2.get_num_states())
+ang2 = la2.learn()
+print(ang2.get_num_states())
 
-		fopack = fmeasure(opacks, rand, rand_length, alphabet)
+vec = [ttt1, ang1, ttt2, ang2]
 
-		fang = fmeasure(angs, rand, rand_length, alphabet)
-
-		print str(len(dataset)) + "\t" + str(fttt) + "\t" + str(fopack) + "\t" + str(fang)
-
-
-test3(['a', 'b', 'c', 'd', 'e'], 4, 6)
+for i in range(0, 4) :
+	row = ""
+	for j in range(0, 4) :
+		mat = neighbour_matching(vec[i], vec[j])
+		n = mat[len(mat) - 1][0]
+		row += str(n) + "\t"
+	print(row)

@@ -4,19 +4,16 @@ import pyprind
 import string
 import numpy as np
 
-from keras.datasets import imdb
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import LSTM
 from keras.layers.embeddings import Embedding
 from keras.preprocessing import sequence
 from keras.models import  model_from_json
 
-max_length = 20
+#max_length = 20
 
 
-def csv2intlist(X_label, y_label, filename, testTrainRatio=0.5, alphabet=['', 'a', 'b']):
-	df = pd.read_csv(filename, encoding='utf-8').sample(frac=1, replace=True).reset_index(drop=True)
+def csv2intlist(X_label, y_label, filename, testTrainRatio, alphabet):
+	#df = pd.read_csv(filename, encoding='utf-8').sample(frac=1, replace=True).reset_index(drop=True)
+	df = pd.read_csv(filename, encoding='utf-8').sample(frac=1.0, replace=False).reset_index(drop=True)
 	length = int(len(df.loc[:, X_label].values) * testTrainRatio)
 	X_train = []
 	for sample in df.loc[:length, X_label].values:
@@ -55,60 +52,25 @@ def OneHot(input_dim=None, input_length=None):
     return Lambda(_one_hot,
                   arguments={'num_classes': input_dim},
                   input_shape=(input_length,))
-
-def build_and_train_model(filename, modelname, epochs, batch_size): #"oracle6", "model6", epochs=4000, batch_size=128
-	num_words = 3
-	X_train, y_train, X_test, y_test = csv2intlist('review', 'sentiment', filename="csv/" + filename + ".csv", testTrainRatio=0.75)
-	# truncate and pad input sequences
-	X_train = sequence.pad_sequences(X_train, maxlen=max_length)
-	X_test = sequence.pad_sequences(X_test, maxlen=max_length)
-
-	# create the model
-	model = Sequential()
-	model.add(OneHot(input_dim=num_words, input_length=max_length))
-	model.add(LSTM(10, activation='sigmoid'))
-	model.add(Dense(5, activation='relu'))
-	model.add(Dense(1, activation='sigmoid'))
-
-	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-	print(model.summary())
-
-	model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs, batch_size=batch_size)
-	#model.fit(X_train, y_train, validation_split=0.25, epochs=600, batch_size=128)
-
-	# Final evaluation of the model
-	scores = model.evaluate(X_test, y_test, verbose=0)
-	autoscores = model.evaluate(X_train, y_train, verbose=0)
-	print("Test Accuracy: %.2f%%" % (scores[1]*100))
-	print("Train Accuracy: %.2f%%" % (autoscores[1]*100))
-
-	json_string = model.to_json()
-	f = open("models/" + modelname + ".txt", "a")
-	f.write(json_string) 
-
-	model.save_weights("models/" + modelname + ".hdf5")
 	
-def build_and_train_model2(filename, modelname, epochs, batch_size): #"oracle6", "model6", epochs=4000, batch_size=128
-	num_words = 3
-	X_train, y_train, X_test, y_test = csv2intlist('review', 'sentiment', filename="csv/" + filename + ".csv", testTrainRatio=1.0)
-	print("length:" + str(len(X_train)))
+def train_model(model, filename, modelname, epochs, batch_size, testTrainRatio, sequence_length, validate, alphabet): #"oracle6", "model6", epochs=4000, batch_size=128
+	num_words = len(alphabet)
+	X_train, y_train, X_test, y_test = csv2intlist('word', 'acceptance', filename="csv/" + filename + ".csv", testTrainRatio=testTrainRatio, alphabet=alphabet)
+	print("X_train")
+	for el in  X_train:
+		print(el)
+	print
+	print("X_test")
+	for el in  X_test:
+		print(el)
 	# truncate and pad input sequences
-	X_train = sequence.pad_sequences(X_train, maxlen=max_length)
-	X_test = sequence.pad_sequences(X_test, maxlen=max_length)
-
-	# create the model
-	model = Sequential()
-	model.add(OneHot(input_dim=num_words, input_length=max_length))
-	model.add(LSTM(10, activation='sigmoid'))
-	model.add(Dense(5, activation='relu'))
-	model.add(Dense(1, activation='sigmoid'))
-
-	model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-	print(model.summary())
-
-	model.fit(X_train, y_train, validation_data=(X_train, y_train), epochs=epochs, batch_size=batch_size)
+	X_train = sequence.pad_sequences(X_train, maxlen=sequence_length)
+	X_test = sequence.pad_sequences(X_test, maxlen=sequence_length)
+	
+	if(validate):
+		model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=epochs, batch_size=batch_size)
+	else:
+		model.fit(X_train, y_train, validation_data=(X_train, y_train), epochs=epochs, batch_size=batch_size)
 
 	json_string = model.to_json()
 	f = open("models/" + modelname + ".txt", "a")
@@ -119,6 +81,10 @@ def build_and_train_model2(filename, modelname, epochs, batch_size): #"oracle6",
 	# Final evaluation of the model
 	autoscores = model.evaluate(X_train, y_train, verbose=0)
 	print("Train Accuracy: %.2f%%" % (autoscores[1]*100))
+	
+	if(validate):
+		scores = model.evaluate(X_test, y_test, verbose=0)
+		print("Test Accuracy: %.2f%%" % (scores[1]*100))
 
 def get_model(modelname):
 	f = open("models/" + modelname + ".txt", "r")

@@ -19,9 +19,9 @@ add_executable(gilearner main.cc)
 
 if (pyembed)
 # For binding python interpreter    #
-	include_directories(lstm)
-	add_subdirectory(lstm)
-	target_link_libraries(gilearner lstm)
+	include_directories(rnnoracle)
+	add_subdirectory(rnnoracle)
+	target_link_libraries(gilearner rnnoracle)
 #Needed to copy some files in the build folder
 	add_custom_command(TARGET gilearner PRE_BUILD
 					COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -59,6 +59,11 @@ if (python)
   find_package( PythonInterp 3.6 REQUIRED )
   find_package( PythonLibs 3.6 REQUIRED )
   add_subdirectory(py)
+  
+  #Needed to copy some files in the build folder
+	add_custom_command(TARGET gilearner PRE_BUILD
+					COMMAND ${CMAKE_COMMAND} -E copy_directory
+					${CMAKE_SOURCE_DIR}/py/copy_in_build_py $<TARGET_FILE_DIR:gilearner>/py)
 endif()
 
 ################################

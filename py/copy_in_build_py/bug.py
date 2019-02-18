@@ -17,14 +17,14 @@ then build the library and run this code in the kdgi/build/py folder."
 
 def f1(dfa1, dfa2):
 	query = equivalence_query(dfa1, dfa2)
-	print query
+	print(query)
 	query = equivalence_query(dfa2, dfa1)
-	print query
+	print(query)
 	
 	mat = neighbour_matching(dfa1, dfa2)
 	n = mat[len(mat) - 1][0]
-	print "Neighbour matching:"
-	print n
+	print("Neighbour matching:")
+	print(n)
 	
 	
 def fmeasure(dfa, oracle, max_length, alphabet):
@@ -39,7 +39,7 @@ def fmeasure(dfa, oracle, max_length, alphabet):
 			word = []
 			
 			for k in range(0, i) :
-				word.extend(alphabet[ val % len(alphabet) ])
+				word.extend(alphabet[ int(val % len(alphabet)) ])
 				val = val / len(alphabet)
 			
 			if oracle.membership_query(word) != dfa.membership_query(word) :
@@ -74,7 +74,7 @@ def test4(percentage) :
 			word = []
 			
 			for k in range(0, i) :
-				word.extend(alphabet[ val % len(alphabet) ])
+				word.extend(alphabet[ int(val % len(alphabet)) ])
 				val = val / len(alphabet)
 			
 			if rand.membership_query(word) :
@@ -93,13 +93,13 @@ def test4(percentage) :
 	
 	ang = la.learn()
 
-	print str(percentage) + "\t" + str(fmeasure(ttt, silly, max_length, alphabet)) + "\t" + str(fmeasure(opack, silly, max_length, alphabet)) + "\t" + str(fmeasure(ang, silly, max_length, alphabet))
+	print(str(percentage) + "\t" + str(fmeasure(ttt, silly, max_length, alphabet)) + "\t" + str(fmeasure(opack, silly, max_length, alphabet)) + "\t" + str(fmeasure(ang, silly, max_length, alphabet)))
 	
 	ttt.print_dot("", "dfas/dot/ttt_" + str(percentage) + ".dot")
 	opack.print_dot("", "dfas/dot/opack_" + str(percentage) + ".dot")
 	ang.print_dot("", "dfas/dot/ang_" + str(percentage) + ".dot")
 	
-print "\tttt\t\topack\t\tang"
+print("\tttt\t\topack\t\tang")
 
 for percentage in range(0, 101, 10) :
 	test4(percentage)

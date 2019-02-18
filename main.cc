@@ -5,7 +5,7 @@
 #include "angluinlearner.h"
 #include "concretedfa.h"
 
-#include "lstm.h"
+#include "rnnoracle.h"
 
 using namespace std;
 
@@ -357,34 +357,14 @@ void test5(){
 
 void testlstm(){
 	py::scoped_interpreter guard{};
-	py::module m0 = py::module::import("LSTMOracle");
-	py::object net = m0.attr("LSTMOracle")("model6b", 2);
 	
 	std::vector<std::string> alphabet = {"a", "b"};
 	
-    LSTMOracle lstm = LSTMOracle(2, alphabet, &net, 50);
+    RNNOracle lstm = RNNOracle("model6b", alphabet, 2, 35);
     
-    //std::cout << lstm.membership_query(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
-    
-    TTTLearner<LSTMOracle> learner(&lstm, alphabet);
+    TTTLearner<RNNOracle> learner(&lstm, alphabet);
 	TTTDfa* dfa = learner.learn();
 	dfa->print_dfa_dot("", "lstm.dot");
-	dfa->Dfa<list<DfaState>*>::print();
-	/*
-	std::cout << lstm.get_state_index_from_word(std::vector<std::string>()) << std::endl;
-	std::cout << lstm.get_state_index_from_word(std::vector<std::string>{"a"}) << std::endl;
-	std::cout << lstm.get_state_index_from_word(std::vector<std::string>{"b"}) << std::endl;
-	std::cout << lstm.get_state_index_from_word(std::vector<std::string>{"a", "b", "a", "a"}) << std::endl;
-	*/
-	
-	/*
-	ConcreteDfa conc = lstm.build_dfa();
-	conc.update_state_table();
-	
-	conc.print_dfa_dot("", "conc.dot");
-	vector<symbol_> cnex;
-	dfa->equivalence_query(&conc, cnex);
-	*/
 }
 
 int main() {

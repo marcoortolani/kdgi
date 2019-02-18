@@ -1,17 +1,11 @@
-cmake_minimum_required(VERSION 3.5)
-
-# Enable all warning by default
-#set(CMAKE_CXX_FLAGS "-g -Wall -fvisibility=hidden -fPIC")
-
-set(CMAKE_CXX_STANDARD 11)
+#Needed because if python=on the pybind11 library is already included.
+if (NOT python)
+	add_subdirectory(../py/pybind11 lib)
+endif()
 
 add_library(rnnoracle rnnoracle.cc)
-
-find_package(PythonLibs REQUIRED)
-#include_directories(${PYTHON_INCLUDE_DIRS})
+find_package(PythonLibs 3.6 REQUIRED)
+find_package(PythonInterp 3.6 REQUIRED)
+target_link_libraries(rnnoracle pybind11)
+include_directories(${PYTHON_INCLUDE_DIRS})
 target_link_libraries(rnnoracle ${PYTHON_LIBRARIES})
-
-target_link_libraries(rnnoracle gi_lib)
-
-#include_directories("/usr/include/python3.6m/")
-#target_link_libraries(lstm "/home/marco/anaconda3/envs/alearn/lib/libpython3.6m.so")

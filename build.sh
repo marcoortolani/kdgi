@@ -1,4 +1,4 @@
-if [ -d "$build" ]; then
+if [ -d ./build ]; then
 	rm -r build
 fi
 

@@ -20,5 +20,6 @@ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']
 
 print(model.summary())
 
+# train and save the model
 #al.train_model(model=model, filename="oracle4", modelname="model4c", epochs=10, batch_size=56, testTrainRatio=0.75, sequence_length=sequence_length, validate=True, alphabet=alphabet)
 #al.train_model(model=model, filename="oracle6", modelname="model6b", epochs=4000, batch_size=128, testTrainRatio=1.0, sequence_length=sequence_length, validate=False, alphabet=alphabet)

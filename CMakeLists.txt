@@ -22,10 +22,22 @@ if (pyembed)
 	include_directories(rnnoracle)
 	add_subdirectory(rnnoracle)
 	target_link_libraries(gilearner rnnoracle)
+
+#Needed to tell the preprocessor to include rnnoracle.h in kdgi/py/gipy.cc
+add_definitions(-DPYEMBED)
+
 #Needed to copy some files in the build folder
+add_custom_command(TARGET gilearner PRE_BUILD
+				COMMAND ${CMAKE_COMMAND} -E copy_directory
+				${CMAKE_SOURCE_DIR}/ker $<TARGET_FILE_DIR:gilearner>)
+					
+#Needed to copy some files in the build/py folder if python=on
+if(python)
 	add_custom_command(TARGET gilearner PRE_BUILD
 					COMMAND ${CMAKE_COMMAND} -E copy_directory
-					${CMAKE_SOURCE_DIR}/ker $<TARGET_FILE_DIR:gilearner>)
+					${CMAKE_SOURCE_DIR}/ker $<TARGET_FILE_DIR:gilearner>/py)
+endif()
+
 #####################################
 endif()
 

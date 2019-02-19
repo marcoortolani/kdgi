@@ -19,6 +19,10 @@
 #include "randomoracle.h"
 #include "sillyoracle.h"
 
+#ifdef PYEMBED
+#include "rnnoracle.h"
+#endif
+
 //Default arguments: https://pybind11.readthedocs.io/en/stable/basics.html#default-args
 
 namespace py = pybind11;
@@ -184,6 +188,9 @@ PYBIND11_MODULE(gipy_lib, m) {
     declare_Learner<AngluinLearner<SillyOracle>, SillyOracle>(m, "AngluinLearner_S");
     declare_Learner<AngluinLearner<RandomOracle>, RandomOracle>(m, "AngluinLearner_R");
     
+	#ifdef PYEMBED
+    declare_Learner<AngluinLearner<RNNOracle>, RNNOracle>(m, "AngluinLearner_RNN");
+    #endif
     
     /*----------TTT----------*/
     // TTT eredita da Dfa<list...>
@@ -198,6 +205,9 @@ PYBIND11_MODULE(gipy_lib, m) {
     declare_TTTLearner<SillyOracle>(m, "_S");
     declare_TTTLearner<RandomOracle>(m, "_R");
     
+    #ifdef PYEMBED
+    declare_TTTLearner<RNNOracle>(m, "_RNN");
+    #endif
     /*----------Oracles----------*/
     py::class_<RandomOracle>(m, "RandomOracle")
 		.def(py::init<int, vector<symbol_>>())
@@ -210,7 +220,12 @@ PYBIND11_MODULE(gipy_lib, m) {
 		.def("membership_query",&SillyOracle::membership_query)
 	;
 	
-	
+	#ifdef PYEMBED
+	py::class_<RNNOracle>(m, "RNNOracle")
+		.def(py::init< string, vector<symbol_>, int, int >())
+		.def("membership_query",&RNNOracle::membership_query)
+	;
+	#endif
     
     /*----------Function templates----------*/
     //Equivalence query
@@ -233,6 +248,12 @@ PYBIND11_MODULE(gipy_lib, m) {
     m.def("equivalence_query", equivalence_query<SillyOracle, ConcreteDfa>);
     m.def("equivalence_query", equivalence_query<SillyOracle, AngluinDfa>);
     m.def("equivalence_query", equivalence_query<SillyOracle, TTTDfa>);
+    
+    #ifdef PYEMBED
+    m.def("equivalence_query", equivalence_query<RNNOracle, ConcreteDfa>);
+    m.def("equivalence_query", equivalence_query<RNNOracle, AngluinDfa>);
+    m.def("equivalence_query", equivalence_query<RNNOracle, TTTDfa>);
+	#endif
     
     //Neighbour matching
     m.def("neighbour_matching", neighbour_matching<ConcreteDfa, ConcreteDfa>);

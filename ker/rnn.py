@@ -25,7 +25,7 @@ class RNN:
 		x = sequence.pad_sequences([x], maxlen=self.sequence_length)
 
 		inp = self.model.input                    # input placeholder
-		outputs = [self.model.layers[2].output]          # all layer outputs
+		outputs = [self.model.layers[layer].output]          # all layer outputs
 		functor = K.function([inp, K.learning_phase()], outputs )
 		outs = functor([x, 1.])
 		

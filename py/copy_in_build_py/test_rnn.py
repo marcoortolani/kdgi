@@ -1,6 +1,13 @@
 from gipy_lib import *
 
-filename = "model6b"
+import sys
+if sys.version_info[0] < 3:
+	filename = "model_2.7"
+else:
+	filename = "model6b"
+
+print(filename)
+
 alphabet = ['a', 'b']
 layer = 2
 max_build = 35
@@ -15,14 +22,25 @@ opack.set_opack(True)
 ttt = TTTLearner_RNN(rnnOracle, alphabet)
 
 ang_dfa = ang.learn()
+print("ang learned")
 
 opack_dfa = opack.learn()
+print("opack learned")
 
 ttt_dfa = ttt.learn()
+print("ttt learned")
 
-print(ang_dfa.get_num_states())
-print(opack_dfa.get_num_states())
-print(ttt_dfa.get_num_states())
+print("ang")
+ang_dfa.print_dfa()
+print()
+
+print("opack")
+opack_dfa.print_dfa()
+print()
+
+print("ttt")
+ttt_dfa.print_dfa()
+print()
 
 query = equivalence_query(ttt_dfa, ang_dfa)
 

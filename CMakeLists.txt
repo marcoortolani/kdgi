@@ -18,25 +18,25 @@ add_subdirectory(gi)
 add_executable(gilearner main.cc)
 
 if (pyembed)
-# For binding python interpreter    #
-	include_directories(rnnoracle)
-	add_subdirectory(rnnoracle)
-	target_link_libraries(gilearner rnnoracle)
+	# For binding python interpreter    #
+		include_directories(rnnoracle)
+		add_subdirectory(rnnoracle)
+		target_link_libraries(gilearner rnnoracle)
 
-#Needed to tell the preprocessor to include rnnoracle.h in kdgi/py/gipy.cc
-add_definitions(-DPYEMBED)
+	#Needed to tell the preprocessor to include rnnoracle.h in kdgi/py/gipy.cc
+	add_definitions(-DPYEMBED)
 
-#Needed to copy some files in the build folder
-add_custom_command(TARGET gilearner PRE_BUILD
-				COMMAND ${CMAKE_COMMAND} -E copy_directory
-				${CMAKE_SOURCE_DIR}/ker $<TARGET_FILE_DIR:gilearner>)
-					
-#Needed to copy some files in the build/py folder if python=on
-if(python)
+	#Needed to copy some files in the build folder
 	add_custom_command(TARGET gilearner PRE_BUILD
 					COMMAND ${CMAKE_COMMAND} -E copy_directory
-					${CMAKE_SOURCE_DIR}/ker $<TARGET_FILE_DIR:gilearner>/py)
-endif()
+					${CMAKE_SOURCE_DIR}/ker $<TARGET_FILE_DIR:gilearner>)
+						
+	#Needed to copy some files in the build/py folder if python=on
+	if(python)
+		add_custom_command(TARGET gilearner PRE_BUILD
+						COMMAND ${CMAKE_COMMAND} -E copy_directory
+						${CMAKE_SOURCE_DIR}/ker $<TARGET_FILE_DIR:gilearner>/py)
+	endif()
 
 #####################################
 endif()
@@ -67,9 +67,13 @@ doxygen_add_docs(docs
 # Python
 ################################
 if (python)
-#  find_package (Python)
-  find_package( PythonInterp 3.6 REQUIRED )
-  find_package( PythonLibs 3.6 REQUIRED )
+  #find_package (Python)
+  find_package( PythonInterp REQUIRED )
+  find_package( PythonLibs REQUIRED )
+  #find_package( PythonInterp 2.7 REQUIRED )
+  #find_package( PythonLibs 2.7 REQUIRED )
+  #find_package( PythonInterp 3.6 REQUIRED )
+  #find_package( PythonLibs 3.6 REQUIRED )
   add_subdirectory(py)
   
   #Needed to copy some files in the build folder

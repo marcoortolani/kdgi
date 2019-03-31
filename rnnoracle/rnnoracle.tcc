@@ -171,12 +171,12 @@ void RNNOracle::build_dfa(){
 }
 
 //RNNOracle::RNNOracle(int layer, std::vector<std::string> alphabet, py::object* rnn, int max_build){
-RNNOracle::RNNOracle(std::string filename, std::vector<std::string> alphabet, int layer, int max_build){
+RNNOracle::RNNOracle(std::string filename, std::vector<symbol_> alphabet, int layer, int max_build, vector<vector<symbol_>> counterexamples){
 	alphabet_ = alphabet;
-	//net_ = rnn;
 	layer_ = layer;
 	A_ = nullptr;
 	max_build_ = max_build;
+	counterexamples_ = counterexamples;
 	
 	py::module rnn_module = py::module::import("rnn");
 	net_ = rnn_module.attr("RNN")(filename);
@@ -191,6 +191,24 @@ RNNOracle::RNNOracle(std::string filename, std::vector<std::string> alphabet, in
 		net_input =  vec_sym_to_vec_int(words_.back(), alphabet_);
 		X_layer.push_back(get_layer_output(net_input));
 	}
+	/*
+	std::vector<std::vector<double>> X_layer;
+	vector<int> net_input;
+	for(int i = 0; i < num_states; i++){
+		for(int j = 0; j < pow(alphabet.size(), i); j++){
+			int val = j;
+			std::vector<std::string> word;
+			
+			for(int k=0; k < i; k++){
+				word.push_back(alphabet_[ val % alphabet_.size()]);
+				val = val / alphabet_.size();
+			}
+			words_.push_back(word);
+			net_input =  vec_sym_to_vec_int(words_.back(), alphabet_);
+			X_layer.push_back(get_layer_output(net_input));
+		}
+	}
+	*/
 	
 	py::module svm_module = py::module::import("svm");
 	py::object X = py::cast(X_layer);
@@ -211,9 +229,14 @@ bool RNNOracle::membership_query(std::vector<std::string> phrase){
 template <class Dfa>
 bool RNNOracle::equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result){
 	cout << counter_ << ":" << max_build_ << endl;
+	for(auto cntr : counterexamples_){
+		if(dfa_hp->membership_query(cntr) != membership_query(cntr)){
+			witness_result = cntr;
+			return false;
+		}
+	}
 	while(counter_ < max_build_){
 		build_dfa();
-		
 		vector<symbol_> cntr;
 		/*
 		if(A_->equivalence_query(dfa_hp, cntr)){
@@ -240,12 +263,16 @@ bool RNNOracle::equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result)
 		vector<symbol_> suffix;
 		
 		if(dfa_hp->equivalence_query(dfa_hp, suffix, phrase1, phrase2)){
+			//return true; //usato solo per non bloccare gli esperimenti, soluzione temporanea da aggiustare!!!
 			cerr << "Error in RNNOracle::equivalence_query: 2 different states of the hypothesis cannot be equivalent! Use a canonical hypothesis." << endl;
 			cerr << "state 1:" << phrase1 << endl;
 			cerr << "state 2:" << phrase2 << endl;
 			cerr << "prefix 1:" << prefix1 << endl;
 			cerr << "prefix 2:" << prefix2 << endl;
 			cerr << "separator:" << suffix << endl;
+			
+			dfa_hp->print();
+			
 			throw 0;
 		}
 		
@@ -266,7 +293,7 @@ bool RNNOracle::equivalence_query(Dfa* dfa_hp , vector<symbol_>& witness_result)
 			else{
 				witness_result = word2;
 			}
-			//cout << "\tcounterexample: " << witness_result << endl;
+			cout << "counterexample: " << witness_result << endl;
 			return false;
 		}
 		else{

@@ -360,7 +360,7 @@ void testlstm(){
 	
 	std::vector<std::string> alphabet = {"a", "b"};
 	
-    RNNOracle lstm = RNNOracle("model6b", alphabet, 2, 35);
+    RNNOracle lstm = RNNOracle("model6b", alphabet, 2, 35, std::vector<std::vector<symbol_>>());
     
     TTTLearner<RNNOracle> learner(&lstm, alphabet);
 	TTTDfa* dfa = learner.learn();

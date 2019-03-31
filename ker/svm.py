@@ -60,6 +60,7 @@ class SVMClassifier:
 	def __init__(self, X):
 		if(len(X) < 2):
 			raise ValueError('In function __init__ of class SVMClassifier: param X must be a list of at least 2 elements.')
+			
 		self.vectors = X[0:2]
 		
 		clf = svm.SVC(kernel='rbf', gamma='scale')

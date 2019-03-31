@@ -35,5 +35,5 @@ def write_data(oracle, length, filename):
 				t = 1
 			data_writer.writerow([s, t])
 
-#c = ConcreteDfa.read_dfa_file("data/_odd_a.txt")
-#write_data(c, 8, 'csv/oracle.csv')
+c = ConcreteDfa.read_dfa_file("data/_odd_a.txt")
+write_data(c, 8, 'csv/test.csv')

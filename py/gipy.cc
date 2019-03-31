@@ -222,7 +222,7 @@ PYBIND11_MODULE(gipy_lib, m) {
 	
 	#ifdef PYEMBED
 	py::class_<RNNOracle>(m, "RNNOracle")
-		.def(py::init< string, vector<symbol_>, int, int >())
+		.def(py::init< string, vector<symbol_>, int, int, vector<vector<symbol_>> >())
 		.def("membership_query",&RNNOracle::membership_query)
 	;
 	#endif

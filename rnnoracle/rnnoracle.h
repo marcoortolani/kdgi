@@ -4,7 +4,7 @@
 //for python interpreter embedding
 #include <pybind11/embed.h>
 //for type conversion c++/python
-#include<pybind11/stl.h>
+#include <pybind11/stl.h>
 
 #include "concretedfa.h"
 #include <iostream>
@@ -28,6 +28,7 @@ class RNNOracle {
 		ConcreteDfa* A_;
 		int counter_;
 		int max_build_;
+		vector<vector<symbol_>> counterexamples_;
 		
 		int last_len_;
 		map<pair<int, symbol_>, int> mandatory_transitions_;
@@ -46,7 +47,7 @@ class RNNOracle {
 		void build_dfa();
 		
 	public:
-		RNNOracle(std::string filename, std::vector<std::string> alphabet, int layer, int max_build);
+		RNNOracle(std::string filename, std::vector<symbol_> alphabet, int layer, int max_build, vector<vector<symbol_>> counterexamples);
 		
 		bool membership_query(std::vector<std::string> phrase);
 		

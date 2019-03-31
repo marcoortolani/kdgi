@@ -1,18 +1,12 @@
 from gipy_lib import *
 
-import sys
-if sys.version_info[0] < 3:
-	filename = "model_2.7"
-else:
-	filename = "model6b"
-
-print(filename)
+filename = "test"
 
 alphabet = ['a', 'b']
 layer = 2
 max_build = 35
 
-rnnOracle = RNNOracle(filename, alphabet, layer, max_build, [])
+rnnOracle = RNNOracle(filename, alphabet, layer, max_build, [['a', 'a', 'a', 'b'], ['a', 'b', 'a', 'b']])
 
 ang = AngluinLearner_RNN(rnnOracle, alphabet)
 

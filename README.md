@@ -76,3 +76,4 @@ Per far verificare l'eccezione si possono seguire le istruzioni contenute nel fi
 Questo non permette all'oracolo RNN di procedere oltre (per poter valutare l'ipotesi si basa sul presupposto che ogni stato sia discriminabile da tutti gli altri).
 Sarebbe bene capire cosa causa questo bug il quale non si è verificato quando a fare da oracolo era un DFA, e risolverlo alla base ma la cosa richiede di studiare a fondo gli algoritmi e come sono stati implementati.
 In alternativa si potrebbe calcolare il DFA canonico a partire dal DFA ipotesi se questo non dovesse già essere canonico usando ad esempio il table filling.
+Un esempio di questo bug lo si incontra con il codice kdgi/build/py/percentage_experiment.py
